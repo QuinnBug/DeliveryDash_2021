@@ -29,23 +29,33 @@ public class Car_Movement : MonoBehaviour
 
     public void Movement() 
     {
+        if (movementInput.sqrMagnitude < 0.1f)
+        {
+            return;
+        }
+
+        int wheels = 0;
         foreach (Wheel wheel in suspension.wheels)
         {
-            if (wheel.grounded)
-            {
-                rb.AddForce((movementInput * moveSpeed) / suspension.wheels.Length);
-            }
+            if (wheel.grounded) wheels++;
         }
+
+        if (wheels >= 2)
+        {
+            rb.AddForce(transform.forward * moveSpeed);
+        }
+
     }
 
     public void Rotation() 
     {
-        Vector3 flattenedVelocity = rb.velocity.normalized;
-        flattenedVelocity.y = 0;
-        if (flattenedVelocity.sqrMagnitude > 0.1f)
+        Vector3 flatMoveDir = movementInput;
+        flatMoveDir.y = 0;
+
+        if (flatMoveDir.sqrMagnitude > 0.1f)
         {
-            transform.rotation = Quaternion.Lerp(transform.rotation,
-                Quaternion.LookRotation(flattenedVelocity, Vector3.up), turnSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.LerpUnclamped(transform.rotation,
+                Quaternion.LookRotation(flatMoveDir, Vector3.up), turnSpeed * Time.deltaTime);
         }
     }
 

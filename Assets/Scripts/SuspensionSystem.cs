@@ -45,7 +45,7 @@ public class Wheel
         else
         {
             grounded = false;
-            groundPos = position + (_dir * 100);
+            groundPos = Vector3.zero;
         }
 
         return grounded;
