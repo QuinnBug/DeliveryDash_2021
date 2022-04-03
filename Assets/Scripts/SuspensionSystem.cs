@@ -25,9 +25,9 @@ public class Wheel
     private float springForce;
     private float damperForce;
 
-    public void UpdatePosition(Vector3 _pos) 
+    public void UpdatePosition(Transform _tf) 
     {
-        position = _pos + offset;
+        position = _tf.position + (_tf.rotation * offset);
     }
 
     public bool UpdateGrounded(Vector3 _dir)
@@ -83,7 +83,7 @@ public class SuspensionSystem : MonoBehaviour
     {
         foreach (Wheel wheel in wheels)
         {
-            wheel.UpdatePosition(transform.position);
+            wheel.UpdatePosition(transform);
             if (wheel.UpdateGrounded(-transform.up)) 
             {
                 rb.AddForceAtPosition(wheel.GetForce(transform.up), wheel.groundPos);
@@ -95,7 +95,7 @@ public class SuspensionSystem : MonoBehaviour
     {
         foreach (Wheel wheel in wheels)
         {
-            wheel.UpdatePosition(transform.position);
+            wheel.UpdatePosition(transform);
             Gizmos.color = Color.red;
             Gizmos.DrawSphere(wheel.position, wheel.wheelRadius);
         }
