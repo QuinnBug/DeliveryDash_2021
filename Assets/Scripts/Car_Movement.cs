@@ -23,8 +23,11 @@ public class Car_Movement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Movement();
-        Rotation();
+        if (movementInput.sqrMagnitude >= 0.1f)
+        {
+            Movement();
+            Rotation();
+        }
     }
 
     public void Movement() 
@@ -36,14 +39,16 @@ public class Car_Movement : MonoBehaviour
                 rb.AddForce((movementInput * moveSpeed) / suspension.wheels.Length);
             }
         }
+
+        
     }
 
     public void Rotation() 
     {
-        Vector3 flattenedVelocity = rb.velocity.normalized;
-        flattenedVelocity.y = 0;
-        if (flattenedVelocity.sqrMagnitude > 0.1f)
+        if (rb.velocity.sqrMagnitude > 0.1f)
         {
+            Vector3 flattenedVelocity = rb.velocity.normalized;
+            flattenedVelocity.y = 0;
             transform.rotation = Quaternion.Lerp(transform.rotation,
                 Quaternion.LookRotation(flattenedVelocity, Vector3.up), turnSpeed * Time.deltaTime);
         }
