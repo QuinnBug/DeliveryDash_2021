@@ -9,6 +9,7 @@ public class Car_Movement : MonoBehaviour
     public float turnSpeed;
     public Transform body;
     private SuspensionSystem suspension;
+    public float forwardSpeed;
 
     Rigidbody rb;
     Vector3 movementInput;
@@ -23,15 +24,20 @@ public class Car_Movement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (movementInput.sqrMagnitude >= 0.1f)
+        if (movementInput.sqrMagnitude >= 0.1f) 
         {
             Movement();
+        }
+
+        if (rb.velocity.sqrMagnitude >= 0.1f)
+        {
             Rotation();
         }
     }
 
     public void Movement() 
     {
+        rb.AddForce(transform.forward * forwardSpeed);
         foreach (Wheel wheel in suspension.wheels)
         {
             if (wheel.grounded)

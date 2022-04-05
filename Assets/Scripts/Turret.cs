@@ -9,6 +9,8 @@ public class Turret : MonoBehaviour
 
     Vector3 aimingInput;
 
+    public float turnSpeed;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -18,12 +20,17 @@ public class Turret : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        Rotation();
     }
 
     public void Rotation() 
     {
-
+        if (aimingInput.sqrMagnitude > 0.1f)
+        {
+            Vector3 flattenedDir = parent.InverseTransformDirection(aimingInput);
+            Quaternion lookRot = Quaternion.LookRotation(flattenedDir, Vector3.up);
+            transform.localRotation = Quaternion.Lerp(transform.rotation, lookRot, turnSpeed * Time.deltaTime);
+        }
     }
 
     public void Fire(InputAction.CallbackContext context) 
