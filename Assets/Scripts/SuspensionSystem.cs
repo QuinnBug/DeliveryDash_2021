@@ -6,16 +6,11 @@ using UnityEngine;
 public class Wheel 
 {
     internal Vector3 position;
-    internal bool grounded;
+    internal bool grounded = false;
     internal Vector3 groundPos;
 
     public Vector3 offset;
-    public float restLength;
-    public float springTravel;
-    public float springStiffness;
-    public float damperStiffness;
-    public float wheelRadius;
-    public float gravForce;
+    public SuspensionSettings settings;
 
     private float minLength;
     private float maxLength;
@@ -32,12 +27,12 @@ public class Wheel
 
     public bool UpdateGrounded(Vector3 _dir)
     {
-        minLength = restLength - springTravel;
-        maxLength = restLength + springTravel;
+        minLength = settings.restLength - settings.springTravel;
+        maxLength = settings.restLength + settings.springTravel;
 
         RaycastHit hit;
         LayerMask mask = 1 << LayerMask.NameToLayer("Ground");
-        if (Physics.Raycast(position, _dir, out hit, maxLength + wheelRadius, mask))
+        if (Physics.Raycast(position, _dir, out hit, maxLength + settings.wheelRadius, mask))
         {
             grounded = true;
             groundPos = hit.point;
@@ -55,12 +50,12 @@ public class Wheel
     {
         lastLength = springLength;
 
-        springLength = Vector3.Distance(position, groundPos) - wheelRadius;
+        springLength = Vector3.Distance(position, groundPos) - settings.wheelRadius;
         springLength = Mathf.Clamp(springLength, minLength, maxLength);
         springVelocity = (lastLength - springLength) / Time.fixedDeltaTime;
 
-        springForce = springStiffness * (restLength - springLength);
-        damperForce = damperStiffness * springVelocity;
+        springForce = settings.springStiffness * (settings.restLength - springLength);
+        damperForce = settings.damperStiffness * springVelocity;
 
         return (springForce + damperForce) * _dir;
     }
@@ -71,6 +66,7 @@ public class SuspensionSystem : MonoBehaviour
     private Rigidbody rb;
 
     public Wheel[] wheels;
+    public SuspensionSettings baseSettings;
 
     // Start is called before the first frame update
     void Start()
@@ -83,6 +79,7 @@ public class SuspensionSystem : MonoBehaviour
     {
         foreach (Wheel wheel in wheels)
         {
+            wheel.settings = baseSettings;
             wheel.UpdatePosition(transform);
             if (wheel.UpdateGrounded(-transform.up)) 
             {
@@ -95,11 +92,28 @@ public class SuspensionSystem : MonoBehaviour
     {
         foreach (Wheel wheel in wheels)
         {
+            wheel.settings = baseSettings;
             wheel.UpdatePosition(transform);
+
             Gizmos.color = Color.red;
-            Gizmos.DrawSphere(wheel.position, wheel.wheelRadius);
+            Gizmos.DrawSphere(wheel.position, wheel.settings.wheelRadius);
+            if (wheel.grounded) 
+            {
+                Gizmos.color = Color.blue;
+                Gizmos.DrawSphere(wheel.groundPos, wheel.settings.wheelRadius);
+            }
         }
     }
 
     //https://www.youtube.com/watch?v=x0LUiE0dxP0
+}
+
+[System.Serializable]
+public struct SuspensionSettings 
+{
+    public float restLength;
+    public float springTravel;
+    public float springStiffness;
+    public float damperStiffness;
+    public float wheelRadius;
 }

@@ -7,9 +7,8 @@ public class Car_Movement : MonoBehaviour
 {
     public float moveSpeed;
     public float turnSpeed;
-    public Transform body;
+
     private SuspensionSystem suspension;
-    public float forwardSpeed;
 
     Rigidbody rb;
     Vector3 movementInput;
@@ -37,11 +36,11 @@ public class Car_Movement : MonoBehaviour
 
     public void Movement() 
     {
-        rb.AddForce(transform.forward * forwardSpeed);
         foreach (Wheel wheel in suspension.wheels)
         {
             if (wheel.grounded)
             {
+                rb.AddForce((transform.forward * moveSpeed) / suspension.wheels.Length);
                 rb.AddForce((movementInput * moveSpeed) / suspension.wheels.Length);
             }
         }
