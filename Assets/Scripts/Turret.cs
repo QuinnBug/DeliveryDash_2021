@@ -5,6 +5,11 @@ using UnityEngine.InputSystem;
 
 public class Turret : MonoBehaviour
 {
+    public GameObject projectilePrefab;
+    public Vector3 projectileSpawnpoint;
+    public Vector3 projectileForceDirection;
+    public float projectileForcePower;
+
     Transform parent;
 
     Vector3 aimingInput;
@@ -25,23 +30,27 @@ public class Turret : MonoBehaviour
 
     public void Rotation() 
     {
-        //parent pos + localPos + (parentRotation with 0 y * aimingInput)
-        Vector3 flatPR = parent.rotation.eulerAngles;
-        flatPR.y = 0;
-        Vector3 targetPos = parent.position + transform.localPosition + (Quaternion.Euler(flatPR) * aimingInput);
-        Debug.DrawLine(transform.position, targetPos);
-        Quaternion targetRot = Quaternion.LookRotation(transform.position - targetPos, parent.up);
-        Vector3 rot = Quaternion.Lerp(transform.rotation, targetRot, turnSpeed * Time.deltaTime).eulerAngles;
-        rot.x = 0;
-        rot.z = 0;
-        transform.localRotation = Quaternion.Euler(rot);
-        //transform.LookAt(targetPos, parent.up);
-        //transform.rotation = Quaternion.Lerp(transform.rotation, lookRot, turnSpeed * Time.deltaTime);
+        Vector3 targetPos = transform.position + parent.InverseTransformDirection(aimingInput);
+        Vector3 diff = targetPos - transform.position;
+        diff.Normalize();
+        float rot_y = Mathf.Atan2(diff.x, diff.z) * Mathf.Rad2Deg;
+        Quaternion desiredRot = Quaternion.Euler(0f, rot_y, 0);
+        transform.localRotation = Quaternion.Lerp(transform.localRotation, desiredRot, turnSpeed * Time.deltaTime);
     }
 
     public void Fire(InputAction.CallbackContext context) 
     {
+        if (context.phase == InputActionPhase.Started) 
+        {
+            GameObject proj = Instantiate(projectilePrefab, transform.TransformPoint(projectileSpawnpoint), Quaternion.identity);
 
+            Rigidbody proj_rb;
+            if (proj.TryGetComponent(out proj_rb))
+            {
+                proj_rb.AddForce(transform.TransformDirection(projectileForceDirection) * projectileForcePower);
+            }
+            Destroy(proj, 10);
+        }
     }
 
     public void AimingInput(InputAction.CallbackContext context) 
@@ -53,5 +62,11 @@ public class Turret : MonoBehaviour
             aimingInput.x = input.x;
             aimingInput.z = input.y;
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.grey;
+        Gizmos.DrawSphere(transform.TransformPoint(projectileSpawnpoint), 0.1f);
     }
 }
