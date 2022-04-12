@@ -40,7 +40,7 @@ public class Car_Movement : MonoBehaviour
         {
             if (wheel.grounded)
             {
-                rb.AddForce((transform.forward * moveSpeed) / suspension.wheels.Length);
+                //rb.AddForce((transform.forward * moveSpeed) / suspension.wheels.Length);
                 rb.AddForce((movementInput * moveSpeed) / suspension.wheels.Length);
             }
         }
@@ -50,12 +50,17 @@ public class Car_Movement : MonoBehaviour
 
     public void Rotation() 
     {
-        if (rb.velocity.sqrMagnitude > 0.1f)
+        if (movementInput.sqrMagnitude > 0.1f)
         {
-            Vector3 flattenedVelocity = rb.velocity.normalized;
-            flattenedVelocity.y = 0;
-            transform.rotation = Quaternion.Lerp(transform.rotation,
-                Quaternion.LookRotation(flattenedVelocity, Vector3.up), turnSpeed * Time.deltaTime);
+            if (suspension.GroundedPercent() > 0f)
+            {
+                transform.rotation = Quaternion.Lerp(transform.rotation,
+                    Quaternion.LookRotation(movementInput, Vector3.up), turnSpeed * Time.deltaTime);
+            }
+            else
+            {
+                //rb.AddTorque(movementInput * turnSpeed);
+            }
         }
     }
 

@@ -48,6 +48,8 @@ public class Wheel
 
     public Vector3 GetForce(Vector3 _dir) 
     {
+        minLength = settings.restLength - settings.springTravel;
+        maxLength = settings.restLength + settings.springTravel;
         lastLength = springLength;
 
         springLength = Vector3.Distance(position, groundPos) - settings.wheelRadius;
@@ -83,9 +85,23 @@ public class SuspensionSystem : MonoBehaviour
             wheel.UpdatePosition(transform);
             if (wheel.UpdateGrounded(-transform.up)) 
             {
-                rb.AddForceAtPosition(wheel.GetForce(transform.up), wheel.groundPos);
+                rb.AddForceAtPosition(wheel.GetForce(transform.up), wheel.position);
             }
         }
+    }
+
+    public float GroundedPercent() 
+    {
+        int groundedI = 0;
+        foreach (Wheel wheel in wheels)
+        {
+            if (wheel.grounded)
+            {
+                groundedI++;
+            }
+        }
+
+        return groundedI / wheels.Length;
     }
 
     private void OnDrawGizmos()

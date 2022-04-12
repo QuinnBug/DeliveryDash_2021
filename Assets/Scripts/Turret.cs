@@ -25,12 +25,18 @@ public class Turret : MonoBehaviour
 
     public void Rotation() 
     {
-        if (aimingInput.sqrMagnitude > 0.1f)
-        {
-            Vector3 flattenedDir = parent.InverseTransformDirection(aimingInput);
-            Quaternion lookRot = Quaternion.LookRotation(flattenedDir, Vector3.up);
-            transform.localRotation = Quaternion.Lerp(transform.rotation, lookRot, turnSpeed * Time.deltaTime);
-        }
+        //parent pos + localPos + (parentRotation with 0 y * aimingInput)
+        Vector3 flatPR = parent.rotation.eulerAngles;
+        flatPR.y = 0;
+        Vector3 targetPos = parent.position + transform.localPosition + (Quaternion.Euler(flatPR) * aimingInput);
+        Debug.DrawLine(transform.position, targetPos);
+        Quaternion targetRot = Quaternion.LookRotation(transform.position - targetPos, parent.up);
+        Vector3 rot = Quaternion.Lerp(transform.rotation, targetRot, turnSpeed * Time.deltaTime).eulerAngles;
+        rot.x = 0;
+        rot.z = 0;
+        transform.localRotation = Quaternion.Euler(rot);
+        //transform.LookAt(targetPos, parent.up);
+        //transform.rotation = Quaternion.Lerp(transform.rotation, lookRot, turnSpeed * Time.deltaTime);
     }
 
     public void Fire(InputAction.CallbackContext context) 
@@ -41,8 +47,11 @@ public class Turret : MonoBehaviour
     public void AimingInput(InputAction.CallbackContext context) 
     {
         Vector2 input = context.ReadValue<Vector2>();
-
-        aimingInput.x = input.x;
-        aimingInput.z = input.y;
+        
+        if (input != Vector2.zero)
+        {
+            aimingInput.x = input.x;
+            aimingInput.z = input.y;
+        }
     }
 }
