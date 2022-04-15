@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Camera_Manager : Singleton
+public class Camera_Manager : Singleton<Camera_Manager>
 {
     public Transform target;
     public Transform focus;

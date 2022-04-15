@@ -2,17 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public class GridBase : MonoBehaviour
+[System.Serializable]
+public struct TileSettings 
 {
-    public bool m_ShowGrid = true;
     public Vector2Int size;
     public float perlinZoom;
     public float perlinHeight;
     public float perlinHeightLimit;
+    public Vector2 vSize;
+}
+
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+public class TerrainTile : MonoBehaviour
+{
+    public Vector2Int tilePosition;
+    [Space]
+    public bool m_ShowGrid = true;
+    public TileSettings settings;
 
     private Vector3[] vertices;
     private Mesh mesh;
+    internal Vector2 perlinOffset;
 
     public void GenerateMesh() 
     {
@@ -20,21 +30,24 @@ public class GridBase : MonoBehaviour
         mesh.name = "Procedural Grid";
 
         #region vertices generation
-        vertices = new Vector3[(size.x + 1) * (size.y + 1)];
+        vertices = new Vector3[(settings.size.x + 1) * (settings.size.y + 1)];
         Vector4[] tangents = new Vector4[vertices.Length];
         Vector4 tangent = new Vector4(1f, 0f, 0f, -1f);
         Vector2[] uv = new Vector2[vertices.Length];
-        for (int i = 0, z = 0; z <= size.y; z++)
+        for (int i = 0, z = 0; z <= settings.size.y; z++)
         {
-            for (int x = 0; x <= size.x; x++, i++)
+            for (int x = 0; x <= settings.size.x; x++, i++)
             {
-                float y = (Mathf.PerlinNoise(x * perlinZoom, z * perlinZoom) - 0.5f) * perlinHeight;
+                float y = (Mathf.PerlinNoise(
+                    (perlinOffset.x + x + (tilePosition.x * settings.size.x)) * settings.perlinZoom,
+                    (perlinOffset.y + z + (tilePosition.y * settings.size.y)) * settings.perlinZoom) - 0.5f)
+                    * settings.perlinHeight;
 
-                if (y > perlinHeightLimit) y = perlinHeightLimit;
+                if (y > settings.perlinHeightLimit) y = settings.perlinHeightLimit;
                 //else if (y < -perlinHeightLimit) y = -perlinHeightLimit;
 
-                vertices[i] = new Vector3(x, y, z);
-                uv[i] = new Vector2((float)x / size.x, (float)z / size.y);
+                vertices[i] = new Vector3(x * settings.vSize.x, y, z * settings.vSize.y);
+                uv[i] = new Vector2((float)x / settings.size.x, (float)z / settings.size.y);
                 tangents[i] = tangent;
             }
         }
@@ -43,15 +56,15 @@ public class GridBase : MonoBehaviour
         mesh.vertices = vertices;
 
         #region tri generation
-        int[] triangles = new int[size.x * size.y * 6];
-        for (int ti = 0, vi = 0, y = 0; y < size.y; y++, vi++)
+        int[] triangles = new int[settings.size.x * settings.size.y * 6];
+        for (int ti = 0, vi = 0, y = 0; y < settings.size.y; y++, vi++)
         {
-            for (int x = 0; x < size.x; x++, ti += 6, vi++)
+            for (int x = 0; x < settings.size.x; x++, ti += 6, vi++)
             {
                 triangles[ti] = vi;
                 triangles[ti + 3] = triangles[ti + 2] = vi + 1;
-                triangles[ti + 4] = triangles[ti + 1] = vi + size.x + 1;
-                triangles[ti + 5] = vi + size.x + 2;
+                triangles[ti + 4] = triangles[ti + 1] = vi + settings.size.x + 1;
+                triangles[ti + 5] = vi + settings.size.x + 2;
             }
         }
         #endregion

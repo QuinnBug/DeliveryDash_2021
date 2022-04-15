@@ -2,20 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Singleton : MonoBehaviour
+public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
 {
-    private static Singleton _instance;
-    public static Singleton Instance { get { return _instance; } }
+    private static T _instance;
+    public static T Instance { get { return _instance; } }
 
     private void Awake()
     {
         if (_instance != null && _instance != this)
         {
-            Destroy(gameObject);
+            Destroy(this);
         }
         else
         {
-            _instance = this;
+            _instance = FindObjectOfType<T>();
+            DontDestroyOnLoad(_instance);
         }
     }
 }
