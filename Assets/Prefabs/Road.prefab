@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 374969932410876660}
   - component: {fileID: 374969932410876659}
   - component: {fileID: 374969932410876658}
-  m_Layer: 3
+  m_Layer: 6
   m_Name: Road
   m_TagString: Road
   m_Icon: {fileID: 0}
@@ -114,3 +114,4 @@ MonoBehaviour:
   width: 15
   vertexCount: 40
   vertexWidth: 8
+  vertices: []

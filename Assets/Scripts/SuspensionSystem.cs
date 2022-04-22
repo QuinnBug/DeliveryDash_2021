@@ -32,6 +32,8 @@ public class Wheel
 
         RaycastHit hit;
         LayerMask mask = 1 << LayerMask.NameToLayer("Ground");
+        mask |= (1 << LayerMask.NameToLayer("Road"));
+
         if (Physics.Raycast(position, _dir, out hit, maxLength + settings.wheelRadius, mask))
         {
             grounded = true;

@@ -24,8 +24,8 @@ public class Road : MonoBehaviour
     public bool GenerateMesh() 
     {
         LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground");
-        startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/2);
-        endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/2);
+        startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/4);
+        endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/4);
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
 
         length = Vector3.Distance(endPoint, startPoint);
