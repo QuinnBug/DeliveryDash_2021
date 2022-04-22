@@ -44,7 +44,7 @@ public class TerrainTile : MonoBehaviour
                     * settings.perlinHeight;
 
                 if (y > settings.perlinHeightLimit) y = settings.perlinHeightLimit;
-                //else if (y < -perlinHeightLimit) y = -perlinHeightLimit;
+                else if (y < -settings.perlinHeightLimit) y = -settings.perlinHeightLimit;
 
                 vertices[i] = new Vector3(x * settings.vSize.x, y, z * settings.vSize.y);
                 uv[i] = new Vector2((float)x / settings.size.x, (float)z / settings.size.y);

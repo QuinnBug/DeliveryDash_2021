@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,34 +9,26 @@ public class Road : MonoBehaviour
     public float width = 1;
     public int vertexCount;
     public int vertexWidth = 2;
+    internal float length = 0;
     private Mesh mesh;
+    [Space]
+    public Vector3[] vertices;
 
-    private Vector3[] vertices;
-
-    public void Init(Vector3 _start, Vector3 _end)
+    public bool Init(Vector3 _start, Vector3 _end)
     {
         startPoint = _start;
         endPoint = _end;
+        return GenerateMesh();
     }
 
-    public void GenerateMesh() 
+    public bool GenerateMesh() 
     {
         LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground");
-        startPoint = startPoint - (transform.forward * width);
-        endPoint = endPoint - (transform.forward * width);
+        startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/2);
+        endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/2);
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
 
-        //RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(center), Vector3.down, 30, groundLayer);
-        //foreach (RaycastHit hit in hits)
-        //{
-        //    if (hit.collider.gameObject.tag == "Road")
-        //    {
-        //        center.y = hit.point.y;
-        //        break;
-        //    }
-        //}
-
-        float roadLength = Vector3.Distance(endPoint, startPoint);
+        length = Vector3.Distance(endPoint, startPoint);
         Collider[] colliders = Physics.OverlapBox(center, new Vector3(1, 25, 1));
         if (colliders.Length > 0)
         {
@@ -44,8 +37,8 @@ public class Road : MonoBehaviour
             {
                 if (col.gameObject != this && col.TryGetComponent(out otherRoad))
                 {
-                    Destroy(this);
-                    return;
+                    Road_Manager.Instance.DestroyRoad(this);
+                    return false;
                 }
             }
         }
@@ -68,7 +61,7 @@ public class Road : MonoBehaviour
             Vector3 vertexPos = Vector3.zero;
             for (float x = -vertexWidth/2.0f; x <= vertexWidth/2.0f; x++, i++)
             {
-                flatVertexPos = new Vector3(x * (width / vertexWidth), 0, z * (roadLength / vertexCount));
+                flatVertexPos = new Vector3(x * (width / vertexWidth), 0, z * (length / vertexCount));
                 vertexPos = flatVertexPos;
                 vertexPos.y = lastY;
                 RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPos), Vector3.down, 100, groundLayer);
@@ -84,7 +77,7 @@ public class Road : MonoBehaviour
                     }
                 }
                 vertices[i] = vertexPos;
-                uv[i] = new Vector2((float)x / (width/vertexWidth), (float)z / (roadLength / vertexCount));
+                uv[i] = new Vector2((float)x / (width/vertexWidth), (float)z / (length / vertexCount));
                 tangents[i] = tangent;
             }
         }
@@ -120,6 +113,15 @@ public class Road : MonoBehaviour
 
         MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
+
+        return true;
     }
-    
+
+    internal Vector3 GetLocalPositionFromMesh(Vector3 offsetDirection)
+    {
+        Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
+        //Vector3 center = transform.position;
+        center += transform.InverseTransformDirection(offsetDirection) * width;
+        return center;
+    }
 }
