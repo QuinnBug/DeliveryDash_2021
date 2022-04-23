@@ -103,7 +103,7 @@ public class Building_Manager : Singleton<Building_Manager>
         int loopCounter = 0;
         while (redo)
         {
-            Debug.Log(loopCounter + " loop");
+            //Debug.Log(loopCounter + " loop");
             colliders = CheckCollisions(right, left, front, back, high, low, parent);
             redo = false;
             foreach (GameObject col in colliders)

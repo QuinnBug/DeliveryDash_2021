@@ -639,34 +639,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 45, y: 90, z: 90}
---- !u!21 &747953235
-Material:
-  serializedVersion: 6
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Clayxels/ClayxelURPShaderSmoothMeshASE
-  m_Shader: {fileID: 4800000, guid: b62bdcab2d2338546b6a8a1711378f86, type: 3}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Floats:
-    - _AlphaCutoff: 0.5
-    - _Metallic1: 0
-    - _Smoothness1: 0
-    - _emissionPower1: 0
-    m_Colors:
-    - _Emission1: {r: 0, g: 0, b: 0, a: 0}
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!1 &817083380
 GameObject:
   m_ObjectHideFlags: 0
@@ -1279,6 +1251,34 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 135, y: 0, z: 0}
+--- !u!21 &1087975166
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Clayxels/ClayxelURPShaderSmoothMeshASE
+  m_Shader: {fileID: 4800000, guid: b62bdcab2d2338546b6a8a1711378f86, type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Metallic1: 0
+    - _Smoothness1: 0
+    - _emissionPower1: 0
+    m_Colors:
+    - _Emission1: {r: 0, g: 0, b: 0, a: 0}
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!1 &1251183815
 GameObject:
   m_ObjectHideFlags: 0
@@ -1647,7 +1647,7 @@ MonoBehaviour:
   chunksX: 1
   chunksY: 1
   chunksZ: 1
-  material: {fileID: 747953235}
+  material: {fileID: 1087975166}
   castShadows: 1
   receiveShadows: 1
   storeAssetPath: ClayxelContainer
@@ -1854,15 +1854,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82b6aa1f7e3d7fe4b85bfff6484cc31b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testGeneration: 0
+  testConnections: 0
   roadPrefab: {fileID: 374969932410876657, guid: 94712b36e79767042bcf8108aec1a92b, type: 3}
   lSys:
     rules:
     - input: 111
       outputs:
-      - f[rt][lt]?
+      - f[rt][lt]o
       - f[rt][rt]?
       - f[lt][lt]?
+      - f[ft][lt]?
+      - f[ft][rt]?
     - input: 108
       outputs:
       - <f
@@ -1884,7 +1886,7 @@ MonoBehaviour:
   count: 10
   length: 40
   angles:
-  - 60
+  - 90
   timePerRoad: 0.0001
   timePerBuilding: 0.0001
 --- !u!4 &2109595311

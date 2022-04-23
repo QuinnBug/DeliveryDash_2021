@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 
 public class Road_Manager : Singleton<Road_Manager>
 {
-    public bool testGeneration = false;
+    public bool testConnections = false;
 
     public GameObject roadPrefab;
     [Space]
@@ -22,10 +22,77 @@ public class Road_Manager : Singleton<Road_Manager>
     List<Vector3> points = new List<Vector3>();
     internal List<Road> roads = new List<Road>();
 
+    bool initDone = false;
+    bool testRunning = false;
+
+    public void Update()
+    {
+        if (testConnections && initDone && !testRunning)
+        {
+            StartCoroutine(ConnectionTest());
+        }
+    }
+
+    private IEnumerator ConnectionTest()
+    {
+        float delay = 1;
+        testRunning = true;
+        Road currentRoad = roads[0];
+        RoadConnection connection = currentRoad.startConnectedRoads.Count > 0 ? RoadConnection.START : RoadConnection.END;
+        Road nextRoad = currentRoad.GetRandomConnected(connection);
+
+        Vector3 rayStart, rayEnd;
+
+        while(testConnections)
+        {
+            Debug.Log(currentRoad.gameObject.name + " -> " + nextRoad.gameObject.name + " @ " + connection.ToString());
+            rayStart = currentRoad.startPoint;
+            rayEnd = currentRoad.endPoint;
+
+            Debug.DrawLine(rayStart, rayEnd, Color.cyan, delay + 0.25f);
+
+            if (nextRoad.startConnectedRoads.Count > 0 && nextRoad.startConnectedRoads.Contains(currentRoad)) 
+            {
+                connection = RoadConnection.END;
+            }
+            else if(nextRoad.endConnectedRoads.Count > 0 && nextRoad.endConnectedRoads.Contains(currentRoad))
+            {
+                connection = RoadConnection.START;
+            }
+            else
+            {
+                Debug.Log("There's an error here");
+            }
+
+            switch (connection)
+            {
+                case RoadConnection.START:
+                    if (nextRoad.startConnectedRoads.Count == 0)
+                    {
+                        connection = RoadConnection.END;
+                    }
+                    break;
+                case RoadConnection.END:
+                    if (nextRoad.endConnectedRoads.Count == 0)
+                    {
+                        connection = RoadConnection.START;
+                    }
+                    break;
+            }
+
+            currentRoad = nextRoad;
+            nextRoad = currentRoad.GetRandomConnected(connection);
+
+            yield return new WaitForSeconds(delay);
+        }
+        testRunning = false;
+    }
+
     public void VisualizeSequence() 
     {
         lSys.GenerateSequence(count);
         StartCoroutine(DelayedInstructionExecution(lSys.finalString));
+        initDone = true;
     }
 
     public IEnumerator DelayedInstructionExecution(string sequence)
@@ -76,6 +143,7 @@ public class Road_Manager : Singleton<Road_Manager>
             yield return new WaitForSeconds(timePerRoad);
         }
         Debug.Log("Roads Done");
+        SetUpRoadConnections();
         StartCoroutine(GenerateBuildingsCoRoutine());
     }
 
@@ -102,6 +170,15 @@ public class Road_Manager : Singleton<Road_Manager>
         }
         Debug.Log("Buildings Done");
     }
+    void SetUpRoadConnections()
+    {
+        foreach (Road road in Road_Manager.Instance.roads)
+        {
+            road.SetupConnections();
+        }
+        Debug.Log("Connections Done");
+    }
+
 }
 
 [System.Serializable]

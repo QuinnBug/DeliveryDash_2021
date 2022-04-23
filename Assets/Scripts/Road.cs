@@ -2,6 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
+
+public enum RoadConnection 
+{
+    START,
+    END
+}
 
 public class Road : MonoBehaviour
 {
@@ -13,6 +20,8 @@ public class Road : MonoBehaviour
     private Mesh mesh;
     [Space]
     public Vector3[] vertices;
+    public List<Road> startConnectedRoads = new List<Road>();
+    public List<Road> endConnectedRoads = new List<Road>();
 
     public bool Init(Vector3 _start, Vector3 _end)
     {
@@ -115,6 +124,43 @@ public class Road : MonoBehaviour
         meshCollider.sharedMesh = mesh;
 
         return true;
+    }
+
+    internal Road GetRandomConnected(RoadConnection roadConnection)
+    {
+        switch (roadConnection)
+        {
+            case RoadConnection.START:
+                return startConnectedRoads[Random.Range(0, startConnectedRoads.Count)];
+
+            case RoadConnection.END:
+                return endConnectedRoads[Random.Range(0, endConnectedRoads.Count)];
+        }
+        return null;
+    }
+
+    public void SetupConnections() 
+    {
+        LayerMask mask = 1 << LayerMask.NameToLayer("Road");
+        Collider[] colliders = Physics.OverlapBox(startPoint, new Vector3(1, 50, 1), transform.rotation, mask);
+
+        foreach (Collider col in colliders)
+        {
+            if (col.gameObject != gameObject)
+            {
+                startConnectedRoads.Add(col.GetComponent<Road>());
+            }
+        }
+
+        colliders = Physics.OverlapBox(endPoint, new Vector3(1,50,1), transform.rotation, mask);
+
+        foreach (Collider col in colliders)
+        {
+            if (col.gameObject != gameObject)
+            {
+                endConnectedRoads.Add(col.GetComponent<Road>());
+            }
+        }
     }
 
     internal Vector3 GetMeshCenter()
