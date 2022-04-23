@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.4482475, g: 0.49827462, b: 0.57558316, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0.99999946, b: 0.99999946, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -536,7 +536,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blend: -0.0001
-  color: {r: 1, g: 0.8, b: 0.25, a: 1}
+  color: {r: 1, g: 0.7329843, b: 0, a: 1}
   attrs: {x: 0, y: 0, z: 0, w: 0}
   attrs2: {x: 0, y: 0, z: 0, w: 0}
   primitiveType: 6
@@ -546,34 +546,6 @@ MonoBehaviour:
   clayObjectId: 5
   numSolids: 1
   splineSubdiv: 3
---- !u!21 &682360310
-Material:
-  serializedVersion: 6
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Clayxels/ClayxelURPShaderSmoothMeshASE
-  m_Shader: {fileID: 4800000, guid: b62bdcab2d2338546b6a8a1711378f86, type: 3}
-  m_ShaderKeywords: 
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Floats:
-    - _AlphaCutoff: 0.5
-    - _Metallic1: 0
-    - _Smoothness1: 0
-    - _emissionPower1: 0
-    m_Colors:
-    - _Emission1: {r: 0, g: 0, b: 0, a: 0}
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -667,6 +639,34 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 45, y: 90, z: 90}
+--- !u!21 &747953235
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Clayxels/ClayxelURPShaderSmoothMeshASE
+  m_Shader: {fileID: 4800000, guid: b62bdcab2d2338546b6a8a1711378f86, type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Metallic1: 0
+    - _Smoothness1: 0
+    - _emissionPower1: 0
+    m_Colors:
+    - _Emission1: {r: 0, g: 0, b: 0, a: 0}
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!1 &817083380
 GameObject:
   m_ObjectHideFlags: 0
@@ -1122,7 +1122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blend: -0.0001
-  color: {r: 1, g: 0.8, b: 0.25, a: 1}
+  color: {r: 1, g: 0.7329843, b: 0, a: 1}
   attrs: {x: 0, y: 0, z: 0, w: 0}
   attrs2: {x: 0, y: 0, z: 0, w: 0}
   primitiveType: 0
@@ -1323,8 +1323,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blend: 0
-  color: {r: 1, g: 0.8, b: 0.25, a: 1}
-  attrs: {x: 0.19999999, y: 0, z: 0, w: 0}
+  color: {r: 1, g: 0.7329843, b: 0, a: 1}
+  attrs: {x: 0.19999997, y: 0, z: 0, w: 0}
   attrs2: {x: 0, y: 0, z: 0, w: 0}
   primitiveType: 0
   mode: 0
@@ -1445,8 +1445,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74b84fd77542cc049aeaf1cfa9ec46ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 50
-  turnSpeed: 5
+  moveSpeed: 25
+  turnSpeed: 3
 --- !u!114 &1264828378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1647,7 +1647,7 @@ MonoBehaviour:
   chunksX: 1
   chunksY: 1
   chunksZ: 1
-  material: {fileID: 682360310}
+  material: {fileID: 747953235}
   castShadows: 1
   receiveShadows: 1
   storeAssetPath: ClayxelContainer
@@ -1881,7 +1881,7 @@ MonoBehaviour:
     axiom: o
     finalString: 
     randomRuleOutput: 1
-  count: 8
+  count: 10
   length: 40
   angles:
   - 60
@@ -1913,7 +1913,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30e306ec73375c46986ceb770f33382, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buildingCountRange: {x: 3, y: 6}
+  buildingCountRange: {x: 6, y: 10}
   buildingDepth: 5
   materials:
   - {fileID: 2100000, guid: 4aa4884cfb1bea048b064db87c776d98, type: 2}

@@ -79,6 +79,9 @@ public class Building_Manager : Singleton<Building_Manager>
 
     void GenerateBaseMesh(float road_x, float front, float back, float high, float low, Road parent, Direction direction) 
     {
+        bool doMerge = false;
+        List<GameObject> mergeObjects = null;
+
         //set up right, left from side of road
         float right = 0, left = 0;
         switch (direction)
@@ -94,26 +97,62 @@ public class Building_Manager : Singleton<Building_Manager>
         }
 
 
-        //run a check to make sure that the building doesn't overlap a road
-        Vector3 meshBottomLeft, meshTopRight;
-        meshBottomLeft = parent.transform.TransformPoint(new Vector3(left, low, front));
-        meshTopRight = parent.transform.TransformPoint(new Vector3(right, high, back));
-        Vector3 meshCenter = Vector3.Lerp(meshBottomLeft, meshTopRight, 0.5f);
-        Collider[] colliders = Physics.OverlapBox(meshCenter, (new Vector3(right - left, 15, front - back)/2.15f), parent.transform.rotation);
-        
-        foreach (Collider col in colliders)
+        //run a check to make sure that the building doesn't overlap things
+        GameObject[] colliders;
+        bool redo = true;
+        int loopCounter = 0;
+        while (redo)
         {
-            if (col.tag == "Road" && col.gameObject != parent.gameObject)
+            Debug.Log(loopCounter + " loop");
+            colliders = CheckCollisions(right, left, front, back, high, low, parent);
+            redo = false;
+            foreach (GameObject col in colliders)
             {
-                //Don't Make building
-                return;
+                if (col.tag == "Road" && col.gameObject != parent.gameObject)
+                {
+                    //Don't Make building or make the building shrink away from the road? will consider
+                    Road colRoad = col.GetComponent<Road>();
+
+                    if (Vector3.Distance(colRoad.GetMeshCenter(), new Vector3(left, low, front)) >
+                        Vector3.Distance(colRoad.GetMeshCenter(), new Vector3(left, low, back)))
+                    {
+                        back += Mathf.Abs(front - back) * 0.01f;
+                    }
+                    else
+                    {
+                        front -= Mathf.Abs(front - back) * 0.01f;
+                    }
+                    redo = true;
+                }
+
+                if (col.tag == "Building")
+                {
+                    high += 0.05f;
+                    //left += 0.001f;
+                    //right -= 0.001f;
+
+                    //make the merging work
+
+                    //if (doMerge == false)
+                    //{
+                    //    doMerge = true;
+                    //    mergeObjects = new List<GameObject>();
+                    //}
+
+                    //if (mergeObjects != null)
+                    //{
+                    //    mergeObjects.Add(col.gameObject);
+                    //}
+                    //return;
+                }
             }
 
-            if (col.tag == "Building")
+            if (loopCounter > 100)
             {
-                //Set a flag to merge the meshes together?
+                redo = false;
                 return;
             }
+            loopCounter++;
         }
 
         high += 1;
@@ -161,16 +200,61 @@ public class Building_Manager : Singleton<Building_Manager>
         Mesh mesh = new Mesh();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
+        
+        if (doMerge)
+        {
+            go.name += " with merge";
+            Debug.Log("Merge Time " + parent.name);
+            List<CombineInstance> combines = new List<CombineInstance>();
+            foreach (GameObject item in mergeObjects)
+            {
+                Mesh otherMesh = item.GetComponent<MeshFilter>().mesh;
+                CombineInstance ci = new CombineInstance();
+                ci.mesh = otherMesh;
+                //ci.transform = item.transform.localToWorldMatrix;
+                combines.Add(ci);
+                item.name = "merged to other";
+                item.SetActive(false);
+            }
+            mesh.CombineMeshes(combines.ToArray(), true);
+        }
+
         mesh.RecalculateNormals();
         mesh.RecalculateTangents();
         mesh.RecalculateBounds();
 
         filter.sharedMesh = mesh;
         collider.sharedMesh = mesh;
-        //rend.material = materials[Random.Range(0, materials.Length)];
         rend.material = materials[1];
+        //rend.material = materials[Random.Range(0, materials.Length)];
 
         //Add Building Script
+    }
+
+    GameObject[] CheckCollisions(float right, float left, float front, float back, float high, float low, Road parent) 
+    {
+        List<GameObject> gameObjects = new List<GameObject>();
+
+        Vector3 meshBottomLeft, meshTopRight;
+        meshBottomLeft = parent.transform.TransformPoint(new Vector3(left, low, front));
+        meshTopRight = parent.transform.TransformPoint(new Vector3(right, high, back));
+        Vector3 meshCenter = Vector3.Lerp(meshBottomLeft, meshTopRight, 0.5f);
+        Collider[] colliders = Physics.OverlapBox(meshCenter, (new Vector3(right - left, 15, front - back) / 2.15f), parent.transform.rotation);
+
+        foreach (Collider col in colliders)
+        {
+            if (col.tag == "Road" && col.gameObject != parent.gameObject)
+            {
+                gameObjects.Add(col.gameObject);
+            }
+            else if (col.tag == "Building")
+            {
+                gameObjects.Add(col.gameObject);
+            }
+        }
+
+
+        return gameObjects.ToArray();
     }
 
     //void GenerateSpaceMesh(Vector3 _pos) 

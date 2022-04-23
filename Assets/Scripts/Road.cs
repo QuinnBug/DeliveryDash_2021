@@ -117,11 +117,10 @@ public class Road : MonoBehaviour
         return true;
     }
 
-    internal Vector3 GetLocalPositionFromMesh(Vector3 offsetDirection)
+    internal Vector3 GetMeshCenter()
     {
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
-        //Vector3 center = transform.position;
-        center += transform.InverseTransformDirection(offsetDirection) * width;
+        Debug.DrawLine(center + Vector3.up, center - Vector3.up);
         return center;
     }
 }
