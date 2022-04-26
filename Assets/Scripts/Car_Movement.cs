@@ -10,19 +10,33 @@ public class Car_Movement : MonoBehaviour
 
     private SuspensionSystem suspension;
 
-    Rigidbody rb;
+    internal Rigidbody rb;
     Vector3 movementInput;
+    bool active = false;
 
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         suspension = GetComponent<SuspensionSystem>();
+        Event_Manager.Instance._OnBuildingsGenerated.AddListener(Activate);
+    }
+
+    public void Activate() 
+    {
+        if (rb != null) 
+        {
+            rb.useGravity = true;
+        }
+
+        active = true;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!active) return;
+
         if (movementInput.sqrMagnitude >= 0.1f) 
         {
             Movement();

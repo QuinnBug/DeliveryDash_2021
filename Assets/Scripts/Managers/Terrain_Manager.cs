@@ -13,6 +13,17 @@ public class Terrain_Manager : Singleton<Terrain_Manager>
     private Vector2 randomOffset;
     private List<TerrainTile> tiles = new List<TerrainTile>();
     public Vector2 terrainSize;
+    public float timePerTile = 0.0001f;
+
+    public void Start()
+    {
+        Event_Manager.Instance._OnGameStart.AddListener(CreateTerrain);
+    }
+
+    public void CreateTerrain() 
+    {
+        StartCoroutine(TerrainCoroutine());
+    }
 
     void GenerateTile(Vector2Int _position) 
     {
@@ -29,7 +40,7 @@ public class Terrain_Manager : Singleton<Terrain_Manager>
         tiles.Add(tile);
     }
 
-    private void Start()
+    private IEnumerator TerrainCoroutine()
     {
         randomOffset = Random.insideUnitCircle * Random.Range(0.0f, 99999.0f);
         for (int x = 0; x < terrainSize.x; x++)
@@ -37,10 +48,11 @@ public class Terrain_Manager : Singleton<Terrain_Manager>
             for (int y = 0; y < terrainSize.y; y++)
             {
                 GenerateTile(new Vector2Int(x,y));
+                yield return new WaitForSeconds(timePerTile);
             }
         }
 
-        Road_Manager.Instance.VisualizeSequence();
+        Event_Manager.Instance._OnTerrainGenerated.Invoke();
     }
 
     

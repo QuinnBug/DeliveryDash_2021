@@ -75,7 +75,7 @@ public class SuspensionSystem : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        rb = transform.root.GetComponent<Rigidbody>();
+        rb = transform.GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -113,7 +113,7 @@ public class SuspensionSystem : MonoBehaviour
             wheel.settings = baseSettings;
             wheel.UpdatePosition(transform);
 
-            Gizmos.color = Color.red;
+            Gizmos.color = Color.yellow;
             Gizmos.DrawSphere(wheel.position, wheel.settings.wheelRadius);
             if (wheel.grounded) 
             {

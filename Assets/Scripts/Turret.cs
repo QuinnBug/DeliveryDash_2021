@@ -11,6 +11,7 @@ public class Turret : MonoBehaviour
     public float projectileForcePower;
 
     Transform parent;
+    Rigidbody rb;
 
     Vector3 aimingInput;
 
@@ -20,6 +21,7 @@ public class Turret : MonoBehaviour
     void Start()
     {
         parent = transform.parent;
+        rb = GetComponentInParent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -47,7 +49,8 @@ public class Turret : MonoBehaviour
             Rigidbody proj_rb;
             if (proj.TryGetComponent(out proj_rb))
             {
-                proj_rb.AddForce(transform.TransformDirection(projectileForceDirection) * projectileForcePower);
+                Vector3 force = transform.TransformDirection(projectileForceDirection) * projectileForcePower;
+                proj_rb.AddForce(force);
             }
             Destroy(proj, 10);
         }

@@ -17,13 +17,18 @@ public class Road_Manager : Singleton<Road_Manager>
     public float[] angles;
     //public float[] lengths;
     public float timePerRoad;
-    public float timePerBuilding;
+
 
     List<Vector3> points = new List<Vector3>();
     internal List<Road> roads = new List<Road>();
 
     bool initDone = false;
     bool testRunning = false;
+
+    public void Start()
+    {
+        Event_Manager.Instance._OnTerrainGenerated.AddListener(VisualizeSequence);
+    }
 
     public void Update()
     {
@@ -49,7 +54,7 @@ public class Road_Manager : Singleton<Road_Manager>
             rayStart = currentRoad.startPoint;
             rayEnd = currentRoad.endPoint;
 
-            Debug.DrawLine(rayStart, rayEnd, Color.cyan, delay + 0.25f);
+            Debug.DrawLine(rayStart, rayEnd, Color.cyan, delay + 600);
 
             if (nextRoad.startConnectedRoads.Count > 0 && nextRoad.startConnectedRoads.Contains(currentRoad)) 
             {
@@ -91,11 +96,11 @@ public class Road_Manager : Singleton<Road_Manager>
     public void VisualizeSequence() 
     {
         lSys.GenerateSequence(count);
-        StartCoroutine(DelayedInstructionExecution(lSys.finalString));
+        StartCoroutine(CreateRoadsCoroutine(lSys.finalString));
         initDone = true;
     }
 
-    public IEnumerator DelayedInstructionExecution(string sequence)
+    public IEnumerator CreateRoadsCoroutine(string sequence)
     {
         int roadCount = 0;
         Stack<LAgent> savePoints = new Stack<LAgent>();
@@ -142,9 +147,10 @@ public class Road_Manager : Singleton<Road_Manager>
             }
             yield return new WaitForSeconds(timePerRoad);
         }
-        Debug.Log("Roads Done");
         SetUpRoadConnections();
-        StartCoroutine(GenerateBuildingsCoRoutine());
+
+        Debug.Log("Roads Done");
+        Event_Manager.Instance._OnRoadsGenerated.Invoke();
     }
 
     private void CreateRoad(Vector3 start, Vector3 end, int num)
@@ -161,22 +167,13 @@ public class Road_Manager : Singleton<Road_Manager>
         Destroy(road.gameObject, 0.01f);
     }
 
-    IEnumerator GenerateBuildingsCoRoutine()
-    {
-        foreach (Road road in Road_Manager.Instance.roads)
-        {
-            Building_Manager.Instance.PopulateRoad(road);
-            yield return new WaitForSeconds(timePerBuilding);
-        }
-        Debug.Log("Buildings Done");
-    }
+    
     void SetUpRoadConnections()
     {
         foreach (Road road in Road_Manager.Instance.roads)
         {
             road.SetupConnections();
         }
-        Debug.Log("Connections Done");
     }
 
 }

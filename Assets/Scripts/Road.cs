@@ -6,8 +6,9 @@ using Random = UnityEngine.Random;
 
 public enum RoadConnection 
 {
-    START,
-    END
+    NULL = -1,
+    START = 0,
+    END = 1
 }
 
 public class Road : MonoBehaviour
@@ -33,7 +34,9 @@ public class Road : MonoBehaviour
     public bool GenerateMesh() 
     {
         LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground");
+        Vector3 oStart = startPoint;
         startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/4);
+        Vector3 oEnd = endPoint;
         endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/4);
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
 
@@ -123,7 +126,28 @@ public class Road : MonoBehaviour
         MeshCollider meshCollider = gameObject.GetComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
 
+        startPoint = oStart;
+        endPoint = oEnd;
+
         return true;
+    }
+
+    internal RoadConnection GetConnectionToRoad(Road otherRoad) 
+    {
+        if (endConnectedRoads.Contains(otherRoad))
+        {
+            return RoadConnection.END;
+        }
+        else if (startConnectedRoads.Contains(otherRoad))
+        {
+            return RoadConnection.START;
+        }
+        else
+        {
+            Debug.LogError("Road not connected to other road");
+            return RoadConnection.NULL;
+        }
+
     }
 
     internal Road GetRandomConnected(RoadConnection roadConnection)

@@ -11,14 +11,39 @@ public class Building_Manager : Singleton<Building_Manager>
     public Vector2Int buildingCountRange;
     public float buildingDepth = 5;
     public Material[] materials;
+    [Space]
+    public float timePerBuilding;
 
-    public List<GameObject> buildings;
+    internal List<Building> buildings = new List<Building>();
+
+    public void Start()
+    {
+        Event_Manager.Instance._OnRoadsGenerated.AddListener(CreateBuildings);
+    }
+
+    public void CreateBuildings() 
+    {
+        StartCoroutine(GenerateBuildingsCoRoutine());
+    }
+
+    internal Building GetRandomBuilding()
+    {
+        return buildings[Random.Range(0, buildings.Count)];
+    }
+
+    IEnumerator GenerateBuildingsCoRoutine()
+    {
+        foreach (Road road in Road_Manager.Instance.roads)
+        {
+            Building_Manager.Instance.PopulateRoad(road);
+            yield return new WaitForSeconds(timePerBuilding);
+        }
+        Debug.Log("Buildings Done");
+        Event_Manager.Instance._OnBuildingsGenerated.Invoke();
+    }
 
     public void PopulateRoad(Road road) 
     {
-        //GenerateSpaceMesh(Vector3.Lerp(road.startPoint, road.endPoint, 0.5f) + (road.transform.right * road.width));
-        //GenerateSpaceMesh(Vector3.Lerp(road.startPoint, road.endPoint, 0.5f) + (road.transform.right * -road.width));
-
         float right = -99999, left = 99999, front = -99999, back = 99999, low = 99999, high = -99999;
 
         foreach (Vector3 vertex in road.vertices)
@@ -66,12 +91,10 @@ public class Building_Manager : Singleton<Building_Manager>
         }
         else if(tempFront < tempBack)
         {
-            Debug.Log("???");
             return new Vector2(tempBack, tempFront);
         }
         else
         {
-            Debug.Log("??? this is real bad");
             return new Vector2(tempFront + 1, tempBack - 1);
         }
         
@@ -127,10 +150,6 @@ public class Building_Manager : Singleton<Building_Manager>
 
                 if (col.tag == "Building")
                 {
-                    high += 0.05f;
-                    //left += 0.001f;
-                    //right -= 0.001f;
-
                     //make the merging work
 
                     //if (doMerge == false)
@@ -143,11 +162,11 @@ public class Building_Manager : Singleton<Building_Manager>
                     //{
                     //    mergeObjects.Add(col.gameObject);
                     //}
-                    //return;
+                    return;
                 }
             }
 
-            if (loopCounter > 100)
+            if (loopCounter > 50)
             {
                 redo = false;
                 return;
@@ -155,9 +174,8 @@ public class Building_Manager : Singleton<Building_Manager>
             loopCounter++;
         }
 
-        high += 1;
-
-        //Debug.Log(parent.name + " = " + right + " > " + left + " ~~ " + high + " > " + low + " ~~ " + front + " > " + back);
+        high += Random.Range(0.5f, 7.5f);
+        low -= 5;
 
         // create vertices and triangles
         Vector3[] vertices = {
@@ -201,6 +219,7 @@ public class Building_Manager : Singleton<Building_Manager>
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         
+        //need to make merging work at some point
         if (doMerge)
         {
             go.name += " with merge";
@@ -211,7 +230,6 @@ public class Building_Manager : Singleton<Building_Manager>
                 Mesh otherMesh = item.GetComponent<MeshFilter>().mesh;
                 CombineInstance ci = new CombineInstance();
                 ci.mesh = otherMesh;
-                //ci.transform = item.transform.localToWorldMatrix;
                 combines.Add(ci);
                 item.name = "merged to other";
                 item.SetActive(false);
@@ -225,10 +243,16 @@ public class Building_Manager : Singleton<Building_Manager>
 
         filter.sharedMesh = mesh;
         collider.sharedMesh = mesh;
-        rend.material = materials[1];
-        //rend.material = materials[Random.Range(0, materials.Length)];
+        rend.material = materials[Random.Range(0, materials.Length)];
 
         //Add Building Script
+        Building b = go.AddComponent<Building>();
+        b.road = parent;
+        b.topRight = go.transform.TransformPoint(new Vector3(right, high, front));
+        b.bottomLeft = go.transform.TransformPoint(new Vector3(left, low, back));
+        b.roadSide = direction;
+        buildings.Add(b);
+
     }
 
     GameObject[] CheckCollisions(float right, float left, float front, float back, float high, float low, Road parent) 
@@ -256,100 +280,6 @@ public class Building_Manager : Singleton<Building_Manager>
 
         return gameObjects.ToArray();
     }
-
-    //void GenerateSpaceMesh(Vector3 _pos) 
-    //{
-
-    //    LayerMask mask = 1 << LayerMask.NameToLayer("Road");
-    //    HashSet<Vector3> corners = new HashSet<Vector3>();
-
-    //    Vector3 initialContact = Vector3.zero;
-    //    Vector3 nextDirection = Vector3.zero;
-    //    Quaternion nextRotation = Quaternion.identity;
-
-    //    //Debug.DrawRay(_pos, omniDirections[0] * 60, Color.red, 10);
-
-    //    RaycastHit hit;
-    //    if (Physics.BoxCast(_pos, new Vector3(0.025f, 60, 0.025f), omniDirections[0], out hit, Quaternion.identity, 100, mask))
-    //    {
-    //        initialContact = hit.point;
-    //        nextDirection = GetNextDirection(_pos, initialContact, hit.collider.transform);
-    //        nextRotation = hit.collider.transform.rotation;
-    //        Debug.DrawLine(_pos, hit.point, Color.yellow, 60);
-    //    }
-    //    else
-    //    {
-    //        Debug.Log("no initial point");
-    //        return;
-    //    }
-
-    //    Vector3 nextPosition = initialContact;
-
-    //    for (int i = 0; i < 8; i++)
-    //    {
-            
-    //        if (Physics.BoxCast(nextPosition, new Vector3(0.0001f, 60, 0.0001f), nextDirection, out hit, nextRotation, 100, mask))
-    //        {
-    //            Debug.DrawLine(nextPosition + Vector3.up, hit.point + Vector3.up, Color.blue, 60);
-
-    //            nextDirection = GetNextDirection(nextPosition, hit.point, hit.collider.transform);
-    //            nextPosition = hit.point;
-
-    //            corners.Add(nextPosition);
-    //        }
-    //        else
-    //        {
-    //            Debug.Log("Failed " + i.ToString());
-    //            Debug.DrawRay(nextPosition + Vector3.up, nextDirection * 60, Color.red, 10);
-    //            return;
-    //        }
-    //    }
-
-    //    Debug.Log(corners.Count);
-
-    //    #region old
-    //    //List<Vector3> initialContactPoints = new List<Vector3>();
-
-    //    //foreach (Vector3 _dir in omniDirections)
-    //    //{
-    //    //    RaycastHit hit;
-    //    //    if (Physics.BoxCast(_pos, new Vector3(0.05f, 10, 0.05f), _dir, out hit, Quaternion.identity, 25, mask))
-    //    //    {
-    //    //        initialContactPoints.Add(hit.point);
-    //    //    }
-    //    //}
-
-    //    //if (initialContactPoints.Count < 4)
-    //    //{
-    //    //    Debug.Log("Not enough contact points");
-    //    //    return;
-    //    //}
-
-    //    //foreach (Vector3 point in initialContactPoints)
-    //    //{
-
-    //    //}
-    //    #endregion
-    //}
-
-    //Vector3 GetNextDirection(Vector3 _start, Vector3 _end, Transform hitTransform) 
-    //{
-    //    Vector3 dir = Vector3.right;
-
-    //    _start.y = 0;
-    //    _end.y = 0;
-
-    //    Vector3 rightDir = _start - _end;
-    //    rightDir = Quaternion.Euler(0, 90, 0) * dir;
-
-    //    float angleF = Vector3.Angle(hitTransform.forward, rightDir);
-    //    float angleB = Vector3.Angle(hitTransform.forward * -1, rightDir);
-
-    //    Debug.Log(angleF + " : " + angleB);
-
-    //    return angleF > angleB ? hitTransform.forward : hitTransform.forward*-1;
-
-    //}
 
     GameObject MakeGoWithMesh(Vector3 backLeft, Vector3 backRight, Vector3 frontLeft, Vector3 frontRight) 
     {
@@ -399,10 +329,10 @@ public class Building_Manager : Singleton<Building_Manager>
 
         return go;
     }
+}
 
-    public enum Direction 
-    {
-        RIGHT,
-        LEFT
-    }
+public enum Direction
+{
+    RIGHT,
+    LEFT
 }
