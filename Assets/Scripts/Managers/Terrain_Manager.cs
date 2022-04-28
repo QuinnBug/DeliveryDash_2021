@@ -18,6 +18,7 @@ public class Terrain_Manager : Singleton<Terrain_Manager>
     public void Start()
     {
         Event_Manager.Instance._OnGameStart.AddListener(CreateTerrain);
+        //CreateTerrain();
     }
 
     public void CreateTerrain() 

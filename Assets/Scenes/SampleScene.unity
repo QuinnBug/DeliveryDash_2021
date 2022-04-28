@@ -1021,8 +1021,8 @@ MonoBehaviour:
   count: 5
   length: 50
   angles:
-  - 60
-  timePerRoad: 2
+  - 90
+  timePerRoad: 0.25
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0
