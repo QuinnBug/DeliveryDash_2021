@@ -12,11 +12,13 @@ public class Building : MonoBehaviour
     public Vector3 bottomLeft, topRight;
     public Direction roadSide;
     Vector3 deliveryCenter;
+    public Vector3 meshCenter;
     Vector3 extents;
 
     public void Start()
     {
-        deliveryCenter = Vector3.Lerp(bottomLeft, topRight, 0.5f) + (transform.right * (roadSide == Direction.RIGHT ? -1 : 1) * Building_Manager.Instance.buildingDepth);
+        meshCenter = Vector3.Lerp(bottomLeft, topRight, 0.5f);
+        deliveryCenter = meshCenter + (transform.right * (roadSide == Direction.RIGHT ? -1 : 1) * Building_Manager.Instance.buildingDepth);
         extents = topRight - bottomLeft;
 
         rend = GetComponent<Renderer>();

@@ -19,22 +19,14 @@ public class Car_Movement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         suspension = GetComponent<SuspensionSystem>();
-        Event_Manager.Instance._OnBuildingsGenerated.AddListener(Activate);
-    }
-
-    public void Activate() 
-    {
-        if (rb != null) 
-        {
-            rb.useGravity = true;
-        }
-
-        active = true;
     }
 
     // Update is called once per frame
     void Update()
     {
+        active = Player_Manager.Instance.active;
+        rb.useGravity = active;
+
         if (!active) return;
 
         if (movementInput.sqrMagnitude >= 0.1f) 

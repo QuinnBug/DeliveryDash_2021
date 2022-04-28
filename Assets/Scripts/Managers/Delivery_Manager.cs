@@ -5,7 +5,7 @@ using UnityEngine;
 public class Delivery_Manager : Singleton<Delivery_Manager>
 {
     bool active = false;
-    List<Building> targets = new List<Building>();
+    public List<Building> targets = new List<Building>();
 
     public int deliveryCounts;
     public int deliveriesCompleted;
@@ -13,7 +13,7 @@ public class Delivery_Manager : Singleton<Delivery_Manager>
 
     void Start()
     {
-        Event_Manager.Instance._OnBuildingsGenerated.AddListener(AssignDeliveries);
+        Event_Manager.Instance._OnBuildingsGenerated.AddListener(AssignDelivery);
         Event_Manager.Instance._DeliveryMade.AddListener(ConfirmDelivery);
     }
 
@@ -30,6 +30,7 @@ public class Delivery_Manager : Singleton<Delivery_Manager>
         if (targets.Contains(building))
         {
             deliveriesCompleted++;
+            AssignDelivery();
             targets.Remove(building);
         }
     }
@@ -38,7 +39,7 @@ public class Delivery_Manager : Singleton<Delivery_Manager>
     {
         if (state && !active)
         {
-            AssignDeliveries();
+            AssignDelivery();
         }
         else if (!state && active)
         {
@@ -47,28 +48,25 @@ public class Delivery_Manager : Singleton<Delivery_Manager>
         active = state;
     }
 
-    void AssignDeliveries() 
+    void AssignDelivery() 
     {
-        for (int i = 0; i < deliveryCounts; i++)
+        bool loop = true;
+        Building newTarget = null;
+        while (loop)
         {
-            bool loop = true;
-            Building newTarget = null;
-            while (loop)
-            {
-                loop = false;
-                newTarget = Building_Manager.Instance.GetRandomBuilding();
+            loop = false;
+            newTarget = Building_Manager.Instance.GetRandomBuilding();
 
-                foreach (Building item in targets)
+            foreach (Building item in targets)
+            {
+                if (item.IsSameRoad(newTarget))
                 {
-                    if (item.IsSameRoad(newTarget))
-                    {
-                        loop = true;
-                        break;
-                    }
+                    loop = true;
+                    break;
                 }
             }
-            newTarget.SetAsTarget();
-            targets.Add(newTarget);
         }
+        newTarget.SetAsTarget();
+        targets.Add(newTarget);
     }
 }

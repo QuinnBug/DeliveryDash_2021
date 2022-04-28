@@ -34,13 +34,17 @@ public class Road : MonoBehaviour
     public bool GenerateMesh() 
     {
         LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground");
-        Vector3 oStart = startPoint;
-        startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/4);
-        Vector3 oEnd = endPoint;
-        endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/4);
-        Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
+        groundLayer |= 1 << LayerMask.NameToLayer("Road");
+        transform.position = startPoint;
+        transform.LookAt(endPoint, Vector3.up);
 
+        Vector3 oStart = startPoint;
+        //startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/4);
+        Vector3 oEnd = endPoint;
+        //endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/4);
+        Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
         length = Vector3.Distance(endPoint, startPoint);
+
         Collider[] colliders = Physics.OverlapBox(center, new Vector3(1, 25, 1));
         if (colliders.Length > 0)
         {
@@ -56,9 +60,6 @@ public class Road : MonoBehaviour
         }
 
         mesh = new Mesh();
-        transform.position = startPoint;
-        transform.LookAt(endPoint, Vector3.up);
-
 
         #region vertices region
         vertices = new Vector3[(vertexWidth + 1) * (vertexCount + 1)];
@@ -67,7 +68,8 @@ public class Road : MonoBehaviour
         Vector2[] uv = new Vector2[vertices.Length];
         float previousSegmentsY = transform.position.y;
         float lastY = transform.position.y;
-        for (int i = 0, z = 0; z <= vertexCount; z++)
+        int i = 0;
+        for (float z = 0; z <= vertexCount; z++)
         {
             Vector3 flatVertexPos = Vector3.zero;
             Vector3 vertexPos = Vector3.zero;
@@ -76,20 +78,38 @@ public class Road : MonoBehaviour
                 flatVertexPos = new Vector3(x * (width / vertexWidth), 0, z * (length / vertexCount));
                 vertexPos = flatVertexPos;
                 vertexPos.y = lastY;
-                RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPos), Vector3.down, 100, groundLayer);
-                //Debug.DrawRay(transform.TransformPoint(flatVertexPos), Vector3.down * 30, Color.red, 10);
-                foreach (RaycastHit hit in hits)
+                bool loop = true;
+                int k = 0;
+                while (loop && k < 10)
                 {
-                    if (hit.collider.gameObject.tag == "Terrain")
+                    loop = false;
+                    RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPos), Vector3.down, 100, groundLayer);
+                    foreach (RaycastHit hit in hits)
                     {
-                        vertexPos.y = transform.InverseTransformPoint(hit.point).y + 0.2f;
-                        lastY = vertexPos.y; 
-                        //vertexPos.y = hit.point.y;
-                        break;
+                        if (hit.collider.gameObject.tag == "Terrain")
+                        {
+                            vertexPos.y = transform.InverseTransformPoint(hit.point).y + 0.2f;
+                            lastY = vertexPos.y; 
+                        }
+                        else if (hit.collider.gameObject.tag == "Road")
+                        {
+                            Vector3 adjustedCenter = new Vector3(vertexPos.x, hit.point.y, (length/vertexCount) * vertexCount/2);
+
+                            Debug.DrawLine(transform.TransformPoint(vertexPos), transform.TransformPoint(adjustedCenter), Color.red, 10);
+
+                            //vertexPos = Vector3.Lerp(vertexPos, adjustedCenter, 0.01f);
+                            //flatVertexPos = vertexPos;
+                            //flatVertexPos.y = 0;
+                            //loop = true;
+                        }
                     }
+                    k++;
                 }
+
                 vertices[i] = vertexPos;
-                uv[i] = new Vector2((float)x / (width/vertexWidth), (float)z / (length / vertexCount));
+                uv[i] = new Vector2((x + (vertexWidth/2.0f)) / vertexWidth, z / vertexCount);
+
+                //Debug.Log(z + " : " + x + " : " + uv[i]);
                 tangents[i] = tangent;
             }
         }
