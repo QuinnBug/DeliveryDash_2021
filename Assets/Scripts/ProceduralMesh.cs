@@ -1,16 +1,39 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace QuinnMeshes 
 {
-    public struct Triangle
+    public class Triangle
     {
         public Vertex[] vertices;
 
-        public Triangle(Vertex[] _v) 
+        internal bool CheckCollision(LayerMask layer, Transform _tf)
         {
-            vertices = _v;
+            foreach (Vertex v in vertices)
+            {
+                foreach (Vertex o in vertices)
+                {
+                    if (v.position != o.position)
+                    {
+                        Vector3 posOne = _tf.TransformPoint(v.position);
+                        Vector3 posTwo = _tf.TransformPoint(o.position);
+                        RaycastHit hit;
+                        if (Physics.Raycast(posOne, posOne - posTwo, out hit, Vector3.Distance(posOne, posTwo), layer))
+                        {
+                            Debug.DrawLine(posOne, posTwo, Color.red, 60);
+                            return false;
+                        }
+                        else
+                        {
+                            Debug.DrawLine(posOne, posTwo, Color.blue, 60);
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
     }
 
@@ -18,11 +41,17 @@ namespace QuinnMeshes
     {
         public Vector3 position;
         public Vector2 uv;
+
+        public Vertex(Vector3 _pos, Vector2 _uv) 
+        {
+            position = _pos;
+            uv = _uv;
+        }
     }
 
     public class qMesh 
     {
-        List<Triangle> triangles;
+        public List<Triangle> triangles = new List<Triangle>();
 
         public Mesh ConvertToMesh() 
         {

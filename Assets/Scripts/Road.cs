@@ -22,8 +22,9 @@ public class Road : MonoBehaviour
     private Mesh mesh;
     private qMesh qMesh;
     [Space]
-    public Vector3[] vertices;
-    public Vector3[] points;
+    internal Vector3[] vertices;
+    internal Vertex[][] points;
+
     public List<Road> startConnectedRoads = new List<Road>();
     public List<Road> endConnectedRoads = new List<Road>();
 
@@ -63,65 +64,74 @@ public class Road : MonoBehaviour
 
         qMesh = new qMesh();
 
-        #region vertices region
-        vertices = new Vector3[(vertexWidth + 1) * (vertexCount + 1)];
-        Vector4[] tangents = new Vector4[vertices.Length];
-        Vector4 tangent = new Vector4(1f, 0f, 0f, -1f);
-        Vector2[] uv = new Vector2[vertices.Length];
-        float previousSegmentsY = transform.position.y;
-        float lastY = transform.position.y;
-        int i = 0;
-        for (float z = 0; z <= vertexCount; z++)
+        #region set up vertices
+        points = new Vertex[vertexWidth+1][];
+        for (float x = 0; x <= vertexWidth; x++)
         {
-            Vector3 flatVertexPos = Vector3.zero;
-            Vector3 vertexPos = Vector3.zero;
-            for (float x = -vertexWidth/2.0f; x <= vertexWidth/2.0f; x++, i++)
+            points[(int)x] = new Vertex[vertexCount+1];
+            for (float z = 0; z <= vertexCount; z++) 
             {
-                flatVertexPos = new Vector3(x * (width / vertexWidth), 0, z * (length / vertexCount));
-                vertexPos = flatVertexPos;
-                vertexPos.y = lastY;
+                bool loop = true;
+                Vector3 flatVertexPoint = new Vector3(x * (width / vertexWidth), 0, z * (length / vertexCount));
+                Vector3 vertexPoint = flatVertexPoint;
 
-                RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPos), Vector3.down, 100, groundLayer);
-                foreach (RaycastHit hit in hits)
+                while (loop)
                 {
-                    if (hit.collider.gameObject.tag == "Terrain")
+                    loop = false;
+                    flatVertexPoint = vertexPoint;
+                    flatVertexPoint.y = 0;
+                    RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPoint), Vector3.down, 100, groundLayer);
+                    foreach (RaycastHit hit in hits)
                     {
-                        vertexPos.y = transform.InverseTransformPoint(hit.point).y + 0.2f;
-                        lastY = vertexPos.y;
+                        if (hit.collider.gameObject.tag == "Terrain")
+                        {
+                            vertexPoint.y = hit.point.y + 0.2f;
+                        }
                     }
                 }
 
-                vertices[i] = vertexPos;
-                uv[i] = new Vector2((x + (vertexWidth/2.0f)) / vertexWidth, z / vertexCount);
-
-                tangents[i] = tangent;
+                points[(int)x][(int)z] = new Vertex(vertexPoint, new Vector2((x + (vertexWidth / 2.0f)) / vertexWidth, z / vertexCount));
             }
         }
         #endregion
 
-        mesh.vertices = vertices;
-
-        #region tri generation
-        int[] triangles = new int[vertexWidth * vertexCount * 6];
-        for (int ti = 0, vi = 0, y = 0; y < vertexCount; y++, vi++)
+        #region set up tris
+        LayerMask roadLayer = 1 << LayerMask.NameToLayer("Road") | groundLayer;
+        for (int x = 0; x < vertexWidth; x++)
         {
-            for (int x = 0; x < vertexWidth; x++, ti += 6, vi++)
+            for (int z = 0; z < vertexCount; z++)
             {
-                triangles[ti] = vi;
-                triangles[ti + 3] = triangles[ti + 2] = vi + 1;
-                triangles[ti + 4] = triangles[ti + 1] = vi + vertexWidth + 1;
-                triangles[ti + 5] = vi + vertexWidth + 2;
+                Triangle tri = new Triangle();
+
+                // bottom left, top left, top right
+                tri.vertices = new Vertex[3] { points[x][z], points[x][z + 1], points[x + 1][z + 1] };
+                if (!tri.CheckCollision(roadLayer, transform)) 
+                {
+                    qMesh.triangles.Add(tri);
+                }
+                else
+                {
+                    Debug.Log("Not adding tri");
+                }
+
+                // bottom left, top right, bottom left
+                tri.vertices = new Vertex[3] { points[x][z], points[x + 1][z + 1], points[x + 1][z] };
+                if (!tri.CheckCollision(roadLayer, transform))
+                {
+                    qMesh.triangles.Add(tri);
+                }
+                else
+                {
+                    Debug.Log("Not adding tri");
+                }
             }
         }
         #endregion
 
-        mesh.triangles = triangles;
-
-        mesh.uv = uv;
-        mesh.tangents = tangents;
+        mesh = qMesh.ConvertToMesh();
+        vertices = mesh.vertices;
 
         mesh.RecalculateNormals();
-
         mesh.RecalculateBounds();
 
         MeshFilter meshFilter = gameObject.GetComponent<MeshFilter>();

@@ -71,7 +71,7 @@ public class Building : MonoBehaviour
         return road == other.road;
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         if (deliveryCenter != null && isTarget)
         {
