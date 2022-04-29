@@ -1015,14 +1015,14 @@ MonoBehaviour:
       - '>fo'
       - <fo
       - fo
-    axiom: f[f][>f][<f]
+    axiom: f[>f]f
     finalString: 
     randomRuleOutput: 1
-  count: 5
+  count: 1
   length: 50
   angles:
-  - 90
-  timePerRoad: 0.25
+  - 60
+  timePerRoad: 0.0001
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0

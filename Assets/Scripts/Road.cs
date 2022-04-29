@@ -37,7 +37,7 @@ public class Road : MonoBehaviour
 
     public bool GenerateMesh() 
     {
-        LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground");
+        LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground") | 1 << LayerMask.NameToLayer("Road");
         transform.position = startPoint;
         transform.LookAt(endPoint, Vector3.up);
 
@@ -71,32 +71,48 @@ public class Road : MonoBehaviour
             points[(int)x] = new Vertex[vertexCount+1];
             for (float z = 0; z <= vertexCount; z++) 
             {
-                bool loop = true;
-                Vector3 flatVertexPoint = new Vector3(x * (width / vertexWidth), 0, z * (length / vertexCount));
+                Vector3 flatVertexPoint = new Vector3((x - vertexWidth/2.0f) * (width / vertexWidth), 0, z * (length / vertexCount));
                 Vector3 vertexPoint = flatVertexPoint;
+                Vector3 adjCenter = new Vector3(vertexPoint.x, 0, transform.InverseTransformPoint(Vector3.Lerp(startPoint, endPoint, 0.5f)).z);
+                //Debug.Log("adjCenter " + adjCenter);
 
+                bool loop = true;
                 while (loop)
                 {
-                    loop = false;
                     flatVertexPoint = vertexPoint;
                     flatVertexPoint.y = 0;
+
+                    loop = false;
+
+                    bool roadDone = false;
+                    float distanceMoved = 0;
+
                     RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPoint), Vector3.down, 100, groundLayer);
                     foreach (RaycastHit hit in hits)
                     {
                         if (hit.collider.gameObject.tag == "Terrain")
                         {
-                            vertexPoint.y = hit.point.y + 0.2f;
+                            vertexPoint.y = transform.InverseTransformPoint(hit.point).y + 0.2f;
+                        }
+                        else if (hit.collider.gameObject.tag == "Road" && !roadDone)
+                        {
+                            Debug.DrawLine(transform.TransformPoint(vertexPoint), transform.TransformPoint(Vector3.Lerp(vertexPoint, adjCenter, 0.001f)), Color.red, 60);
+                            distanceMoved += Vector3.Distance(vertexPoint, adjCenter) * 0.001f;
+                            vertexPoint = Vector3.Lerp(vertexPoint, adjCenter, 0.001f);
+                            loop = distanceMoved < length/2;
+                            roadDone = true;
                         }
                     }
                 }
 
-                points[(int)x][(int)z] = new Vertex(vertexPoint, new Vector2((x + (vertexWidth / 2.0f)) / vertexWidth, z / vertexCount));
+
+                points[(int)x][(int)z] = new Vertex(vertexPoint, new Vector2(((x - vertexWidth / 2.0f) + (vertexWidth / 2.0f)) / vertexWidth, z / vertexCount));
             }
         }
         #endregion
 
         #region set up tris
-        LayerMask roadLayer = 1 << LayerMask.NameToLayer("Road") | groundLayer;
+        LayerMask roadLayer = 1 << LayerMask.NameToLayer("Road");
         for (int x = 0; x < vertexWidth; x++)
         {
             for (int z = 0; z < vertexCount; z++)
@@ -109,20 +125,13 @@ public class Road : MonoBehaviour
                 {
                     qMesh.triangles.Add(tri);
                 }
-                else
-                {
-                    Debug.Log("Not adding tri");
-                }
 
                 // bottom left, top right, bottom left
-                tri.vertices = new Vertex[3] { points[x][z], points[x + 1][z + 1], points[x + 1][z] };
-                if (!tri.CheckCollision(roadLayer, transform))
+                Triangle tri1 = new Triangle();
+                tri1.vertices = new Vertex[3] { points[x + 1][z + 1], points[x + 1][z], points[x][z] };
+                if (!tri1.CheckCollision(roadLayer, transform))
                 {
-                    qMesh.triangles.Add(tri);
-                }
-                else
-                {
-                    Debug.Log("Not adding tri");
+                    qMesh.triangles.Add(tri1);
                 }
             }
         }

@@ -22,18 +22,18 @@ namespace QuinnMeshes
                         RaycastHit hit;
                         if (Physics.Raycast(posOne, posOne - posTwo, out hit, Vector3.Distance(posOne, posTwo), layer))
                         {
-                            Debug.DrawLine(posOne, posTwo, Color.red, 60);
-                            return false;
+                            //Debug.DrawLine(posOne, posTwo, Color.red, 60);
+                            //return true;
                         }
                         else
                         {
-                            Debug.DrawLine(posOne, posTwo, Color.blue, 60);
+                            //Debug.DrawLine(posOne, posTwo, Color.blue, 60);
                         }
                     }
                 }
             }
 
-            return true;
+            return false;
         }
     }
 
