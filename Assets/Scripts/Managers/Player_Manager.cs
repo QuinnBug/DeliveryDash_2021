@@ -7,6 +7,7 @@ public class Player_Manager : Singleton<Player_Manager>
 {
     
     internal bool active = false;
+    internal Rigidbody rb;
 
     public UiPointer arrow = new UiPointer();
 
@@ -14,6 +15,7 @@ public class Player_Manager : Singleton<Player_Manager>
     {
         Event_Manager.Instance._OnBuildingsGenerated.AddListener(Activate);
         arrow.transform = transform;
+        rb = GetComponent<Rigidbody>();
     }
 
     void Update()

@@ -12,6 +12,7 @@ public enum RoadConnection
     END = 1
 }
 
+[Serializable]
 public class Road : MonoBehaviour
 {
     public Vector3 startPoint, endPoint;
@@ -96,10 +97,10 @@ public class Road : MonoBehaviour
                         }
                         else if (hit.collider.gameObject.tag == "Road" && !roadDone)
                         {
-                            Debug.DrawLine(transform.TransformPoint(vertexPoint), transform.TransformPoint(Vector3.Lerp(vertexPoint, adjCenter, 0.001f)), Color.red, 60);
-                            distanceMoved += Vector3.Distance(vertexPoint, adjCenter) * 0.001f;
-                            vertexPoint = Vector3.Lerp(vertexPoint, adjCenter, 0.001f);
-                            loop = distanceMoved < length/2;
+                            //Debug.DrawLine(transform.TransformPoint(vertexPoint), transform.TransformPoint(Vector3.Lerp(vertexPoint, adjCenter, 0.001f)), Color.red, 60);
+                            //distanceMoved += Vector3.Distance(vertexPoint, adjCenter) * 0.001f;
+                            //vertexPoint = Vector3.Lerp(vertexPoint, adjCenter, 0.001f);
+                            //loop = distanceMoved < length/2;
                             roadDone = true;
                         }
                     }

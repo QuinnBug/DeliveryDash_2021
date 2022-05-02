@@ -260,7 +260,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 488563360}
-  m_LocalRotation: {x: 0.47185794, y: -0.000000021454222, z: 0.0000000114819505, w: 0.88167465}
+  m_LocalRotation: {x: 0.47185794, y: 0.000000021454227, z: -0.000000011481954, w: 0.88167465}
   m_LocalPosition: {x: 10, y: 45, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -603,7 +603,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   npcPrefab: {fileID: 6793172090542195421, guid: 91eb532777375834ea33da0f48bfa92b, type: 3}
-  npcMaxCount: 0
+  npcMaxCount: 1
 --- !u!1 &895108135
 GameObject:
   m_ObjectHideFlags: 3
@@ -1015,10 +1015,10 @@ MonoBehaviour:
       - '>fo'
       - <fo
       - fo
-    axiom: f[>f]f
+    axiom: o
     finalString: 
     randomRuleOutput: 1
-  count: 1
+  count: 8
   length: 50
   angles:
   - 60
@@ -1066,6 +1066,18 @@ PrefabInstance:
       propertyPath: arrow.pointer
       value: 
       objectReference: {fileID: 488175691}
+    - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: projectilePrefab
+      value: 
+      objectReference: {fileID: 3736760577868700389, guid: 29229cd260ac77746b046d65d3dd524e, type: 3}
+    - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: projectileForcePower
+      value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: projectileForceDirection.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674756, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -1110,9 +1122,33 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674757, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: moveSpeed
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674761, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_Name
       value: Car
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: baseSettings.restLength
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: baseSettings.springStiffness
+      value: 125
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674763, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_Drag
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674763, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_Mass
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674763, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_AngularDrag
+      value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}

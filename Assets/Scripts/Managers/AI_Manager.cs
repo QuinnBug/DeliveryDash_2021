@@ -39,8 +39,8 @@ public class AI_Manager : Singleton<AI_Manager>
     {
         GameObject unit = Instantiate(npcPrefab, transform);
         AI_Base unitAI = unit.GetComponent<AI_Base>();
-        unitAI.Init();
         npcs.Add(unitAI);
+        unitAI.Init();
     }
 
     // Update is called once per frame

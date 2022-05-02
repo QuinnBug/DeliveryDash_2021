@@ -196,6 +196,7 @@ MonoBehaviour:
   testRoute: 0
   speed: 35
   turnSpeed: 5
+  pathCount: 2
 --- !u!114 &6793172090542195428
 MonoBehaviour:
   m_ObjectHideFlags: 0

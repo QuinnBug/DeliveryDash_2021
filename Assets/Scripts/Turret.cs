@@ -17,6 +17,8 @@ public class Turret : MonoBehaviour
 
     public float turnSpeed;
 
+    private GameObject projectile;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -44,15 +46,19 @@ public class Turret : MonoBehaviour
     {
         if (context.phase == InputActionPhase.Started) 
         {
-            GameObject proj = Instantiate(projectilePrefab, transform.TransformPoint(projectileSpawnpoint), Quaternion.identity);
+            projectile = Instantiate(projectilePrefab, transform.TransformPoint(projectileSpawnpoint), Quaternion.identity);
 
             Rigidbody proj_rb;
-            if (proj.TryGetComponent(out proj_rb))
+            if (projectile.TryGetComponent(out proj_rb))
             {
                 Vector3 force = transform.TransformDirection(projectileForceDirection) * projectileForcePower;
                 proj_rb.AddForce(force);
             }
-            Destroy(proj, 10);
+        }
+
+        if (context.phase == InputActionPhase.Canceled)
+        {
+            //Destroy(projectile);
         }
     }
 
