@@ -9,6 +9,7 @@ public class AI_Base : MonoBehaviour
     public float speed = 1.0f;
     public float turnSpeed = 1.0f;
     public int pathCount = 2;
+    public int minDistanceToPoint = 2;
     [Space]
     public RoadNavigation nav = new RoadNavigation();
     [Space]
@@ -16,13 +17,14 @@ public class AI_Base : MonoBehaviour
 
     private int pathIndex = 0;
     private int routeIndex = 0;
-    private bool runningTest = false;
+    private bool exitingRoad = false;
 
     Rigidbody rb;
     SuspensionSystem suspension;
 
-    public void Init()
+    public bool Init()
     {
+        Debug.Log(name + " initialising");
         rb = GetComponent<Rigidbody>();
         suspension = GetComponent<SuspensionSystem>();
 
@@ -31,34 +33,54 @@ public class AI_Base : MonoBehaviour
 
         nav.currentRoad = Road_Manager.Instance.roads[Random.Range(0, Road_Manager.Instance.roads.Count)];
         nav.targetRoad = Road_Manager.Instance.roads[Random.Range(0, Road_Manager.Instance.roads.Count)];
-        
-        nav.GeneratePathToTarget();
-        paths.Add(nav.path);
+
+        if (nav.GeneratePathToTarget()) 
+        {
+            paths.Add(nav.path);
+        }
+        else
+        {
+            return false;
+        }
 
         for (int i = 0; i < pathCount; i++)
         {
             nav.targetRoad = Road_Manager.Instance.roads[Random.Range(0, Road_Manager.Instance.roads.Count)];
-            nav.GeneratePathToTarget(new StreetTravel[1] { nav.path[nav.path.Length - 1] });
-            paths.Add(nav.path);
+            if(nav.GeneratePathToTarget(new StreetTravel[1] { nav.path[nav.path.Length - 1] })) 
+            {
+                paths.Add(nav.path);
+            }
         }
 
         nav.targetRoad = paths[0][0].road;
-        nav.GeneratePathToTarget(new StreetTravel[1] { nav.path[nav.path.Length - 1] });
-        paths.Add(nav.path);
+        if(nav.GeneratePathToTarget(new StreetTravel[1] { nav.path[nav.path.Length - 1] })) 
+        {
+            paths.Add(nav.path);
+        }
+        else
+        {
+            return false;
+        }
 
         nav.path = paths[routeIndex];
         transform.position = nav.currentRoad.startPoint;
         transform.rotation = Quaternion.Euler(Vector3.zero);
+        exitingRoad = true;
+        Debug.Log(name + " finished");
+        return true;
     }
 
     public void NewTarget() 
     {
         pathIndex = 0;
         routeIndex++;
+        exitingRoad = true;
+
         if (routeIndex >= paths.Count)
         {
             routeIndex = 0;
         }
+
         nav.path = paths[routeIndex];
     }
 
@@ -69,9 +91,9 @@ public class AI_Base : MonoBehaviour
             MoveAlongRoute();
         }
 
-        if (suspension.GroundedPercent() < 0.5f)
+        if (suspension.GroundedPercent() == 0)
         {
-            transform.rotation = Quaternion.Euler(Vector3.zero);
+            //transform.rotation = Quaternion.Euler(Vector3.zero);
         }
     }
 
@@ -87,7 +109,7 @@ public class AI_Base : MonoBehaviour
         //get the point on the left hand side of the street
         Vector3 streetDirection = street.GetStartPoint() - street.GetExitPoint();
         streetDirection = Quaternion.Euler(0, -90, 0) * streetDirection.normalized;
-        Vector3 targetPosition = street.GetExitPoint() + (streetDirection * (-street.road.width / 5) );
+        Vector3 targetPosition = (exitingRoad ? street.GetExitPoint() : street.GetStartPoint()) + (streetDirection * (-street.road.width / 5) );
         targetPosition.y = transform.position.y;
 
         if (suspension.GroundedPercent() >= 0.75f)
@@ -98,9 +120,17 @@ public class AI_Base : MonoBehaviour
         }
         //transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
 
-        if (Vector3.Distance(targetPosition, transform.position) < 0.5f)
+        if (Vector3.Distance(targetPosition, transform.position) <= minDistanceToPoint)
         {
-            pathIndex += 1;
+            if (exitingRoad)
+            {
+                pathIndex += 1;
+                exitingRoad = false;
+            }
+            else
+            {
+                exitingRoad = true;
+            }
         }
     }
 
@@ -127,11 +157,12 @@ public class RoadNavigation
     public Road targetRoad;
     public StreetTravel[] path;
 
-    public void GeneratePathToTarget(StreetTravel[] initialOptions) 
+    public bool GeneratePathToTarget(StreetTravel[] initialOptions) 
     {
         List<StreetTravel> closedList = new List<StreetTravel>(); // closed list
         List<PathNode> openList = new List<PathNode>(); //open List
         List<StreetTravel> tempHistory = new List<StreetTravel>();
+
         foreach (StreetTravel item in initialOptions)
         {
             openList.Add(new PathNode(targetRoad, tempHistory, item));
@@ -156,7 +187,7 @@ public class RoadNavigation
             {
                 path = currentNode.history;
                 //Debug.Log("Found Path " + path.Length);
-                return;
+                return true;
             }
 
             foreach (Road road in currentNode.streetTravel.GetOutGoingRoads())
@@ -197,12 +228,14 @@ public class RoadNavigation
                 }
             }
         }
-        Debug.Log("Failed To Find Path");
+
+        Debug.Log("failed to find path");
+        return false;
     }
 
-    public void GeneratePathToTarget() 
+    public bool GeneratePathToTarget() 
     {
-        GeneratePathToTarget(new StreetTravel[2] { new StreetTravel(currentRoad, RoadConnection.START), new StreetTravel(currentRoad, RoadConnection.END) });
+        return GeneratePathToTarget(new StreetTravel[2] { new StreetTravel(currentRoad, RoadConnection.START), new StreetTravel(currentRoad, RoadConnection.END) });
     }
 }
 
@@ -221,11 +254,11 @@ public struct StreetTravel
         switch (entrance)
         {
             case RoadConnection.START:
-                if(road.endConnectedRoads.Count != 0 && road.startConnectedRoads.Count == 0)
+                if(road.endConnectedRoads.Count != 0)
                 {
                     exit = RoadConnection.END;
                 }
-                else if (road.endConnectedRoads.Count == 0 && road.startConnectedRoads.Count != 0)
+                else if (road.startConnectedRoads.Count != 0)
                 {
                     exit = RoadConnection.START;
                 }
@@ -236,11 +269,11 @@ public struct StreetTravel
                 break;
 
             case RoadConnection.END:
-                if (road.endConnectedRoads.Count == 0 && road.startConnectedRoads.Count != 0)
+                if (road.startConnectedRoads.Count != 0)
                 {
                     exit = RoadConnection.START;
                 }
-                else if (road.endConnectedRoads.Count != 0 && road.startConnectedRoads.Count == 0)
+                else if (road.endConnectedRoads.Count != 0)
                 {
                     exit = RoadConnection.END;
                 }
@@ -259,7 +292,7 @@ public struct StreetTravel
 
     public bool Equals(StreetTravel other) 
     {
-        return (road == other.road && exit == other.exit);
+        return (road == other.road && exit == other.exit && entrance == other.entrance);
     }
 
     internal Road[] GetOutGoingRoads()
@@ -277,14 +310,14 @@ public struct StreetTravel
 
             default:
                 Debug.Log("Invalid Exit state " + road.name + " " + exit);
-                if (road.endConnectedRoads.Count != 0)
-                {
-                    roads = road.endConnectedRoads.ToArray();
-                }
-                else
-                {
-                    roads = road.startConnectedRoads.ToArray();
-                }
+                //if (road.endConnectedRoads.Count != 0)
+                //{
+                //    roads = road.endConnectedRoads.ToArray();
+                //}
+                //else
+                //{
+                //    roads = road.startConnectedRoads.ToArray();
+                //}
                 break;
         }
 

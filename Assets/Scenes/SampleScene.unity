@@ -602,8 +602,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0442c6681655b784eabf3024b7bb0aab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  npcPrefab: {fileID: 6793172090542195421, guid: 91eb532777375834ea33da0f48bfa92b, type: 3}
-  npcMaxCount: 1
+  npcPrefab: {fileID: 6793172090542195421, guid: 84a8b11109e41214eb4ef66cd568226c, type: 3}
+  npcMaxCount: 10
 --- !u!1 &895108135
 GameObject:
   m_ObjectHideFlags: 3
@@ -805,7 +805,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
@@ -1066,16 +1066,64 @@ PrefabInstance:
       propertyPath: arrow.pointer
       value: 
       objectReference: {fileID: 488175691}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: arrow.xScreenRange.max
+      value: 600
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: arrow.xScreenRange.min
+      value: -600
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: arrow.yScreenRange.max
+      value: 400
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: arrow.yScreenRange.min
+      value: -400
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568479735239696, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.2430369
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568479735239696, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.63
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568479735239696, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.9857
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568479735239698, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: a40f3f99d2897a5498d8602093196b2b, type: 2}
     - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: projectilePrefab
       value: 
       objectReference: {fileID: 3736760577868700389, guid: 29229cd260ac77746b046d65d3dd524e, type: 3}
     - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: projectileForcePower
-      value: 10000
+      value: 12500
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: projectileSpawnpoint.y
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: projectileSpawnpoint.z
+      value: 1.71
       objectReference: {fileID: 0}
     - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: projectileForceDirection.y
+      value: -0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568480077756137, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.11
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568480077756137, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674756, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}

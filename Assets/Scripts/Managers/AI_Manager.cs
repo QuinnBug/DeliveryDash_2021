@@ -9,6 +9,7 @@ public class AI_Manager : Singleton<AI_Manager>
     List<AI_Base> npcs = new List<AI_Base>();
 
     bool active = false;
+    bool canSpawn = true;
 
     // Start is called before the first frame update
     void Start()
@@ -20,27 +21,37 @@ public class AI_Manager : Singleton<AI_Manager>
     {
         if (!active) return;
 
-        if (npcMaxCount > npcs.Count)
+        if (npcMaxCount > npcs.Count && canSpawn)
         {
-            CreateNPC();
+            StartCoroutine(CreateNPC());
         }
         else if (npcMaxCount < npcs.Count)
         {
-            while (npcMaxCount < npcs.Count)
-            {
-                AI_Base npc = npcs[npcMaxCount - 1];
-                npcs.Remove(npc);
-                Destroy(npc.gameObject);
-            }
+            AI_Base npc = npcs[npcMaxCount - 1];
+            npcs.Remove(npc);
+            Destroy(npc.gameObject);
         }
     }
 
-    private void CreateNPC()
+    private IEnumerator CreateNPC()
     {
+        canSpawn = false;
+
         GameObject unit = Instantiate(npcPrefab, transform);
+        unit.name += npcs.Count;
         AI_Base unitAI = unit.GetComponent<AI_Base>();
         npcs.Add(unitAI);
-        unitAI.Init();
+        if (unitAI)
+        {
+            unitAI.Init();
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+        yield return new WaitForSeconds(0.1f);
+
+        canSpawn = true;
     }
 
     // Update is called once per frame

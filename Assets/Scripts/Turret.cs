@@ -52,6 +52,7 @@ public class Turret : MonoBehaviour
             if (projectile.TryGetComponent(out proj_rb))
             {
                 Vector3 force = transform.TransformDirection(projectileForceDirection) * projectileForcePower;
+                force.y = projectileForceDirection.y * projectileForcePower;
                 proj_rb.AddForce(force);
             }
         }

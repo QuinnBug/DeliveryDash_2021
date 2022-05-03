@@ -97,7 +97,7 @@ GameObject:
   - component: {fileID: 6793172090542195428}
   - component: {fileID: 6793172090542195427}
   m_Layer: 0
-  m_Name: NPC
+  m_Name: NPC 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -192,10 +192,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1970a0df379b1c44828fb6e27b2faa4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 50
+  speed: 30
   turnSpeed: 15
   pathCount: 2
-  minDistanceToPoint: 2
+  minDistanceToPoint: 3
   nav:
     currentRoad: {fileID: 0}
     targetRoad: {fileID: 0}
@@ -213,28 +213,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   wheels:
-  - offset: {x: 0.75, y: -0.6, z: 1}
+  - offset: {x: 0, y: -0.6, z: 1}
     settings:
       restLength: 0.25
       springTravel: 0.1
       springStiffness: 100
       damperStiffness: 2
       wheelRadius: 0.25
-  - offset: {x: -0.75, y: -0.6, z: 1}
-    settings:
-      restLength: 0.25
-      springTravel: 0.1
-      springStiffness: 100
-      damperStiffness: 2
-      wheelRadius: 0.25
-  - offset: {x: 0.75, y: -0.6, z: -1}
-    settings:
-      restLength: 0.25
-      springTravel: 0.1
-      springStiffness: 100
-      damperStiffness: 2
-      wheelRadius: 0.25
-  - offset: {x: -0.75, y: -0.6, z: -1}
+  - offset: {x: 0, y: -0.6, z: 1}
     settings:
       restLength: 0.25
       springTravel: 0.1
@@ -243,8 +229,8 @@ MonoBehaviour:
       wheelRadius: 0.25
   baseSettings:
     restLength: 0.25
-    springTravel: 0.1
-    springStiffness: 100
+    springTravel: 0.2
+    springStiffness: 250
     damperStiffness: 2
     wheelRadius: 0.25
 --- !u!54 &6793172090542195427
@@ -255,7 +241,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6793172090542195421}
   serializedVersion: 2
-  m_Mass: 3
+  m_Mass: 5
   m_Drag: 2
   m_AngularDrag: 5
   m_UseGravity: 1
