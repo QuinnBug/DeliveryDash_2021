@@ -24,7 +24,7 @@ public class AI_Base : MonoBehaviour
 
     public bool Init()
     {
-        Debug.Log(name + " initialising");
+        //Debug.Log(name + " initialising");
         rb = GetComponent<Rigidbody>();
         suspension = GetComponent<SuspensionSystem>();
 
@@ -66,7 +66,7 @@ public class AI_Base : MonoBehaviour
         transform.position = nav.currentRoad.startPoint;
         transform.rotation = Quaternion.Euler(Vector3.zero);
         exitingRoad = true;
-        Debug.Log(name + " finished");
+        //Debug.Log(name + " finished");
         return true;
     }
 
@@ -165,11 +165,12 @@ public class RoadNavigation
 
         foreach (StreetTravel item in initialOptions)
         {
-            openList.Add(new PathNode(targetRoad, tempHistory, item));
+            //if it's a start node it has no parent
+            openList.Add(new PathNode(0, targetRoad, null, item));
         }
 
 
-        while (openList.Count > 0)
+        while (openList.Count > 0 && openList.Count <= 200)
         {
             PathNode currentNode = openList[0];
             foreach (PathNode node in openList)
@@ -185,8 +186,22 @@ public class RoadNavigation
 
             if (currentNode.streetTravel.road == targetRoad)
             {
-                path = currentNode.history;
-                //Debug.Log("Found Path " + path.Length);
+                List<StreetTravel> route = new List<StreetTravel>();
+
+                PathNode nextNode = currentNode;
+
+                // while not the start point
+                while (nextNode.parent != null) 
+                {
+                    route.Add(nextNode.streetTravel);
+                    nextNode = nextNode.parent;
+                }
+
+                // add the start road to the list
+                route.Add(nextNode.streetTravel);
+
+                route.Reverse();
+                path = route.ToArray();
                 return true;
             }
 
@@ -204,9 +219,8 @@ public class RoadNavigation
 
                 bool alreadyOpen = false;
 
-                tempHistory = new List<StreetTravel>(currentNode.history);
-                tempHistory.Add(currentNode.streetTravel);
-                PathNode newNode = new PathNode(targetRoad, tempHistory, newStreet);
+                // g is the number of roads visited since the start
+                PathNode newNode = new PathNode(currentNode.g + 1, targetRoad, currentNode, newStreet);
 
                 for (int i = 0; i < openList.Count; i++)
                 {
@@ -227,6 +241,11 @@ public class RoadNavigation
                     openList.Add(newNode);
                 }
             }
+        }
+
+        if (openList.Count > 500)
+        {
+            Debug.Log("Openlist reached limit");
         }
 
         Debug.Log("failed to find path");
@@ -335,23 +354,23 @@ public struct StreetTravel
     }
 }
 
-public struct PathNode 
+public class PathNode 
 {
     public float f;
-    public float g;
+    public int g;
     public float h;
     public StreetTravel streetTravel;
-    public StreetTravel[] history;
+    public PathNode parent;
 
-    public PathNode(Road target, List<StreetTravel> _history, StreetTravel _streetTravel) 
+    public PathNode(int steps, Road target, PathNode _parent, StreetTravel _streetTravel) 
     {
         streetTravel = _streetTravel;
         Vector3 current = streetTravel.exit == RoadConnection.START ? streetTravel.road.startPoint : streetTravel.road.endPoint;
-        g = _history.Count;
+        parent = _parent;
+        g = steps;
         float s = Vector3.Distance(current, target.startPoint);
         float e = Vector3.Distance(current, target.endPoint);
         h = s > e ? e : s;
         f = g + h;
-        history = _history.ToArray();
     }
 }

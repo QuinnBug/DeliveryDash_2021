@@ -6,6 +6,10 @@ public class AI_Manager : Singleton<AI_Manager>
 {
     public GameObject npcPrefab;
     public int npcMaxCount;
+    [Range(1,60)]
+    public float npcSpawnDelay;
+    public bool doSpawns;
+
     List<AI_Base> npcs = new List<AI_Base>();
 
     bool active = false;
@@ -17,7 +21,12 @@ public class AI_Manager : Singleton<AI_Manager>
         Event_Manager.Instance._OnBuildingsGenerated.AddListener(StartAI);
     }
 
-    public void Update()
+    private void Update()
+    {
+        if(doSpawns) SpawnNPC();
+    }
+
+    public void SpawnNPC()
     {
         if (!active) return;
 
@@ -35,23 +44,25 @@ public class AI_Manager : Singleton<AI_Manager>
 
     private IEnumerator CreateNPC()
     {
+        Debug.Log("AI Create Start");
         canSpawn = false;
 
         GameObject unit = Instantiate(npcPrefab, transform);
         unit.name += npcs.Count;
         AI_Base unitAI = unit.GetComponent<AI_Base>();
-        npcs.Add(unitAI);
-        if (unitAI)
+        if (unitAI.Init())
         {
-            unitAI.Init();
+            npcs.Add(unitAI);
         }
         else
         {
             Destroy(gameObject);
         }
-        yield return new WaitForSeconds(0.1f);
+
+        yield return new WaitForSeconds(1.5f);
 
         canSpawn = true;
+        Debug.Log("AI Create End");
     }
 
     // Update is called once per frame

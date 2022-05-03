@@ -43,9 +43,11 @@ public class Road : MonoBehaviour
         transform.LookAt(endPoint, Vector3.up);
 
         Vector3 oStart = startPoint;
-        startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/6);
+        startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/7);
+
         Vector3 oEnd = endPoint;
-        endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/6);
+        endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/7);
+
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
         length = Vector3.Distance(endPoint, startPoint);
 
