@@ -603,8 +603,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   npcPrefab: {fileID: 6793172090542195421, guid: 84a8b11109e41214eb4ef66cd568226c, type: 3}
-  npcMaxCount: 100
-  npcSpawnDelay: 1.5
+  npcMaxCount: 10
+  npcSpawnDelay: 3
   doSpawns: 0
 --- !u!1 &895108135
 GameObject:
@@ -732,13 +732,13 @@ MonoBehaviour:
   tilePrefab: {fileID: 6816130086519178985, guid: e836307ed35125247809ece758189721, type: 3}
   tileSettings:
     size: {x: 200, y: 200}
-    perlinZoom: 0.01
-    perlinHeight: 30
-    perlinHeightLimit: 5
+    perlinZoom: 0.005
+    perlinHeight: 10
+    perlinHeightLimit: 6
     vSize: {x: 1, y: 1}
   worldStart: {x: 0, y: 0, z: 0}
   randomOffset: {x: 0, y: 0}
-  terrainSize: {x: 8, y: 8}
+  terrainSize: {x: 10, y: 10}
   timePerTile: 0.0001
 --- !u!4 &980056745
 Transform:
@@ -999,28 +999,29 @@ MonoBehaviour:
     rules:
     - input: 111
       outputs:
-      - f[rt][lt]?
-      - f[ft][lt]?
-      - f[ft][rt]?
+      - f[lt]?
+      - f[rt]?
+      - f[ft]?
     - input: 108
       outputs:
       - <f
+      - <<f
     - input: 114
       outputs:
       - '>f'
+      - '>>f'
     - input: 116
       outputs:
       - fo
       - ffo
     - input: 63
       outputs:
-      - '>fo'
-      - <fo
-      - fo
+      - lo
+      - ro
     axiom: '[o]>>[o]'
     finalString: 
     randomRuleOutput: 1
-  count: 8
+  count: 1
   length: 50
   angles:
   - 60
@@ -1033,7 +1034,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2109595309}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 800, y: 15, z: 800}
+  m_LocalPosition: {x: 1000, y: 15, z: 1000}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1069,20 +1070,48 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 488175691}
     - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: stats.maxAmmo
+      value: 99999
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: stats.maxFuel
+      value: 999999
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: stats.fuelDrain
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: stats.maxHealth
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: stats.moveSpeed
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: stats.turnSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: stats.shotsPerSecond
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: arrow.xScreenRange.max
-      value: 600
+      value: 350
       objectReference: {fileID: 0}
     - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: arrow.xScreenRange.min
-      value: -600
+      value: -350
       objectReference: {fileID: 0}
     - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: arrow.yScreenRange.max
-      value: 400
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: arrow.yScreenRange.min
-      value: -400
+      value: -200
       objectReference: {fileID: 0}
     - target: {fileID: 6467568479735239696, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_LocalScale.z
@@ -1106,7 +1135,7 @@ PrefabInstance:
       objectReference: {fileID: 3736760577868700389, guid: 29229cd260ac77746b046d65d3dd524e, type: 3}
     - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: projectileForcePower
-      value: 12500
+      value: 20000
       objectReference: {fileID: 0}
     - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: projectileSpawnpoint.y
@@ -1118,7 +1147,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: projectileForceDirection.y
-      value: -0.25
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6467568480077756137, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1134,15 +1163,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674756, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 800
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674756, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8.56
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674756, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 800
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674756, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1182,10 +1211,42 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: baseSettings.restLength
-      value: 1.5
+      value: 0.6
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: baseSettings.springStiffness
+      value: 125
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[0].settings.restLength
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[1].settings.restLength
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[2].settings.restLength
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[3].settings.restLength
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[0].settings.springStiffness
+      value: 125
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[1].settings.springStiffness
+      value: 125
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[2].settings.springStiffness
+      value: 125
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568481500674762, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: wheels.Array.data[3].settings.springStiffness
       value: 125
       objectReference: {fileID: 0}
     - target: {fileID: 6467568481500674763, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}

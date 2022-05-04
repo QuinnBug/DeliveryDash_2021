@@ -5,21 +5,43 @@ using UnityEngine.UI;
 
 public class Player_Manager : Singleton<Player_Manager>
 {
-    
+    public PlayerStats stats;
+
     internal bool active = false;
     internal Rigidbody rb;
-
+    internal Car_Movement movement;
+    internal Turret turret;
+    [Space]
     public UiPointer arrow = new UiPointer();
 
     public void Start()
     {
         Event_Manager.Instance._OnBuildingsGenerated.AddListener(Activate);
+
         arrow.transform = transform;
         rb = GetComponent<Rigidbody>();
+        movement = GetComponent<Car_Movement>();
+        turret = GetComponentInChildren<Turret>();
+
+        //any loading of stats needs to happen before assigning the starting values
+        stats.Init();
     }
 
     void Update()
     {
+        //turret updates
+        turret.active = active;
+        turret.ammo = stats.currentAmmo;
+        turret.fireDelay = 1 / stats.shotsPerSecond;
+
+        //movement updates
+        movement.active = active;
+        movement.moveSpeed = stats.moveSpeed;
+        movement.turnSpeed = stats.turnSpeed;
+        movement.fuel = stats.currentFuel;
+        movement.fuelDrain = stats.fuelDrain;
+
+        //arrow update
         arrow.Update(active);
     }
 

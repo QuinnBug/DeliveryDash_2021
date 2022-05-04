@@ -192,6 +192,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1970a0df379b1c44828fb6e27b2faa4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  health: 10
+  armor: 0
   speed: 30
   turnSpeed: 15
   pathCount: 2

@@ -8,11 +8,14 @@ public class Car_Movement : MonoBehaviour
     public float moveSpeed;
     public float turnSpeed;
 
+    internal float fuel;
+    internal float fuelDrain;
+
     private SuspensionSystem suspension;
 
     internal Rigidbody rb;
     Vector3 movementInput;
-    bool active = false;
+    internal bool active = false;
 
     // Start is called before the first frame update
     void Start()
@@ -24,7 +27,6 @@ public class Car_Movement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        active = Player_Manager.Instance.active;
         rb.useGravity = active;
 
         if (!active) return;
@@ -42,30 +44,35 @@ public class Car_Movement : MonoBehaviour
 
     public void Movement() 
     {
+        if (fuel <= 0)
+        {
+            return;
+        }
+
         foreach (Wheel wheel in suspension.wheels)
         {
             if (wheel.grounded)
             {
-                //rb.AddForce((transform.forward * moveSpeed) / suspension.wheels.Length);
-                rb.AddForce((movementInput * moveSpeed) / suspension.wheels.Length);
+                rb.AddForce(movementInput * moveSpeed);
+                Player_Manager.Instance.stats.currentFuel -= fuelDrain * Time.deltaTime;
+                break;
             }
         }
-
-        
     }
 
     public void Rotation() 
     {
+        if (fuel <= 0)
+        {
+            return;
+        }
+
         if (movementInput.sqrMagnitude > 0.1f)
         {
             if (suspension.GroundedPercent() > 0f)
             {
                 transform.rotation = Quaternion.Lerp(transform.rotation,
                     Quaternion.LookRotation(movementInput, Vector3.up), turnSpeed * Time.deltaTime);
-            }
-            else
-            {
-                //rb.AddTorque(movementInput * turnSpeed);
             }
         }
     }

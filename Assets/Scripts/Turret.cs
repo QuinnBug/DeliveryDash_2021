@@ -19,6 +19,13 @@ public class Turret : MonoBehaviour
 
     private GameObject projectile;
 
+    internal bool active;
+
+    internal int ammo;
+    internal float fireDelay;
+    private float fireTimer;
+    private bool firing;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -30,6 +37,10 @@ public class Turret : MonoBehaviour
     void Update()
     {
         Rotation();
+
+        if (!active) return;
+        
+        Shoot();
     }
 
     public void Rotation() 
@@ -42,24 +53,62 @@ public class Turret : MonoBehaviour
         transform.localRotation = Quaternion.Lerp(transform.localRotation, desiredRot, turnSpeed * Time.deltaTime);
     }
 
-    public void Fire(InputAction.CallbackContext context) 
+    public void Shoot() 
     {
-        if (context.phase == InputActionPhase.Started) 
+        if (ammo <= 0 || !active)
         {
+            return;
+        }
+
+        if (fireTimer > 0)
+        {
+            fireTimer -= Time.deltaTime;
+            return;
+        }
+
+        if (firing && fireTimer <= 0)
+        {
+            fireTimer = fireDelay;
+
+            Player_Manager.Instance.stats.currentAmmo--;
             projectile = Instantiate(projectilePrefab, transform.TransformPoint(projectileSpawnpoint), Quaternion.identity);
 
             Rigidbody proj_rb;
             if (projectile.TryGetComponent(out proj_rb))
             {
                 Vector3 force = transform.TransformDirection(projectileForceDirection) * projectileForcePower;
-                force.y = projectileForceDirection.y * projectileForcePower;
+
+                //Adjustmest for velocity
+                Vector3 carVel = rb.velocity;
+                carVel = transform.InverseTransformDirection(carVel);
+                carVel.y = 0;
+                carVel.x = Mathf.Abs(carVel.x);
+                carVel.z = Mathf.Abs(carVel.z);
+
+                if (carVel.magnitude > 1)
+                {
+                    carVel.Normalize();
+                    carVel += Vector3.one;
+                    force.Scale(carVel);
+                }
+                //end of adjustment
+
+                force.y = projectileForceDirection.y;
                 proj_rb.AddForce(force);
             }
+        }
+    }
+
+    public void Fire(InputAction.CallbackContext context) 
+    {
+        if (context.phase == InputActionPhase.Started) 
+        {
+            firing = true;
         }
 
         if (context.phase == InputActionPhase.Canceled)
         {
-            //Destroy(projectile);
+            firing = false;
         }
     }
 

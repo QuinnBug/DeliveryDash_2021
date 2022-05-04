@@ -13,6 +13,7 @@ public class Event_Manager : Singleton<Event_Manager>
     public DeliveryEvent _DeliveryMade = new DeliveryEvent();
 
     public BoolEvent _DeliveriesStateChange = new BoolEvent();
+    public AIEvent _AiUnitKilled = new AIEvent();
 
     public void Start()
     {
@@ -28,3 +29,4 @@ public class Event_Manager : Singleton<Event_Manager>
 
 public class BoolEvent : UnityEvent<bool> { }
 public class DeliveryEvent : UnityEvent<Building> { }
+public class AIEvent : UnityEvent<AI_Base> { }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class AI_Base : MonoBehaviour
+public class AI_Base : Shootable
 {
     public float speed = 1.0f;
     public float turnSpeed = 1.0f;
@@ -84,8 +84,10 @@ public class AI_Base : MonoBehaviour
         nav.path = paths[routeIndex];
     }
 
-    public void Update()
+    public override void Update()
     {
+        base.Update();
+
         if (nav.path != null)
         {
             MoveAlongRoute();
@@ -132,6 +134,11 @@ public class AI_Base : MonoBehaviour
                 exitingRoad = true;
             }
         }
+    }
+
+    public override void Die() 
+    {
+        Event_Manager.Instance._AiUnitKilled.Invoke(this);
     }
 
     public void OnDrawGizmosSelected()

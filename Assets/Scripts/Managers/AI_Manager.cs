@@ -19,6 +19,7 @@ public class AI_Manager : Singleton<AI_Manager>
     void Start()
     {
         Event_Manager.Instance._OnBuildingsGenerated.AddListener(StartAI);
+        Event_Manager.Instance._AiUnitKilled.AddListener(NpcKilled);
     }
 
     private void Update()
@@ -44,7 +45,7 @@ public class AI_Manager : Singleton<AI_Manager>
 
     private IEnumerator CreateNPC()
     {
-        Debug.Log("AI Create Start");
+        //Debug.Log("AI Create Start");
         canSpawn = false;
 
         GameObject unit = Instantiate(npcPrefab, transform);
@@ -59,16 +60,24 @@ public class AI_Manager : Singleton<AI_Manager>
             Destroy(gameObject);
         }
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(npcSpawnDelay);
 
         canSpawn = true;
-        Debug.Log("AI Create End");
+        //Debug.Log("AI Create End");
     }
 
-    // Update is called once per frame
     public void StartAI()
     {
         active = true;
         Debug.Log("Ai activated");
+    }
+
+    public void NpcKilled(AI_Base _npc) 
+    {
+        if (npcs.Contains(_npc))
+        {
+            npcs.Remove(_npc);
+            Destroy(_npc.gameObject);
+        }
     }
 }
