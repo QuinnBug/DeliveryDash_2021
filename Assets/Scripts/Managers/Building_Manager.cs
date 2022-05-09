@@ -35,14 +35,14 @@ public class Building_Manager : Singleton<Building_Manager>
     {
         foreach (Road road in Road_Manager.Instance.roads)
         {
-            Building_Manager.Instance.PopulateRoad(road);
-            yield return new WaitForSeconds(timePerBuilding);
+            StartCoroutine(PopulateRoad(road));
+            yield return new WaitForSeconds(timePerBuilding * buildingCountRange.y * 2);
         }
         Debug.Log("Buildings Done");
         Event_Manager.Instance._OnBuildingsGenerated.Invoke();
     }
 
-    public void PopulateRoad(Road road) 
+    public IEnumerator PopulateRoad(Road road) 
     {
         float right = -99999, left = 99999, front = -99999, back = 99999, low = 99999, high = -99999;
 
@@ -62,6 +62,7 @@ public class Building_Manager : Singleton<Building_Manager>
         {
             Vector2 fb = GetAdjustedFB(randomCountLeft, front, back, i, road.width);
             GenerateBaseMesh(left, fb.x, fb.y, low, road, Direction.LEFT);
+            yield return new WaitForSeconds(timePerBuilding);
         }
 
         //Right side of the road
@@ -70,6 +71,7 @@ public class Building_Manager : Singleton<Building_Manager>
         {
             Vector2 fb = GetAdjustedFB(randomCountRight, front, back, i, road.width);
             GenerateBaseMesh(right, fb.x, fb.y, low, road, Direction.RIGHT);
+            yield return new WaitForSeconds(timePerBuilding);
         }
     }
 
@@ -108,127 +110,98 @@ public class Building_Manager : Singleton<Building_Manager>
         {
             case Direction.RIGHT:
                 left = road_x;
+                //right = road_x + Mathf.Abs(front - back);
                 right = road_x + buildingDepth;
                 break;
             case Direction.LEFT:
                 right = road_x;
                 left = road_x - buildingDepth;
+                //left = road_x - Mathf.Abs(front - back);
                 break;
         }
 
-        GameObject[] colliders = CheckCollisions(right, left, front, back, y + 10, y, parent);
-
-        if (colliders.Length > 0)
-        {
-            return;
-        }
-
-        GameObject go = new GameObject("BuildingBase");
+        GameObject go = new GameObject("Building " + Random.Range(0,99999).ToString());
 
         go.transform.parent = parent.transform;
         go.transform.localPosition = Vector3.zero;
         go.transform.localRotation = Quaternion.Euler(Vector3.zero);
         go.tag = "Building";
+        go.layer = LayerMask.NameToLayer("Building");
 
         //Add Building Script
         Building b = go.AddComponent<Building>();
-        b.Init(GetRandomBuildingLayout(right,left,front,back,y) , parent, materials[Random.Range(0, materials.Length)]);
+        b.Init(new List<Vector3>(GetRandomBuildingLayout(right,left,front,back,y)) , parent, materials[Random.Range(0, materials.Length)], new Range(left, right), new Range(back, front));
         buildings.Add(b);
-    }
-
-    GameObject[] CheckCollisions(float right, float left, float front, float back, float high, float low, Road parent) 
-    {
-        List<GameObject> gameObjects = new List<GameObject>();
-
-        Vector3 meshBottomLeft, meshTopRight;
-        meshBottomLeft = parent.transform.TransformPoint(new Vector3(left, low, front));
-        meshTopRight = parent.transform.TransformPoint(new Vector3(right, high, back));
-        Vector3 meshCenter = Vector3.Lerp(meshBottomLeft, meshTopRight, 0.5f);
-        Collider[] colliders = Physics.OverlapBox(meshCenter, (new Vector3(right - left, 15, front - back) / 2.15f), parent.transform.rotation);
-
-        foreach (Collider col in colliders)
-        {
-            if (col.tag == "Road" && col.gameObject != parent.gameObject)
-            {
-                gameObjects.Add(col.gameObject);
-            }
-            else if (col.tag == "Building")
-            {
-                gameObjects.Add(col.gameObject);
-            }
-        }
-
-
-        return gameObjects.ToArray();
-    }
-
-    GameObject MakeGoWithMesh(Vector3 backLeft, Vector3 backRight, Vector3 frontLeft, Vector3 frontRight) 
-    {
-        Vector3[] vertices = {
-            backLeft,
-            backRight,
-            backRight + Vector3.up,
-            backLeft + Vector3.up,
-            frontLeft + Vector3.up,
-            frontRight + Vector3.up,
-            frontRight,
-            frontLeft
-        };
-
-        int[] triangles = {
-            0, 2, 1, //face front
-			0, 3, 2,
-            2, 3, 4, //face top
-			2, 4, 5,
-            1, 2, 5, //face right
-			1, 5, 6,
-            0, 7, 4, //face left
-			0, 4, 3,
-            5, 4, 7, //face back
-			5, 7, 6,
-            0, 6, 7, //face bottom
-			0, 1, 6
-        };
-
-        GameObject go = new GameObject();
-
-        MeshFilter filter = go.AddComponent<MeshFilter>();
-        MeshRenderer rend = go.AddComponent<MeshRenderer>();
-        MeshCollider collider = go.AddComponent<MeshCollider>();
-
-        Mesh mesh = new Mesh();
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-        mesh.RecalculateNormals();
-        mesh.RecalculateTangents();
-        mesh.RecalculateBounds();
-
-        filter.sharedMesh = mesh;
-        collider.sharedMesh = mesh;
-        //rend.material = materials[Random.Range(0, materials.Length)];
-        rend.material = materials[0];
-
-        return go;
     }
 
     Vector3[] GetRandomBuildingLayout(float right, float left, float front, float back, float y) 
     {
+        //Vector3 centerPoint = Vector3.Lerp(new Vector3(left, y, back), new Vector3(right, y, front), 0.5f);
+
+        float x_diff = Mathf.Abs(right - left)/4;
+        float z_diff = Mathf.Abs(front - back)/4;
+
+        #region new broken
+        //List<Vector3>[] sides = new List<Vector3>[4];
+        //int segments = Random.Range(1, 4);
+        //segments *= 2;
+
+        ////add the corners to the start of each side
+        //sides[0] = new List<Vector3>();
+        //sides[0].Add(new Vector3(left, y, back));
+
+        //sides[1] = new List<Vector3>();
+        //sides[1].Add(new Vector3(right, y, back));
+
+        //sides[2] = new List<Vector3>();
+        //sides[2].Add(new Vector3(right, y, front));
+
+        //sides[3] = new List<Vector3>();
+        //sides[3].Add(new Vector3(left, y, front));
+
+        ////create segments along each side from corner towards next corner
+        //for (int i = 0; i < 4; i++)
+        //{
+        //    int j = i + 1;
+        //    if (j == 4)
+        //    {
+        //        j = 0;
+        //    }
+
+        //    for (int k = 0; k < segments; k++)
+        //    {
+        //        sides[i].Add(Vector3.Lerp(sides[i][0], sides[j][0], (float)((1.0f/segments) * (k + 1.0f) )));
+        //    }
+        //}
+
+        //// take each point from the sides and add it to a list
+        //List<Vector3> points = new List<Vector3>();
+        //foreach (List<Vector3> _p in sides)
+        //{
+        //    foreach (Vector3 p in _p)
+        //    {
+        //        points.Add(p);
+        //    }
+        //}
+
+        //return points.ToArray();
+        #endregion
+
+        #region old
         Vector3[] points;
-        switch (Random.Range(0, 4)) 
+        switch (Random.Range(0, 4))
         {
             case 0:
             case 1:
-                float x_diff = Mathf.Abs(right - left) / 4;
-                float z_diff = Mathf.Abs(front - back) / 4;
                 points = new Vector3[] {
                     new Vector3(left + x_diff, y, back),
-                new Vector3(right - x_diff, y, back),
-                new Vector3(right, y, back + z_diff),
-                new Vector3(right, y, front - z_diff),
-                new Vector3(right - x_diff, y, front),
-                new Vector3(left + x_diff, y, front),
-                new Vector3(left, y, front - z_diff),
-                new Vector3(left, y, back + z_diff),
+                    new Vector3(right - x_diff, y, back),
+                    new Vector3(right, y, back + z_diff),
+                    new Vector3(right, y, front - z_diff),
+                    new Vector3(right - x_diff, y, front),
+                    new Vector3(left + x_diff, y, front),
+                    new Vector3(left, y, front - z_diff),
+                    new Vector3(left, y, back + z_diff),
                 };
                 break;
 
@@ -242,11 +215,14 @@ public class Building_Manager : Singleton<Building_Manager>
                 break;
         }
         return points;
+        #endregion
     }
 }
 
 public enum Direction
 {
     RIGHT,
-    LEFT
+    BACK,
+    LEFT,
+    FORWARD
 }

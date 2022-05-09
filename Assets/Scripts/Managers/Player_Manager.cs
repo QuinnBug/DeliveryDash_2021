@@ -112,4 +112,10 @@ public struct Range
 {
     public float min;
     public float max;
+
+    public Range(float _min, float _max)
+    {
+        min = _min;
+        max = _max;
+    }
 }

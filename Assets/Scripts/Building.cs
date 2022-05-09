@@ -11,34 +11,97 @@ public class Building : MonoBehaviour
     public Renderer rend;
     bool isTarget = false;
     internal Road road;
+    public Vector3[] points;
 
-    Vector3 deliveryCenter;
+    public Range xLimits = new Range();
+    public Range zLimits = new Range();
+
+    Vector3 deliveryCenter = Vector3.zero;
     public Vector3 meshCenter;
-    Vector3 extents;
+    Vector3 extents = Vector3.zero;
 
-    public void Init(Vector3[] points, Road parent, Material _mat)
+    public void Init(List<Vector3> _points, Road parent, Material _mat, Range _xLim, Range _zLim)
     {
+        //Debug.Log("Init start for " + name);
+
+        xLimits = _xLim;
+        zLimits = _zLim;
+
+        points = _points.ToArray();
         road = parent;
 
-        float height = Random.Range(5, 10);
+        float minDistance = 0.25f;
+        float height = Random.Range(3, 10);
+
         Vector3 up = Vector3.up * height;
 
+        Vector3 centerpoint = Vector3.zero;
+        foreach (Vector3 point in _points)
+        {
+            centerpoint += point;
+        }
+        centerpoint /= _points.Count;
+
+        for (int i = 0; i < _points.Count; i++)
+        {
+            Vector3 adjCenter = _points[i];
+
+            if (adjCenter.z == zLimits.min || adjCenter.z == zLimits.max)
+            {
+                adjCenter.z = centerpoint.z;
+            }
+
+            if (adjCenter.x == xLimits.min || adjCenter.x == xLimits.max)
+            {
+                adjCenter.x = centerpoint.x;
+            }
+
+            Vector3 hitPoint = TestCollision(_points[i]);
+
+            while (hitPoint != Vector3.zero && Vector3.Distance(_points[i], adjCenter) > minDistance)
+            {
+                _points[i] = Vector3.Lerp(_points[i], adjCenter, 0.01f);
+                hitPoint = TestCollision(_points[i]);
+            }
+
+            if (hitPoint != Vector3.zero)
+            {
+                _points.RemoveAt(i);
+                i--;
+                if (_points.Count < 3)
+                {
+                    return;
+                }
+
+                //return;
+            }
+        }
+
+        //refresh the center incase we changed the points
+        centerpoint = Vector3.zero;
+        foreach (Vector3 point in _points)
+        {
+            centerpoint += point;
+        }
+        centerpoint /= _points.Count;
+
+        #region Mesh Creation
         qMesh _qMesh = new qMesh();
 
         //side walls
-        for (int i = 0; i < points.Length; i++)
+        for (int i = 0; i < _points.Count; i++)
         {
             int j = i + 1;
-            if (j >= points.Length)
+            if (j >= _points.Count)
             {
                 j = 0;
             }
 
             Vertex[] _v = new Vertex[] { 
-                new Vertex(points[i], new Vector2(0, 0)),
-                new Vertex(points[j], new Vector2(1, 0)),
-                new Vertex(points[i] + up, new Vector2(0, 1)),
-                new Vertex(points[j] + up, new Vector2(1, 1)),
+                new Vertex(_points[i], new Vector2(0, 0)),
+                new Vertex(_points[j], new Vector2(1, 0)),
+                new Vertex(_points[i] + up, new Vector2(0, 1)),
+                new Vertex(_points[j] + up, new Vector2(1, 1)),
             };
 
             Triangle tri1 = new Triangle();
@@ -50,27 +113,21 @@ public class Building : MonoBehaviour
             _qMesh.triangles.Add(tri2);
         }
 
-        Vector3 centerpoint = Vector3.zero;
-        foreach (Vector3 point in points)
-        {
-            centerpoint += point;
-        }
-        centerpoint /= points.Length;
         //top and bottom
-        for (int i = 0; i < points.Length; i++)
+        for (int i = 0; i < _points.Count; i++)
         {
             int j = i + 1;
-            if (j >= points.Length)
+            if (j >= _points.Count)
             {
                 j = 0;
             }
 
             Vertex[] _v = new Vertex[] {
-                new Vertex(points[i], new Vector2(0, 0)),
-                new Vertex(points[j], new Vector2(0, 0)),
+                new Vertex(_points[i], new Vector2(0, 0)),
+                new Vertex(_points[j], new Vector2(0, 0)),
                 new Vertex(centerpoint, new Vector2(0, 0)),
-                new Vertex(points[i] + up, new Vector2(0, 0)),
-                new Vertex(points[j] + up, new Vector2(0, 0)),
+                new Vertex(_points[i] + up, new Vector2(0, 0)),
+                new Vertex(_points[j] + up, new Vector2(0, 0)),
                 new Vertex(centerpoint + up, new Vector2(0, 0))
             };
 
@@ -98,10 +155,34 @@ public class Building : MonoBehaviour
         material = _mat;
 
         meshCenter = mesh.bounds.center;
-        
+        #endregion
+
         //deliveryCenter = meshCenter + (transform.right * (roadSide == Direction.RIGHT ? -1 : 1) * Building_Manager.Instance.buildingDepth);
         //extents = topRight - bottomLeft;
+    }
 
+    //private bool TestCollision(Vector3 point) 
+    private Vector3 TestCollision(Vector3 point) 
+    {
+        LayerMask mask = 1 << LayerMask.NameToLayer("Road");
+        mask |= 1 << LayerMask.NameToLayer("Building");
+
+        point += Vector3.up * 20;
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(transform.TransformPoint(point), Vector3.down, out hit, 60, mask))
+        {
+            Debug.DrawLine(transform.TransformPoint(point), hit.point, Color.red, 20);
+            return transform.InverseTransformPoint(hit.point);
+        }
+        else
+        {
+            Debug.DrawRay(transform.TransformPoint(point), Vector3.down * 50, Color.blue, 10);
+            return Vector3.zero;
+        }
+
+        
     }
 
     public void Update()
@@ -152,10 +233,21 @@ public class Building : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if (points != null)
+        {
+            foreach (Vector3 item in points)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawSphere(transform.TransformPoint(item), 0.1f);
+            }
+        }
+
         if (deliveryCenter != null && isTarget)
         {
             //Gizmos.color = Color.blue;
             //Gizmos.DrawLine(bottomLeft, topRight);
+
+            
 
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(deliveryCenter, deliveryCenter + extents);
