@@ -110,13 +110,11 @@ public class Building_Manager : Singleton<Building_Manager>
         {
             case Direction.RIGHT:
                 left = road_x;
-                //right = road_x + Mathf.Abs(front - back);
                 right = road_x + buildingDepth;
                 break;
             case Direction.LEFT:
                 right = road_x;
                 left = road_x - buildingDepth;
-                //left = road_x - Mathf.Abs(front - back);
                 break;
         }
 
@@ -142,79 +140,79 @@ public class Building_Manager : Singleton<Building_Manager>
         float z_diff = Mathf.Abs(front - back)/4;
 
         #region new broken
-        //List<Vector3>[] sides = new List<Vector3>[4];
-        //int segments = Random.Range(1, 4);
-        //segments *= 2;
+        List<Vector3>[] sides = new List<Vector3>[4];
+        int segments = Random.Range(2, 5);
+        segments *= 2;
 
-        ////add the corners to the start of each side
-        //sides[0] = new List<Vector3>();
-        //sides[0].Add(new Vector3(left, y, back));
+        //add the corners to the start of each side
+        sides[0] = new List<Vector3>();
+        sides[0].Add(new Vector3(left, y, back));
 
-        //sides[1] = new List<Vector3>();
-        //sides[1].Add(new Vector3(right, y, back));
+        sides[1] = new List<Vector3>();
+        sides[1].Add(new Vector3(right, y, back));
 
-        //sides[2] = new List<Vector3>();
-        //sides[2].Add(new Vector3(right, y, front));
+        sides[2] = new List<Vector3>();
+        sides[2].Add(new Vector3(right, y, front));
 
-        //sides[3] = new List<Vector3>();
-        //sides[3].Add(new Vector3(left, y, front));
+        sides[3] = new List<Vector3>();
+        sides[3].Add(new Vector3(left, y, front));
 
-        ////create segments along each side from corner towards next corner
-        //for (int i = 0; i < 4; i++)
-        //{
-        //    int j = i + 1;
-        //    if (j == 4)
-        //    {
-        //        j = 0;
-        //    }
+        //create segments along each side from corner towards next corner
+        for (int i = 0; i < 4; i++)
+        {
+            int j = i + 1;
+            if (j == 4)
+            {
+                j = 0;
+            }
 
-        //    for (int k = 0; k < segments; k++)
-        //    {
-        //        sides[i].Add(Vector3.Lerp(sides[i][0], sides[j][0], (float)((1.0f/segments) * (k + 1.0f) )));
-        //    }
-        //}
+            for (int k = 0; k < segments; k++)
+            {
+                sides[i].Add(Vector3.Lerp(sides[i][0], sides[j][0], (float)((1.0f / segments) * (k + 1.0f))));
+            }
+        }
 
-        //// take each point from the sides and add it to a list
-        //List<Vector3> points = new List<Vector3>();
-        //foreach (List<Vector3> _p in sides)
-        //{
-        //    foreach (Vector3 p in _p)
-        //    {
-        //        points.Add(p);
-        //    }
-        //}
+        // take each point from the sides and add it to a list
+        List<Vector3> points = new List<Vector3>();
+        foreach (List<Vector3> _p in sides)
+        {
+            foreach (Vector3 p in _p)
+            {
+                points.Add(p);
+            }
+        }
 
-        //return points.ToArray();
+        return points.ToArray();
         #endregion
 
         #region old
-        Vector3[] points;
-        switch (Random.Range(0, 4))
-        {
-            case 0:
-            case 1:
-                points = new Vector3[] {
-                    new Vector3(left + x_diff, y, back),
-                    new Vector3(right - x_diff, y, back),
-                    new Vector3(right, y, back + z_diff),
-                    new Vector3(right, y, front - z_diff),
-                    new Vector3(right - x_diff, y, front),
-                    new Vector3(left + x_diff, y, front),
-                    new Vector3(left, y, front - z_diff),
-                    new Vector3(left, y, back + z_diff),
-                };
-                break;
+        //Vector3[] points;
+        //switch (Random.Range(0, 4))
+        //{
+        //    case 0:
+        //    case 1:
+        //        points = new Vector3[] {
+        //            new Vector3(left + x_diff, y, back),
+        //            new Vector3(right - x_diff, y, back),
+        //            new Vector3(right, y, back + z_diff),
+        //            new Vector3(right, y, front - z_diff),
+        //            new Vector3(right - x_diff, y, front),
+        //            new Vector3(left + x_diff, y, front),
+        //            new Vector3(left, y, front - z_diff),
+        //            new Vector3(left, y, back + z_diff),
+        //        };
+        //        break;
 
-            default:
-                points = new Vector3[] {
-                    new Vector3 (left, y, back),
-                    new Vector3 (right, y, back),
-                    new Vector3 (right, y, front),
-                    new Vector3 (left, y, front),
-                };
-                break;
-        }
-        return points;
+        //    default:
+        //        points = new Vector3[] {
+        //            new Vector3 (left, y, back),
+        //            new Vector3 (right, y, back),
+        //            new Vector3 (right, y, front),
+        //            new Vector3 (left, y, front),
+        //        };
+        //        break;
+        //}
+        //return points;
         #endregion
     }
 }

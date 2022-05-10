@@ -44,6 +44,18 @@ public class Building : MonoBehaviour
 
         for (int i = 0; i < _points.Count; i++)
         {
+            int j = i + 1;
+            if (j == _points.Count)
+            {
+                j = 0;
+            }
+
+            int k = i - 1;
+            if (k == -1)
+            {
+                k = _points.Count - 1;
+            }
+
             Vector3 adjCenter = _points[i];
 
             if (adjCenter.z == zLimits.min || adjCenter.z == zLimits.max)
@@ -60,7 +72,7 @@ public class Building : MonoBehaviour
 
             while (hitPoint != Vector3.zero && Vector3.Distance(_points[i], adjCenter) > minDistance)
             {
-                _points[i] = Vector3.Lerp(_points[i], adjCenter, 0.01f);
+                _points[i] = Vector3.Lerp(_points[i], adjCenter, 0.001f);
                 hitPoint = TestCollision(_points[i]);
             }
 
@@ -68,14 +80,17 @@ public class Building : MonoBehaviour
             {
                 _points.RemoveAt(i);
                 i--;
-                if (_points.Count < 3)
+                if (_points.Count < points.Length * 0.75f)
                 {
+                    Destroy(gameObject);
                     return;
                 }
 
                 //return;
             }
         }
+
+        points = _points.ToArray();
 
         //refresh the center incase we changed the points
         centerpoint = Vector3.zero;
@@ -161,7 +176,6 @@ public class Building : MonoBehaviour
         //extents = topRight - bottomLeft;
     }
 
-    //private bool TestCollision(Vector3 point) 
     private Vector3 TestCollision(Vector3 point) 
     {
         LayerMask mask = 1 << LayerMask.NameToLayer("Road");
@@ -171,18 +185,17 @@ public class Building : MonoBehaviour
 
         RaycastHit hit;
 
-        if (Physics.Raycast(transform.TransformPoint(point), Vector3.down, out hit, 60, mask))
+        //if (Physics.Raycast(transform.TransformPoint(point), Vector3.down, out hit, 60, mask))
+        if (Physics.BoxCast(transform.TransformPoint(point), new Vector3(0.01f,0.01f,0.01f), Vector3.down, out hit, transform.rotation, 60, mask))
         {
-            Debug.DrawLine(transform.TransformPoint(point), hit.point, Color.red, 20);
+            //Debug.DrawLine(transform.TransformPoint(point), hit.point, Color.red, 20);
             return transform.InverseTransformPoint(hit.point);
         }
         else
         {
-            Debug.DrawRay(transform.TransformPoint(point), Vector3.down * 50, Color.blue, 10);
+            //Debug.DrawRay(transform.TransformPoint(point), Vector3.down * 50, Color.blue, 10);
             return Vector3.zero;
         }
-
-        
     }
 
     public void Update()

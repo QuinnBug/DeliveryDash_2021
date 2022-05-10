@@ -1021,7 +1021,7 @@ MonoBehaviour:
     axiom: o
     finalString: 
     randomRuleOutput: 1
-  count: 8
+  count: 3
   length: 50
   angles:
   - 60

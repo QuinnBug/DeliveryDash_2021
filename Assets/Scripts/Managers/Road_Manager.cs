@@ -15,7 +15,6 @@ public class Road_Manager : Singleton<Road_Manager>
     public int count = 5;
     public int length;
     public float[] angles;
-    //public float[] lengths;
     public float timePerRoad;
 
 
