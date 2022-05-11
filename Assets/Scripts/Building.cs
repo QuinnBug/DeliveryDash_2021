@@ -11,7 +11,7 @@ public class Building : MonoBehaviour
     public Renderer rend;
     bool isTarget = false;
     internal Road road;
-    public Vector3[] points;
+    public Vector3[] pointArray;
 
     public Range xLimits = new Range();
     public Range zLimits = new Range();
@@ -20,32 +20,36 @@ public class Building : MonoBehaviour
     public Vector3 meshCenter;
     Vector3 extents = Vector3.zero;
 
-    public void Init(List<Vector3> _points, Road parent, Material _mat, Range _xLim, Range _zLim)
+    public void Init(List<Vector3> points, Road parent, Material _mat, Range _xLim, Range _zLim)
     {
         //Debug.Log("Init start for " + name);
 
         xLimits = _xLim;
         zLimits = _zLim;
 
-        points = _points.ToArray();
+        pointArray = points.ToArray();
         road = parent;
 
-        float minDistance = 0.25f;
+        float minDistance = 0.1f;
         float height = Random.Range(3, 10);
 
         Vector3 up = Vector3.up * height;
 
-        Vector3 centerpoint = Vector3.zero;
-        foreach (Vector3 point in _points)
-        {
-            centerpoint += point;
-        }
-        centerpoint /= _points.Count;
+        Vector3 centerpoint = GetCenter(points);
 
-        for (int i = 0; i < _points.Count; i++)
+        List<int> indexes = new List<int>();
+        for (int p = 0; p < pointArray.Length; p++)
         {
+            indexes.Add(p);
+        }
+
+        while (indexes.Count > 0)
+        {
+            int i = indexes[0];
+            indexes.RemoveAt(0);
+
             int j = i + 1;
-            if (j == _points.Count)
+            if (j == points.Count)
             {
                 j = 0;
             }
@@ -53,70 +57,63 @@ public class Building : MonoBehaviour
             int k = i - 1;
             if (k == -1)
             {
-                k = _points.Count - 1;
+                k = points.Count - 1;
             }
 
-            Vector3 adjCenter = _points[i];
+            //Vector3 adjCenter = Vector3.Lerp(Vector3.Lerp(points[j], centerpoint, 1 - minDistance), Vector3.Lerp(points[k], centerpoint, 1 - minDistance), 0.5f);
+            //need to find a way to get a proper center, possibly also move points k and j and readd those to the index list if they aren't in there
+            Vector3 adjCenter = Vector3.Lerp(points[i], Vector3.Lerp(points[k], points[j], 0.5f), 0.5f);
 
-            if (adjCenter.z == zLimits.min || adjCenter.z == zLimits.max)
+            #region old adjCenter
+            //Vector3 adjCenter = _points[i];
+            //if (adjCenter.z == zLimits.min || adjCenter.z == zLimits.max)
+            //{
+            //    adjCenter.z = centerpoint.z;
+            //}
+
+            //if (adjCenter.x == xLimits.min || adjCenter.x == xLimits.max)
+            //{
+            //    adjCenter.x = centerpoint.x;
+            //}
+            #endregion
+
+            Vector3 hitPoint = TestCollision(points[i]);
+
+            while (hitPoint != Vector3.zero && Vector3.Distance(points[i], adjCenter) > minDistance)
             {
-                adjCenter.z = centerpoint.z;
-            }
-
-            if (adjCenter.x == xLimits.min || adjCenter.x == xLimits.max)
-            {
-                adjCenter.x = centerpoint.x;
-            }
-
-            Vector3 hitPoint = TestCollision(_points[i]);
-
-            while (hitPoint != Vector3.zero && Vector3.Distance(_points[i], adjCenter) > minDistance)
-            {
-                _points[i] = Vector3.Lerp(_points[i], adjCenter, 0.001f);
-                hitPoint = TestCollision(_points[i]);
+                points[i] = Vector3.Lerp(points[i], adjCenter, 0.001f);
+                hitPoint = TestCollision(points[i]);
             }
 
             if (hitPoint != Vector3.zero)
             {
-                _points.RemoveAt(i);
-                i--;
-                if (_points.Count < points.Length * 0.75f)
-                {
-                    Destroy(gameObject);
-                    return;
-                }
-
-                //return;
+                Destroy(gameObject);
+                return;
             }
+
+            centerpoint = GetCenter(points);
+
         }
 
-        points = _points.ToArray();
-
-        //refresh the center incase we changed the points
-        centerpoint = Vector3.zero;
-        foreach (Vector3 point in _points)
-        {
-            centerpoint += point;
-        }
-        centerpoint /= _points.Count;
+        pointArray = points.ToArray();
 
         #region Mesh Creation
         qMesh _qMesh = new qMesh();
 
         //side walls
-        for (int i = 0; i < _points.Count; i++)
+        for (int i = 0; i < points.Count; i++)
         {
             int j = i + 1;
-            if (j >= _points.Count)
+            if (j >= points.Count)
             {
                 j = 0;
             }
 
             Vertex[] _v = new Vertex[] { 
-                new Vertex(_points[i], new Vector2(0, 0)),
-                new Vertex(_points[j], new Vector2(1, 0)),
-                new Vertex(_points[i] + up, new Vector2(0, 1)),
-                new Vertex(_points[j] + up, new Vector2(1, 1)),
+                new Vertex(points[i], new Vector2(0, 0)),
+                new Vertex(points[j], new Vector2(1, 0)),
+                new Vertex(points[i] + up, new Vector2(0, 1)),
+                new Vertex(points[j] + up, new Vector2(1, 1)),
             };
 
             Triangle tri1 = new Triangle();
@@ -129,20 +126,20 @@ public class Building : MonoBehaviour
         }
 
         //top and bottom
-        for (int i = 0; i < _points.Count; i++)
+        for (int i = 0; i < points.Count; i++)
         {
             int j = i + 1;
-            if (j >= _points.Count)
+            if (j >= points.Count)
             {
                 j = 0;
             }
 
             Vertex[] _v = new Vertex[] {
-                new Vertex(_points[i], new Vector2(0, 0)),
-                new Vertex(_points[j], new Vector2(0, 0)),
+                new Vertex(points[i], new Vector2(0, 0)),
+                new Vertex(points[j], new Vector2(0, 0)),
                 new Vertex(centerpoint, new Vector2(0, 0)),
-                new Vertex(_points[i] + up, new Vector2(0, 0)),
-                new Vertex(_points[j] + up, new Vector2(0, 0)),
+                new Vertex(points[i] + up, new Vector2(0, 0)),
+                new Vertex(points[j] + up, new Vector2(0, 0)),
                 new Vertex(centerpoint + up, new Vector2(0, 0))
             };
 
@@ -174,6 +171,17 @@ public class Building : MonoBehaviour
 
         //deliveryCenter = meshCenter + (transform.right * (roadSide == Direction.RIGHT ? -1 : 1) * Building_Manager.Instance.buildingDepth);
         //extents = topRight - bottomLeft;
+    }
+
+    Vector3 GetCenter(List<Vector3> points) 
+    {
+        Vector3 centerpoint = Vector3.zero;
+        foreach (Vector3 point in points)
+        {
+            centerpoint += point;
+        }
+        centerpoint /= points.Count;
+        return centerpoint;
     }
 
     private Vector3 TestCollision(Vector3 point) 
@@ -246,9 +254,9 @@ public class Building : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (points != null)
+        if (pointArray != null)
         {
-            foreach (Vector3 item in points)
+            foreach (Vector3 item in pointArray)
             {
                 Gizmos.color = Color.red;
                 Gizmos.DrawSphere(transform.TransformPoint(item), 0.1f);

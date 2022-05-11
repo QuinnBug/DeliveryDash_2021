@@ -1021,7 +1021,7 @@ MonoBehaviour:
     axiom: o
     finalString: 
     randomRuleOutput: 1
-  count: 3
+  count: 15
   length: 50
   angles:
   - 60
@@ -1057,7 +1057,7 @@ MonoBehaviour:
   materials:
   - {fileID: 2100000, guid: de5f67ad039d0804a9c960c380fc6147, type: 2}
   - {fileID: 2100000, guid: 6de6c6f25b052604d9201ccf8a4d2abf, type: 2}
-  timePerBuilding: 0.1
+  timePerBuilding: 0.05
 --- !u!1001 &6467568480341165340
 PrefabInstance:
   m_ObjectHideFlags: 0
