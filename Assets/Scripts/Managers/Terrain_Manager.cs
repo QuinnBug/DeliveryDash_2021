@@ -29,7 +29,7 @@ public class Terrain_Manager : Singleton<Terrain_Manager>
     void GenerateTile(Vector2Int _position) 
     {
         Vector2 posXSize = _position * tileSettings.size;
-        Vector3 worldPos = new Vector3(posXSize.x, 0, posXSize.y) + worldStart;
+        Vector3 worldPos = new Vector3(posXSize.x * tileSettings.vSize.x, 0, posXSize.y * tileSettings.vSize.x) + worldStart;
         GameObject tileObj = Instantiate(tilePrefab, worldPos, Quaternion.identity, transform);
 
         TerrainTile tile = tileObj.GetComponent<TerrainTile>();
