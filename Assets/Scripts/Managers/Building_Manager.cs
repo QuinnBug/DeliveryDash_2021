@@ -128,7 +128,7 @@ public class Building_Manager : Singleton<Building_Manager>
 
         //Add Building Script
         Building b = go.AddComponent<Building>();
-        b.Init(new List<Vector3>(GetRandomBuildingLayout(right,left,front,back,y)) , parent, materials[Random.Range(0, materials.Length)], new Range(left, right), new Range(back, front));
+        b.Init(new List<Vector3>(GetRandomBuildingLayout(right,left,front,back,y)), parent, materials[Random.Range(0, materials.Length)], new Range(left, right), new Range(back, front));
         buildings.Add(b);
     }
 

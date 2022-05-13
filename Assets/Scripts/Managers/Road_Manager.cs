@@ -154,6 +154,17 @@ public class Road_Manager : Singleton<Road_Manager>
 
     private void CreateRoad(Vector3 start, Vector3 end, int num)
     {
+        foreach (Road item in roads)
+        {
+            if (start == item.startPoint && end == item.endPoint)
+            {
+                return;
+            }
+        }
+
+        //if there is already a junction at start, add this road to that junction, else create a junction
+        //if there is already a junction at end, add this road to that junction, else create a junction
+
         GameObject roadObj = Instantiate(roadPrefab, start, Quaternion.identity, transform);
         Road road = roadObj.GetComponent<Road>();
         roadObj.name = roadObj.name + num.ToString();

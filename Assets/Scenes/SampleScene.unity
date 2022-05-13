@@ -1018,10 +1018,10 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: o
+    axiom: fff
     finalString: 
     randomRuleOutput: 1
-  count: 15
+  count: 0
   length: 50
   angles:
   - 60

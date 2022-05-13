@@ -62,7 +62,7 @@ public class Building : MonoBehaviour
 
             //Vector3 adjCenter = Vector3.Lerp(Vector3.Lerp(points[j], centerpoint, 1 - minDistance), Vector3.Lerp(points[k], centerpoint, 1 - minDistance), 0.5f);
             //need to find a way to get a proper center, possibly also move points k and j and readd those to the index list if they aren't in there
-            Vector3 adjCenter = Vector3.Lerp(points[i], Vector3.Lerp(points[k], points[j], 0.5f), 0.5f);
+            Vector3 adjCenter = centerpoint;
 
             #region old adjCenter
             //Vector3 adjCenter = _points[i];
@@ -194,14 +194,14 @@ public class Building : MonoBehaviour
         RaycastHit hit;
 
         //if (Physics.Raycast(transform.TransformPoint(point), Vector3.down, out hit, 60, mask))
-        if (Physics.BoxCast(transform.TransformPoint(point), new Vector3(0.01f,0.01f,0.01f), Vector3.down, out hit, transform.rotation, 60, mask))
+        if (Physics.BoxCast(transform.TransformPoint(point), new Vector3(0.01f, 0.01f, 0.01f), Vector3.down, out hit, transform.rotation, 60, mask))
         {
-            //Debug.DrawLine(transform.TransformPoint(point), hit.point, Color.red, 20);
+            Debug.DrawLine(transform.TransformPoint(point), hit.point, Color.red, 20);
             return transform.InverseTransformPoint(hit.point);
         }
         else
         {
-            //Debug.DrawRay(transform.TransformPoint(point), Vector3.down * 50, Color.blue, 10);
+            Debug.DrawRay(transform.TransformPoint(point), Vector3.down * 50, Color.blue, 10);
             return Vector3.zero;
         }
     }
