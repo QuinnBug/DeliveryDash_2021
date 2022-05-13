@@ -109,6 +109,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fc3dd8883fdc9542a9e52b2ee22ef63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointDistanceFromCenter: 3
+  pointDistanceFromCenter: 7.5
   position: {x: 0, y: 0, z: 0}
   connectedRoads: []
+  debugPoints: []
+  centerPoints: []

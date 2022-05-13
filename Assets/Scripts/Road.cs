@@ -36,19 +36,19 @@ public class Road : MonoBehaviour
     {
         startPoint = _start;
         endPoint = _end;
+        transform.position = startPoint;
+        transform.LookAt(endPoint, Vector3.up);
     }
 
     public bool GenerateMesh() 
     {
         LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground") | 1 << LayerMask.NameToLayer("Road");
-        transform.position = startPoint;
-        transform.LookAt(endPoint, Vector3.up);
-
+        
         Vector3 oStart = startPoint;
-        startPoint = Vector3.MoveTowards(startPoint, endPoint, -width/7);
+        //startPoint = Vector3.MoveTowards(startPoint, endPoint, width/2);
 
         Vector3 oEnd = endPoint;
-        endPoint = Vector3.MoveTowards(endPoint, startPoint, -width/7);
+        //endPoint = Vector3.MoveTowards(endPoint, startPoint, width/2);
 
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
         length = Vector3.Distance(endPoint, startPoint);
@@ -92,6 +92,7 @@ public class Road : MonoBehaviour
                     bool roadDone = false;
                     float distanceMoved = 0;
 
+                    //need to convert to a box cast? needs a lot of work tbh
                     RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPoint), Vector3.down, 100, groundLayer);
                     foreach (RaycastHit hit in hits)
                     {
@@ -102,9 +103,9 @@ public class Road : MonoBehaviour
                         else if (hit.collider.gameObject.tag == "Road" && !roadDone)
                         {
                             //Debug.DrawLine(transform.TransformPoint(vertexPoint), transform.TransformPoint(Vector3.Lerp(vertexPoint, adjCenter, 0.001f)), Color.red, 60);
-                            //distanceMoved += Vector3.Distance(vertexPoint, adjCenter) * 0.001f;
-                            //vertexPoint = Vector3.Lerp(vertexPoint, adjCenter, 0.001f);
-                            //loop = distanceMoved < length/2;
+                            distanceMoved += Vector3.Distance(vertexPoint, adjCenter) * 0.001f;
+                            vertexPoint = Vector3.Lerp(vertexPoint, adjCenter, 0.001f);
+                            loop = distanceMoved < length/2;
                             roadDone = true;
                         }
                     }

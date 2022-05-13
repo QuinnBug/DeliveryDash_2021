@@ -196,12 +196,12 @@ public class Building : MonoBehaviour
         //if (Physics.Raycast(transform.TransformPoint(point), Vector3.down, out hit, 60, mask))
         if (Physics.BoxCast(transform.TransformPoint(point), new Vector3(0.01f, 0.01f, 0.01f), Vector3.down, out hit, transform.rotation, 60, mask))
         {
-            Debug.DrawLine(transform.TransformPoint(point), hit.point, Color.red, 20);
+            //Debug.DrawLine(transform.TransformPoint(point), hit.point, Color.red, 20);
             return transform.InverseTransformPoint(hit.point);
         }
         else
         {
-            Debug.DrawRay(transform.TransformPoint(point), Vector3.down * 50, Color.blue, 10);
+            //Debug.DrawRay(transform.TransformPoint(point), Vector3.down * 50, Color.blue, 10);
             return Vector3.zero;
         }
     }

@@ -175,11 +175,11 @@ public class Road_Manager : Singleton<Road_Manager>
 
         foreach (Junction item in junctions)
         {
-            if (start == item.position)
+            if (Vector3.Distance(start, item.position) < 1)
             {
                 road.startJunction = item;
             }
-            else if (end == item.position)
+            else if (Vector3.Distance(end, item.position) < 1)
             {
                 road.endJunction = item;
             }
@@ -200,6 +200,7 @@ public class Road_Manager : Singleton<Road_Manager>
         Junction junction = jObj.GetComponent<Junction>();
 
         junction.position = _pos;
+        junctions.Add(junction);
 
         return junction;
     }
@@ -217,6 +218,7 @@ public class Road_Manager : Singleton<Road_Manager>
         {
             item.Init();
         }
+        Debug.Log("Junctions done");
 
         foreach (Road road in roads)
         {
