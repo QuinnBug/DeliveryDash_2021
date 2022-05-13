@@ -21,7 +21,7 @@ public class Road : MonoBehaviour
     public int vertexWidth = 2;
     internal float length = 0;
     private Mesh mesh;
-    private qMesh qMesh;
+    private QMesh qMesh;
     [Space]
     internal Vector3[] vertices;
     internal Vertex[][] points;
@@ -29,11 +29,13 @@ public class Road : MonoBehaviour
     public List<Road> startConnectedRoads = new List<Road>();
     public List<Road> endConnectedRoads = new List<Road>();
 
-    public bool Init(Vector3 _start, Vector3 _end)
+    public Junction startJunction = null;
+    public Junction endJunction = null;
+
+    public void Init(Vector3 _start, Vector3 _end)
     {
         startPoint = _start;
         endPoint = _end;
-        return GenerateMesh();
     }
 
     public bool GenerateMesh() 
@@ -65,7 +67,7 @@ public class Road : MonoBehaviour
             }
         }
 
-        qMesh = new qMesh();
+        qMesh = new QMesh();
 
         #region set up vertices
         points = new Vertex[vertexWidth+1][];

@@ -98,7 +98,7 @@ public class Building : MonoBehaviour
         pointArray = points.ToArray();
 
         #region Mesh Creation
-        qMesh _qMesh = new qMesh();
+        QMesh _qMesh = new QMesh();
 
         //side walls
         for (int i = 0; i < points.Count; i++)

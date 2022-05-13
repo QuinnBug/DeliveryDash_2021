@@ -49,7 +49,7 @@ namespace QuinnMeshes
         }
     }
 
-    public class qMesh 
+    public class QMesh 
     {
         public List<Triangle> triangles = new List<Triangle>();
 

@@ -9,6 +9,7 @@ public class Road_Manager : Singleton<Road_Manager>
     public bool testConnections = false;
 
     public GameObject roadPrefab;
+    public GameObject junctionPrefab;
     [Space]
     public LSystem lSys = new LSystem();
     [Space]
@@ -17,9 +18,10 @@ public class Road_Manager : Singleton<Road_Manager>
     public float[] angles;
     public float timePerRoad;
 
-
     List<Vector3> points = new List<Vector3>();
+
     internal List<Road> roads = new List<Road>();
+    internal List<Junction> junctions = new List<Junction>();
 
     bool initDone = false;
     bool testRunning = false;
@@ -120,9 +122,11 @@ public class Road_Manager : Singleton<Road_Manager>
                     roadCount++;
                     tempPos = currentPos;
                     break;
+
                 case Instructions.LEFT_TURN:
                     direction = Quaternion.Euler(0, angles[Random.Range(0, angles.Length)] * -1, 0) * direction;
                     break;
+
                 case Instructions.RIGHT_TURN:
                     direction = Quaternion.Euler(0, angles[Random.Range(0, angles.Length)], 0) * direction;
                     break;
@@ -141,12 +145,13 @@ public class Road_Manager : Singleton<Road_Manager>
                         length = ag.length;
                     }
                     break;
+
                 default:
                     break;
             }
             yield return new WaitForSeconds(timePerRoad);
         }
-        SetUpRoadConnections();
+        FinaliseRoads();
 
         Debug.Log("Roads Done");
         Event_Manager.Instance._OnRoadsGenerated.Invoke();
@@ -162,13 +167,41 @@ public class Road_Manager : Singleton<Road_Manager>
             }
         }
 
-        //if there is already a junction at start, add this road to that junction, else create a junction
-        //if there is already a junction at end, add this road to that junction, else create a junction
-
         GameObject roadObj = Instantiate(roadPrefab, start, Quaternion.identity, transform);
         Road road = roadObj.GetComponent<Road>();
         roadObj.name = roadObj.name + num.ToString();
-        if (road.Init(start, end)) roads.Add(road);
+        road.Init(start, end);
+        roads.Add(road);
+
+        foreach (Junction item in junctions)
+        {
+            if (start == item.position)
+            {
+                road.startJunction = item;
+            }
+            else if (end == item.position)
+            {
+                road.endJunction = item;
+            }
+
+            if (road.startJunction != null && road.endJunction != null) break;
+        }
+
+        if (road.startJunction == null) road.startJunction = NewJunction(start);
+        if (road.endJunction == null) road.endJunction = NewJunction(end);
+
+        road.startJunction.connectedRoads.Add(road);
+        road.endJunction.connectedRoads.Add(road);
+    }
+
+    private Junction NewJunction(Vector3 _pos)
+    {
+        GameObject jObj = Instantiate(junctionPrefab, _pos, Quaternion.identity);
+        Junction junction = jObj.GetComponent<Junction>();
+
+        junction.position = _pos;
+
+        return junction;
     }
 
     public void DestroyRoad(Road road) 
@@ -178,9 +211,19 @@ public class Road_Manager : Singleton<Road_Manager>
     }
 
     
-    void SetUpRoadConnections()
+    void FinaliseRoads()
     {
-        foreach (Road road in Road_Manager.Instance.roads)
+        foreach (Junction item in junctions)
+        {
+            item.Init();
+        }
+
+        foreach (Road road in roads)
+        {
+            road.GenerateMesh();
+        }
+
+        foreach (Road road in roads)
         {
             road.SetupConnections();
         }
