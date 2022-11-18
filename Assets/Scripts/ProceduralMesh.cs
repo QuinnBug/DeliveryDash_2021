@@ -37,6 +37,7 @@ namespace QuinnMeshes
         }
     }
 
+    [System.Serializable]
     public struct Vertex 
     {
         public Vector3 position;

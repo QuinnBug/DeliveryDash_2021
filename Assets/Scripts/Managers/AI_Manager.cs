@@ -18,8 +18,8 @@ public class AI_Manager : Singleton<AI_Manager>
     // Start is called before the first frame update
     void Start()
     {
-        Event_Manager.Instance._OnBuildingsGenerated.AddListener(StartAI);
-        Event_Manager.Instance._AiUnitKilled.AddListener(NpcKilled);
+        //Event_Manager.Instance._OnBuildingsGenerated.AddListener(StartAI);
+        //Event_Manager.Instance._AiUnitKilled.AddListener(NpcKilled);
     }
 
     private void Update()

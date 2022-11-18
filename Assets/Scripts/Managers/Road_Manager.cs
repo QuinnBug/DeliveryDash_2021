@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+/// <summary>
+/// Uses an L system to generate a sequence of roads, and then creates a mesh for each of them
+/// </summary>
 public class Road_Manager : Singleton<Road_Manager>
 {
     public bool testConnections = false;
@@ -175,11 +178,11 @@ public class Road_Manager : Singleton<Road_Manager>
 
         foreach (Junction item in junctions)
         {
-            if (Vector3.Distance(start, item.position) < 1)
+            if (Vector3.Distance(start, item.centralPoint) < 1)
             {
                 road.startJunction = item;
             }
-            else if (Vector3.Distance(end, item.position) < 1)
+            else if (Vector3.Distance(end, item.centralPoint) < 1)
             {
                 road.endJunction = item;
             }
@@ -199,7 +202,7 @@ public class Road_Manager : Singleton<Road_Manager>
         GameObject jObj = Instantiate(junctionPrefab, _pos, Quaternion.identity);
         Junction junction = jObj.GetComponent<Junction>();
 
-        junction.position = _pos;
+        junction.centralPoint = _pos;
         junctions.Add(junction);
 
         return junction;
@@ -214,15 +217,14 @@ public class Road_Manager : Singleton<Road_Manager>
     
     void FinaliseRoads()
     {
+        for (int i = 0; i < roads.Count; i++)
+        {
+            roads[i].GenerateMesh();
+        }
+
         foreach (Junction item in junctions)
         {
             item.Init();
-        }
-        Debug.Log("Junctions done");
-
-        foreach (Road road in roads)
-        {
-            road.GenerateMesh();
         }
 
         foreach (Road road in roads)

@@ -9,14 +9,15 @@ public class Junction : MonoBehaviour
 {
     public float pointDistanceFromCenter = 1;
     [Space]
-    public Vector3 position;
+    public Vector3 centralPoint;
     public List<Road> connectedRoads;
     [Space]
     public Vector3[] debugPoints;
     public List<Vector3> centerPoints = new List<Vector3>();
+
     public void Init() 
     {
-        transform.position = position;
+        transform.position = centralPoint;
 
         if (connectedRoads.Count < 2) return;
 
@@ -28,60 +29,87 @@ public class Junction : MonoBehaviour
         foreach (Road road in connectedRoads)
         {
             bool startConnect = ConnectedToRoadStart(road);
-            Vector3 _endPoint = startConnect ? road.endPoint : road.startPoint;
-            //Vector3 pointDir = road.transform.right * (startConnect ? -1 : 1);
+            //Vector3 _endPoint = startConnect ? road.endPoint : road.startPoint;
 
-            Vector3 roadCenter = transform.InverseTransformPoint(Vector3.MoveTowards(position, _endPoint, pointDistanceFromCenter));
-            Vector3 pointDir = Quaternion.Euler(0,90,0) * roadCenter.normalized;
+            //get the left most point of the mesh and the right most point of the road mesh.
+            int depth = startConnect ? 0 : road.vertexCount;
 
-            points.Add(roadCenter + (pointDir * (road.width / 2)));
-            points.Add(roadCenter - (pointDir * (road.width / 2)));
+            points.Add(road.transform.TransformPoint(road.points[0][depth].position));
+            points.Add(road.transform.TransformPoint(road.points[road.vertexWidth][depth].position));
+
+            Debug.Log(points[points.Count - 2] + " && " + points[points.Count - 1] + " :: " + depth);
+            Debug.DrawLine(points[points.Count - 2], points[points.Count - 1], Color.cyan, 60);
+
+            //Vector3 roadCenter = transform.InverseTransformPoint(Vector3.MoveTowards(position, _endPoint, pointDistanceFromCenter));
+            //Vector3 pointDir = Quaternion.Euler(0, 90, 0) * roadCenter.normalized;
+
+            //points.Add(roadCenter + (pointDir * (road.width / 2)));
+            //points.Add(roadCenter - (pointDir * (road.width / 2)));
         }
 
         points = SortPointsClockwise(points);
 
-        //add 0 to get the center point
-        points.Add(Vector3.zero);
-
-        //do the ol' raycast down to get floor height
-        LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground");
         for (int i = 0; i < points.Count; i++)
         {
-            Vector3 adjPoint = points[i];
+            int j = i + 1;
+            if (j >= points.Count) j = 0;
 
-            RaycastHit hit;
-            if (Physics.Raycast(transform.TransformPoint(adjPoint), Vector3.down, out hit, 100, groundLayer))
-            {
-                if (hit.collider.gameObject.tag == "Terrain")
-                {
-                    adjPoint.y = transform.InverseTransformPoint(hit.point).y + 0.2f;
-                }
-            }
-
-            points[i] = adjPoint;
+            Debug.DrawLine(points[i], points[j], Color.blue, 60);
+            points[i] = transform.InverseTransformPoint(points[i]);
+            Debug.DrawLine(points[i], points[j], Color.red, 60);
         }
 
+        //add 0 to get the center point
+        points.Add(new Vector3(0, points[0].y, 0));
+
+        #region floor raycase
+        //do the ol' raycast down to get floor height
+        //LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground");
+        //for (int i = 0; i < points.Count; i++)
+        //{
+        //    Vector3 adjPoint = points[i];
+
+        //    RaycastHit hit;
+        //    if (Physics.Raycast(transform.TransformPoint(adjPoint), Vector3.down, out hit, 100, groundLayer))
+        //    {
+        //        if (hit.collider.gameObject.tag == "Terrain")
+        //        {
+        //            adjPoint.y = transform.InverseTransformPoint(hit.point).y + 0.2f;
+        //        }
+        //    }
+
+        //    points[i] = adjPoint;
+        //}
+        #endregion
+
         //remove the 0 from the array and set position to that
-        position = points.Last();
+        centralPoint = points.Last();
         points.RemoveAt(points.Count - 1);
 
         debugPoints = points.ToArray();
 
         QMesh qMesh = new QMesh();
-        for (int i = 0; i < points.Count; i++)
+        //for (int i = 0; i < points.Count; i++)
+        for (int i = 0; i < points.Count; i += 2)
         {
             int j = i + 1;
-            if (j == points.Count)
-            {
-                j = 0;
-            }
+            if (j == points.Count) j = 0;
+            int k = j + 1;
+            if (k == points.Count) k = 0;
+            
 
             Triangle tri = new Triangle();
 
+            //Vertex[] _v = new Vertex[] {
+            //    new Vertex(points[i], new Vector2(0, 1)),
+            //    new Vertex(centralPoint, new Vector2(0.5f, 0)),
+            //    new Vertex(points[j], new Vector2(1, 1)),
+            //};
+
             Vertex[] _v = new Vertex[] {
-                new Vertex(points[i], new Vector2(0, 1)),
-                new Vertex(position, new Vector2(0.5f, 0)),
-                new Vertex(points[j], new Vector2(1, 1)),
+                new Vertex(points[i], new Vector2(1, 1)),
+                new Vertex(points[k], new Vector2(1, 1)),
+                new Vertex(points[j], new Vector2(1, 1))
             };
 
             tri.vertices = _v;
@@ -125,14 +153,13 @@ public class Junction : MonoBehaviour
             j = i - 1;
 
             open = points[i];
-            float openAngle = Vector3.SignedAngle(Vector3.forward, (open), Vector3.up);
+            float openAngle = Vector3.SignedAngle(Vector3.forward, open, Vector3.up);
             if (openAngle < 0) openAngle += 360;
-
 
             while (j >= 0 && loop)
             {
                 check = points[j];
-                float checkAngle = Vector3.SignedAngle(Vector3.forward, (check), Vector3.up);
+                float checkAngle = Vector3.SignedAngle(Vector3.forward, check, Vector3.up);
                 if (checkAngle < 0) checkAngle += 360;
 
                 loop = checkAngle < openAngle;
@@ -155,7 +182,7 @@ public class Junction : MonoBehaviour
             foreach (var item in debugPoints)
             {
                 Gizmos.color = Color.cyan;
-                Gizmos.DrawSphere(transform.TransformPoint(item), 0.5f);
+                Gizmos.DrawSphere(transform.TransformPoint(item), 1.5f);
             }
         }
 

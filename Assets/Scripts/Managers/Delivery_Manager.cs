@@ -13,8 +13,8 @@ public class Delivery_Manager : Singleton<Delivery_Manager>
 
     void Start()
     {
-        Event_Manager.Instance._OnBuildingsGenerated.AddListener(AssignDelivery);
-        Event_Manager.Instance._DeliveryMade.AddListener(ConfirmDelivery);
+        //Event_Manager.Instance._OnBuildingsGenerated.AddListener(AssignDelivery);
+        //Event_Manager.Instance._DeliveryMade.AddListener(ConfirmDelivery);
     }
 
     void Update()

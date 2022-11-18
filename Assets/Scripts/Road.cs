@@ -24,7 +24,7 @@ public class Road : MonoBehaviour
     private QMesh qMesh;
     [Space]
     internal Vector3[] vertices;
-    internal Vertex[][] points;
+    public Vertex[][] points;
 
     public List<Road> startConnectedRoads = new List<Road>();
     public List<Road> endConnectedRoads = new List<Road>();
@@ -45,21 +45,20 @@ public class Road : MonoBehaviour
         LayerMask groundLayer = 1 << LayerMask.NameToLayer("Ground") | 1 << LayerMask.NameToLayer("Road");
         
         Vector3 oStart = startPoint;
-        //startPoint = Vector3.MoveTowards(startPoint, endPoint, width/2);
+        //startPoint = Vector3.MoveTowards(startPoint, endPoint, 0.1f);
 
         Vector3 oEnd = endPoint;
-        //endPoint = Vector3.MoveTowards(endPoint, startPoint, width/2);
+        //endPoint = Vector3.MoveTowards(endPoint, startPoint, 0.1f);
 
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
         length = Vector3.Distance(endPoint, startPoint);
 
-        Collider[] colliders = Physics.OverlapBox(center, new Vector3(1, 25, 1));
+        Collider[] colliders = Physics.OverlapBox(center, new Vector3(1, 35, 1));
         if (colliders.Length > 0)
         {
-            Road otherRoad;
             foreach (Collider col in colliders)
             {
-                if (col.gameObject != this && col.TryGetComponent(out otherRoad))
+                if (col.gameObject != this && col.TryGetComponent(out Road otherRoad))
                 {
                     Road_Manager.Instance.DestroyRoad(this);
                     return false;
@@ -79,7 +78,6 @@ public class Road : MonoBehaviour
                 Vector3 flatVertexPoint = new Vector3((x - vertexWidth/2.0f) * (width / vertexWidth), 0, z * (length / vertexCount));
                 Vector3 vertexPoint = flatVertexPoint;
                 Vector3 adjCenter = new Vector3(vertexPoint.x, 0, transform.InverseTransformPoint(Vector3.Lerp(startPoint, endPoint, 0.5f)).z);
-                //Debug.Log("adjCenter " + adjCenter);
 
                 bool loop = true;
                 while (loop)
@@ -89,8 +87,8 @@ public class Road : MonoBehaviour
 
                     loop = false;
 
-                    bool roadDone = false;
-                    float distanceMoved = 0;
+                    //bool roadDone = false;
+                    //float distanceMoved = 0;
 
                     //need to convert to a box cast? needs a lot of work tbh
                     RaycastHit[] hits = Physics.RaycastAll(transform.TransformPoint(flatVertexPoint), Vector3.down, 100, groundLayer);
@@ -100,14 +98,14 @@ public class Road : MonoBehaviour
                         {
                             vertexPoint.y = transform.InverseTransformPoint(hit.point).y + 0.2f;
                         }
-                        else if (hit.collider.gameObject.tag == "Road" && !roadDone)
-                        {
-                            //Debug.DrawLine(transform.TransformPoint(vertexPoint), transform.TransformPoint(Vector3.Lerp(vertexPoint, adjCenter, 0.001f)), Color.red, 60);
-                            distanceMoved += Vector3.Distance(vertexPoint, adjCenter) * 0.001f;
-                            vertexPoint = Vector3.Lerp(vertexPoint, adjCenter, 0.001f);
-                            loop = distanceMoved < length/2;
-                            roadDone = true;
-                        }
+                        //else if (hit.collider.gameObject.tag == "Road" && !roadDone)
+                        //{
+                        //    //Debug.DrawLine(transform.TransformPoint(vertexPoint), transform.TransformPoint(Vector3.Lerp(vertexPoint, adjCenter, 0.001f)), Color.red, 60);
+                        //    distanceMoved += Vector3.Distance(vertexPoint, adjCenter) * 0.001f;
+                        //    vertexPoint = Vector3.Lerp(vertexPoint, adjCenter, 0.001f);
+                        //    loop = distanceMoved < length/2;
+                        //    roadDone = true;
+                        //}
                     }
                 }
 
@@ -221,5 +219,29 @@ public class Road : MonoBehaviour
         Vector3 center = Vector3.Lerp(startPoint, endPoint, 0.5f);
         Debug.DrawLine(center + Vector3.up, center - Vector3.up);
         return center;
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (points != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(transform.TransformPoint(points[0][0].position), Vector3.one / 2);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(transform.TransformPoint(points[0][vertexCount].position), Vector3.one / 2);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(transform.TransformPoint(points[vertexWidth][0].position), Vector3.one / 2);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(transform.TransformPoint(points[vertexWidth][vertexCount].position), Vector3.one / 2);
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawCube(startPoint, Vector3.one / 2);
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawCube(endPoint, Vector3.one / 2);
+        }
     }
 }
