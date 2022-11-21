@@ -35,7 +35,7 @@ public class NodeMeshConstructor : MonoBehaviour
     {
         if (nodeManager.nodeGenDone && points == null)
         {
-            GetAllPoints();
+            //GetAllPoints();
         }
     }
 

@@ -195,7 +195,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
                 if (showNodes)
                 {
                     Gizmos.color = Color.red;
-                    Gizmos.DrawSphere(item.point, 5.0f);
+                    Gizmos.DrawSphere(item.point, 10.0f);
 
                     Gizmos.color = Color.red;
                     Gizmos.DrawSphere(item.point + (item.forward * 5), 3.0f);
@@ -237,7 +237,7 @@ public class Node
 
     public void AddConnection(Node node) 
     {
-        if (connections.Contains(node) || Vector3.Distance(point, node.point) >= 100)
+        if (connections.Contains(node) || Vector3.Distance(point, node.point) >= 250)
             return;
         else 
         {

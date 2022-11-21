@@ -430,6 +430,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testConnections: 0
+  showConnections: 1
+  showNodes: 1
   lSys:
     rules:
     - input: 111
@@ -459,10 +461,10 @@ MonoBehaviour:
     finalString: 
     randomRuleOutput: 1
   count: 10
-  length: 50
-  angle: 30
+  length: 100
+  angle: 15
   minDistMultiplier: 1.5
-  timePerStep: 0.1
+  timePerStep: 0.001
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0
@@ -492,6 +494,8 @@ MonoBehaviour:
   cornerDistance: 25
   abDistance: 0
   points: []
+  drawPoints: 0
+  drawLines: 0
   currentP: 0
   pCount: 64
   pTimer: 0.5
