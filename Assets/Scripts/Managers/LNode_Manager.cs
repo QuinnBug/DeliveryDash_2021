@@ -10,6 +10,8 @@ using Random = UnityEngine.Random;
 public class LNode_Manager : Singleton<LNode_Manager>
 {
     public bool testConnections = false;
+    public bool showConnections = false;
+    public bool showNodes = false;
     [Space]
     public LSystem lSys = new LSystem();
     public int count = 5;
@@ -19,7 +21,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
     public float minDistMultiplier;
     public float timePerStep;
     [Space]
-    public List<Node> nodes = new List<Node>();
+    internal List<Node> nodes = new List<Node>();
 
     bool initDone = false;
     internal bool nodeGenDone = false;
@@ -190,23 +192,28 @@ public class LNode_Manager : Singleton<LNode_Manager>
         {
             foreach (Node item in nodes)
             {
-                Gizmos.color = Color.red;
-                Gizmos.DrawSphere(item.point, 5.0f);
-
-                Gizmos.color = Color.red;
-                Gizmos.DrawSphere(item.point + (item.forward * 5), 3.0f);
-
-                foreach (Node node in item.connections)
+                if (showNodes)
                 {
-                    Gizmos.color = Color.blue;
-                    Gizmos.DrawLine(item.point, node.point);
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawSphere(item.point, 5.0f);
+
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawSphere(item.point + (item.forward * 5), 3.0f);
+                }
+
+                if (showConnections)
+                {
+                    foreach (Node node in item.connections)
+                    {
+                        Gizmos.color = Color.blue;
+                        Gizmos.DrawLine(item.point, node.point);
+                    }
                 }
             }
         }
     }
 }
 
-[Serializable]
 public class Node
 {
     public Vector3 point;

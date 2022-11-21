@@ -437,6 +437,8 @@ MonoBehaviour:
       - f[lt]?
       - f[rt]?
       - f[ft]?
+      - flt?
+      - frt?
     - input: 108
       outputs:
       - <f
@@ -456,12 +458,11 @@ MonoBehaviour:
     axiom: o
     finalString: 
     randomRuleOutput: 1
-  count: 15
+  count: 10
   length: 50
-  angle: 45
+  angle: 30
   minDistMultiplier: 1.5
   timePerStep: 0.1
-  nodes: []
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0
@@ -488,5 +489,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e7b09b4b007a84493a949705dd8ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cornerDistance: 15
+  cornerDistance: 25
+  abDistance: 0
   points: []
+  currentP: 0
+  pCount: 64
+  pTimer: 0.5
+  switchTime: 0.5
