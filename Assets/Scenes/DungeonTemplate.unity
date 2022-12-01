@@ -462,8 +462,10 @@ MonoBehaviour:
     randomRuleOutput: 1
   count: 10
   length: 100
-  angle: 15
-  minDistMultiplier: 1.5
+  angle: 45
+  nodeLimitRange:
+    min: 75
+    max: 175
   timePerStep: 0.001
 --- !u!4 &2109595311
 Transform:
@@ -491,12 +493,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e7b09b4b007a84493a949705dd8ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  minVDistance: 3
   cornerDistance: 25
-  abDistance: 0
   points: []
-  drawPoints: 0
+  drawPoints: 1
   drawLines: 0
   currentP: 0
-  pCount: 64
-  pTimer: 0.5
-  switchTime: 0.5
+  displayCount: 5
+  pTimer: 5
+  switchTime: 5

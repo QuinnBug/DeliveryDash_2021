@@ -18,7 +18,8 @@ public class LNode_Manager : Singleton<LNode_Manager>
     [Space]
     public int length;
     public int angle;
-    public float minDistMultiplier;
+    //below the minimum the nodes combine, above the maximum connections are broken
+    public Range nodeLimitRange;
     public float timePerStep;
     [Space]
     internal List<Node> nodes = new List<Node>();
@@ -172,7 +173,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
     {
         foreach (Node item in nodes)
         {
-            if (pos == item.point || Vector3.Distance(pos, item.point) <= length / minDistMultiplier)
+            if (pos == item.point || Vector3.Distance(pos, item.point) <= nodeLimitRange.min)
             {
                 Debug.Log("No new node needed");
                 parent.AddConnection(item);
@@ -237,12 +238,14 @@ public class Node
 
     public void AddConnection(Node node) 
     {
-        if (connections.Contains(node) || Vector3.Distance(point, node.point) >= 250)
+        //if node
+
+        if (connections.Contains(node) || Vector3.Distance(point, node.point) >= LNode_Manager.Instance.nodeLimitRange.max)
             return;
         else 
         {
             connections.Add(node);
-            node.AddConnection(node);
+            node.connections.Add(this);
         }
 
     }

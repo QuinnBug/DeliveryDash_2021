@@ -6,18 +6,18 @@ public class NodeMeshConstructor : MonoBehaviour
 {
     LNode_Manager nodeManager;
 
+    public float minVDistance;
     public float cornerDistance;
-    [SerializeField]
     private float abDistance;
 
     public List<Vector3> points = null;
-    public List<Bounds> squares = null;
+    public List<Bounds> shapes = null;
 
     //display variables
     public bool drawPoints;
     public bool drawLines;
     public int currentP = 0;
-    public int pCount = 64;
+    public int displayCount = 64;
     public float pTimer = 0;
     public float switchTime = 0.5f;
 
@@ -35,22 +35,25 @@ public class NodeMeshConstructor : MonoBehaviour
     {
         if (nodeManager.nodeGenDone && points == null)
         {
-            //GetAllPoints();
+            GetAllPoints();
         }
     }
 
     void GetAllPoints() 
     {
         points = new List<Vector3>();
+        shapes = new List<Bounds>();
 
         foreach (Node item in nodeManager.nodes)
         {
-            squares.Add(GetNodeCorners(item));
+            if (item == null) continue;
+
+            shapes.Add(GetNodeCorners(item));
         }
 
-        for (int i = 0; i < squares.Count; i++)
+        for (int i = 0; i < shapes.Count; i++)
         {
-            for (int j = 0; j < squares.Count; j++)
+            for (int j = 0; j < shapes.Count; j++)
             {
                 
             }
@@ -61,43 +64,66 @@ public class NodeMeshConstructor : MonoBehaviour
 
     Bounds GetNodeCorners(Node node) 
     {
-        Vector3[] points = new Vector3[4];
+        //for each conn
+        //get the direction from node to conn[i]
+        //find midIPoint xDist in direction
+        //get sidePoints to the left & right of midIPoint
+        //add sidePoints to points if sidepoint is further away than mid corner dist from other points
+        //sort points in clockwise order
+        //return points;
 
-        Quaternion rotation = Quaternion.LookRotation(node.forward, Vector3.up);
+        List<Vector3> points = new List<Vector3>();
 
-        int i = 0;
-        for (int x = -1; x <= 1; x+=2)
+        Quaternion rotation;
+        Vector3 midDirPoint;
+        foreach (Node conn in node.connections)
         {
-            for (int z = -1; z <= 1; z += 2)
+            //rotation = Quaternion.FromToRotation(Vector3.forward, (node.point - conn.point).normalized);
+            if ((conn.point - node.point).sqrMagnitude == 0) { Debug.Log(node.point + " " + conn.point); continue; }
+            rotation = Quaternion.LookRotation(conn.point - node.point, Vector3.up);
+            midDirPoint = node.point + (rotation * (Vector3.forward * abDistance));
+            //does -1 and 1 for left & right
+            for (int i = -1; i < 2; i += 2)
             {
-                points[i] = node.point + (rotation * (new Vector3(x, 0, z) * abDistance));
-                i++;
+                points.Add(midDirPoint + (rotation * (Vector3.right * abDistance * i)));
             }
+            //points.Add(midDirPoint);
         }
 
-        return new Bounds(points);
+        //remove duplicate points
+
+        if (node.connections.Count == 1)
+        {
+            points.Add(node.point);
+            //needs to add the points that would make the road form a square
+        }
+
+        return new Bounds(points.ToArray());
     }
 
     private void OnDrawGizmosSelected()
     {
-        if (points != null && points.Count >= pCount)
+        if (shapes != null && shapes.Count >= displayCount)
         {
             pTimer -= Time.deltaTime;
 
             if (pTimer <= 0)
             {
                 pTimer = switchTime;
-                currentP += 4; //4 corners means we jump forward 1 node;
+                currentP ++;
             }
 
-            if (currentP >= points.Count - pCount) currentP = 0;
+            if (currentP >= shapes.Count - displayCount) currentP = 0;
 
             if (drawPoints)
             {
-                for (int i = currentP; i < currentP + pCount; i++)
+                for (int i = currentP; i < currentP + displayCount; i++)
                 {
-                    Gizmos.color = Color.green;
-                    Gizmos.DrawSphere(points[i], 3);
+                    foreach (Vector3 dot in shapes[i].corners)
+                    {
+                        Gizmos.color = Color.green;
+                        Gizmos.DrawSphere(dot + Vector3.up * 5, 3);
+                    }
                 }
             }
         }
