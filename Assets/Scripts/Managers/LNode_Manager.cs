@@ -215,11 +215,12 @@ public class LNode_Manager : Singleton<LNode_Manager>
     }
 }
 
+[System.Serializable]
 public class Node
 {
     public Vector3 point;
     public Vector3 forward;
-    public List<Node> connections;
+    internal List<Node> connections;
 
     public Node(Vector3 m_point, Node parent = null) 
     {
