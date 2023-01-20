@@ -457,16 +457,16 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: ff[<ff][>ff]
+    axiom: o
     finalString: ff[<ff][>ff]
     randomRuleOutput: 1
-  count: 1
+  count: 33
   length: 100
   angle: 45
   nodeLimitRange:
     min: 75
     max: 175
-  timePerStep: 0.001
+  timePerStep: 1
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0
@@ -495,12 +495,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minVDistance: 3
   cornerDistance: 25
-  fullPath: []
-  pathList: []
-  points: []
+  finalPath: []
+  shapePoints: []
   drawPoints: 0
-  drawLines: 0
+  drawLines: 1
   currentP: 0
-  displayCount: 2
+  displayCount: 50
   pTimer: 0.2
   switchTime: 0.2

@@ -162,11 +162,11 @@ public class LNode_Manager : Singleton<LNode_Manager>
                 default:
                     break;
             }
-            yield return new WaitForSeconds(timePerStep);
         }
 
         //Debug.Log("Route Done");
         nodeGenDone = true;
+        yield return new WaitForSeconds(timePerStep);
     }
 
     private Node AddNode(Vector3 pos, Node parent)
@@ -219,7 +219,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
 public class Node
 {
     public Vector3 point;
-    public Vector3 forward;
+    internal Vector3 forward;
     internal List<Node> connections;
 
     public Node(Vector3 m_point, Node parent = null) 

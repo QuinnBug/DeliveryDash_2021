@@ -12,10 +12,10 @@ public class NodeMeshConstructor : MonoBehaviour
     private float abDistance;
 
     [Space]
-    public List<Node> fullPath;
-    public List<Path> pathList;
+    public HashSet<Node> visitedNodes;
+    public List<Node> finalPath;
     [Space]
-    public List<Vector3> points = null;
+    public List<Vector3> shapePoints = null;
     public List<Bounds> shapes = null;
 
     //display variables
@@ -31,8 +31,9 @@ public class NodeMeshConstructor : MonoBehaviour
     {
         nodeManager = LNode_Manager.Instance;
 
-        points = null;
-        fullPath = null;
+        shapePoints = null;
+        visitedNodes = null;
+        finalPath = null;
 
         abDistance = Mathf.Sqrt((cornerDistance * cornerDistance) / 2);
     }
@@ -40,12 +41,12 @@ public class NodeMeshConstructor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (nodeManager.nodeGenDone && points == null)
+        if (nodeManager.nodeGenDone && shapePoints == null)
         {
             //GetAllPoints();
         }
 
-        if (nodeManager.nodeGenDone && fullPath == null)
+        if (nodeManager.nodeGenDone && visitedNodes == null)
         {
             GetPolygonFromNodes();
         }
@@ -53,7 +54,7 @@ public class NodeMeshConstructor : MonoBehaviour
 
     void GetAllPoints() 
     {
-        points = new List<Vector3>();
+        shapePoints = new List<Vector3>();
         shapes = new List<Bounds>();
 
         foreach (Node item in nodeManager.nodes)
@@ -114,69 +115,107 @@ public class NodeMeshConstructor : MonoBehaviour
 
     void GetPolygonFromNodes()
     {
-        /*
-         * 1. First we need to save the start node which needs to be a node with only 1 connection
-         * 2. Then we need to explore the connected nodes until we reach a node with branches
-         * 3. we then need to explore each branch until they reach another branching node or the end of the branch
-         * 4. If we have a branch that ends then we finish exploring that branch to completion
-         * 5. If we only have branches that reach branching nodes we go from step 2 for the available branch
-         * 6. If we reach a point where there are no more available branches we path back to the previous branch
-         * 7. when we reach the start node, we should have explored all branches
-         */
-
         //setting the start node.
-        int i = 0;
         Node startNode = nodeManager.nodes[0];
-        //In theory having multiple connections is valid for the start node, but we need to start without that for testing
-        while (startNode.connections.Count > 1 && i < nodeManager.nodes.Count)
+
+        visitedNodes = new HashSet<Node>() { startNode };
+        finalPath = new List<Node>();
+
+        finalPath.AddRange(ExploreBranch(startNode, 0));
+
+        //We have a list of nodes that we can follow to visit all connected nodes
+
+        int j = 0;
+        shapePoints = new List<Vector3>();
+        Quaternion rotation;
+        Vector3 midDirPoint;
+
+        for (int i = 0; i < finalPath.Count - 1; i++)
         {
-            i++;
-            startNode = nodeManager.nodes[i];
+            j = i + 1;
+            //we need to get a point to the left of the mid point between current and next
+            //(Quaternion * Vector3) gives us the vector rotated by the Quaternion
+
+            if ((finalPath[j].point - finalPath[i].point).sqrMagnitude == 0) { Debug.Log(finalPath[i].point + " " + finalPath[j].point); continue; }
+            rotation = Quaternion.LookRotation(finalPath[j].point - finalPath[i].point, Vector3.up);
+
+            float distance = Vector3.Distance(finalPath[i].point, finalPath[j].point); 
+
+            //a quarter of the way between the points and to the left.
+            midDirPoint = finalPath[i].point + (rotation * (Vector3.forward * distance * 0.25f));
+            shapePoints.Add(midDirPoint + (rotation * (Vector3.right * abDistance * -1)));
+
+            midDirPoint = finalPath[i].point + (rotation * (Vector3.forward * distance * 0.75f));
+            shapePoints.Add(midDirPoint + (rotation * (Vector3.right * abDistance * -1)));
         }
 
-        Debug.Log("Starting at node " + i);
-
-        fullPath = new List<Node>() { startNode };
-        ExploreBranch(startNode, 0);
     }
 
+    /// <summary>
+    /// Recursive exploration function. It will find a path that will move from the start node to any dead end or branching points
+    /// </summary>
     private Node[] ExploreBranch(Node startNode, int pathToFollow)
     {
         bool exploring = true;
+        visitedNodes.Add(startNode);
 
         List<Node> path = new List<Node>();
+        path.Add(startNode);
+
 
         Node current = startNode.connections[pathToFollow];
         
         while (exploring)
         {
             Node[] connections = ValidConnections(current, path);
+
+            visitedNodes.Add(current);
+
+            //we continue exploring until reaching a deadend or a branch
             exploring = connections.Length == 1;
 
             //if we only have one path we move to that one
-            if (connections.Length == 1)
+            if (exploring)
             {
                 Debug.Log("Found Connection");
                 path.Add(current);
                 current = connections[0];
             }
-            //if we've reached a dead end
-            else if (connections.Length == 0)
+            else
             {
                 List<Node> rev_path = new List<Node>(path);
                 rev_path.Reverse();
 
                 path.Add(current);
-                path.AddRange(rev_path);
 
-                pathList.Add(new Path(path.ToArray()));
+                //if we've reached a branching node it will need to explore those paths
+                if (connections.Length > 1)
+                {
+                    Debug.Log("Reached Branch @ " + current.point);
+                    foreach (Node connection in connections)
+                    {
+                        path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
+                        path.Add(current);
+                    }
+                }
+                else
+                {
+                    Debug.Log("Reached Deadend @ " + current.point);
+                }
+
+                path.AddRange(rev_path);
             }
-            //if we've reached a branch;
-            else if (connections.Length > 1)
+        }
+
+        int length = path.Count - 1;
+        for (int i = 0; i < length; i++)
+        {
+            if (path[i] == path[i + 1])
             {
-                //we need to explore all the paths
+                path.RemoveAt(i + 1);
+                length--;
+                i--;
             }
-            
         }
 
         return path.ToArray();
@@ -188,7 +227,8 @@ public class NodeMeshConstructor : MonoBehaviour
         List<Node> valids = new List<Node>();
         foreach (Node connection in testNode.connections)
         {
-            if (!path.Contains(connection) && !fullPath.Contains(testNode)) valids.Add(connection);
+            //if (!path.Contains(connection) && !visitedNodes.Contains(testNode)) valids.Add(connection);
+            if (!visitedNodes.Contains(connection) && !valids.Contains(connection)) valids.Add(connection);
         }
 
         return valids.ToArray();
@@ -201,7 +241,26 @@ public class NodeMeshConstructor : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (fullPath != null && fullPath.Count >= displayCount)
+        //if (finalPath != null && finalPath.Count >= displayCount)
+        //{
+        //    pTimer -= Time.deltaTime;
+
+        //    if (pTimer <= 0)
+        //    {
+        //        pTimer = switchTime;
+        //        currentP++;
+        //    }
+
+        //    if (currentP >= finalPath.Count - displayCount) currentP = 0;
+
+        //    for (int i = currentP; i < currentP + displayCount; i++)
+        //    {
+        //        Gizmos.color = Color.magenta;
+        //        Gizmos.DrawSphere(finalPath[i].point, 30);
+        //    }
+        //}
+
+        if (shapePoints != null && shapePoints.Count >= displayCount)
         {
             pTimer -= Time.deltaTime;
 
@@ -211,35 +270,23 @@ public class NodeMeshConstructor : MonoBehaviour
                 currentP++;
             }
 
-            if (currentP >= fullPath.Count - displayCount) currentP = 0;
-
-            for (int i = currentP; i < currentP + displayCount; i++)
-            {
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawSphere(fullPath[i].point, 15);
-            }
-        }
-        else if (shapes != null && shapes.Count >= displayCount)
-        {
-            pTimer -= Time.deltaTime;
-
-            if (pTimer <= 0)
-            {
-                pTimer = switchTime;
-                currentP ++;
-            }
-
-            if (currentP >= shapes.Count - displayCount) currentP = 0;
+            if (currentP >= shapePoints.Count - displayCount) currentP = 0;
 
             if (drawPoints)
             {
                 for (int i = currentP; i < currentP + displayCount; i++)
                 {
-                    foreach (Vector3 dot in shapes[i].corners)
-                    {
-                        Gizmos.color = Color.green;
-                        Gizmos.DrawSphere(dot + Vector3.up * 5, 3);
-                    }
+                    Gizmos.color = Color.green;
+                    Gizmos.DrawSphere(shapePoints[i] + Vector3.up, 10);
+                }
+            }
+
+            if (drawLines)
+            {
+                for (int i = currentP; i < currentP + displayCount - 1; i++)
+                {
+                    Gizmos.color = Color.green;
+                    Gizmos.DrawLine(shapePoints[i], shapePoints[i+1]);
                 }
             }
         }
