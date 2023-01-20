@@ -12,7 +12,8 @@ public class NodeMeshConstructor : MonoBehaviour
     private float abDistance;
 
     [Space]
-    public NodePair[] temp = null;
+    public List<Node> fullPath;
+    public List<Path> pathList;
     [Space]
     public List<Vector3> points = null;
     public List<Bounds> shapes = null;
@@ -29,8 +30,9 @@ public class NodeMeshConstructor : MonoBehaviour
     void Start()
     {
         nodeManager = LNode_Manager.Instance;
+
         points = null;
-        temp = null;
+        fullPath = null;
 
         abDistance = Mathf.Sqrt((cornerDistance * cornerDistance) / 2);
     }
@@ -43,9 +45,9 @@ public class NodeMeshConstructor : MonoBehaviour
             //GetAllPoints();
         }
 
-        if (nodeManager.nodeGenDone && temp == null)
+        if (nodeManager.nodeGenDone && fullPath == null)
         {
-            temp = GetPolygonFromNodes();
+            GetPolygonFromNodes();
         }
     }
 
@@ -110,88 +112,86 @@ public class NodeMeshConstructor : MonoBehaviour
         return new Bounds(points.ToArray());
     }
 
-    NodePair[] GetPolygonFromNodes() 
+    void GetPolygonFromNodes()
     {
-        List<Vector3> points = new List<Vector3>();
+        /*
+         * 1. First we need to save the start node which needs to be a node with only 1 connection
+         * 2. Then we need to explore the connected nodes until we reach a node with branches
+         * 3. we then need to explore each branch until they reach another branching node or the end of the branch
+         * 4. If we have a branch that ends then we finish exploring that branch to completion
+         * 5. If we only have branches that reach branching nodes we go from step 2 for the available branch
+         * 6. If we reach a point where there are no more available branches we path back to the previous branch
+         * 7. when we reach the start node, we should have explored all branches
+         */
 
-        Stack<NodePair> open = new Stack<NodePair>();
+        //setting the start node.
+        int i = 0;
         Node startNode = nodeManager.nodes[0];
-
-        foreach (Node conn in startNode.connections)
+        //In theory having multiple connections is valid for the start node, but we need to start without that for testing
+        while (startNode.connections.Count > 1 && i < nodeManager.nodes.Count)
         {
-            open.Push(new NodePair(startNode, conn));
+            i++;
+            startNode = nodeManager.nodes[i];
         }
 
-        NodePair currentPair = open.Peek();
-        List<NodePair> closed = new List<NodePair>();
-        List<Node> route = new List<Node>();
+        Debug.Log("Starting at node " + i);
 
-        Node current;
+        fullPath = new List<Node>() { startNode };
+        ExploreBranch(startNode, 0);
+    }
 
-        while (open.Count != 0)
+    private Node[] ExploreBranch(Node startNode, int pathToFollow)
+    {
+        bool exploring = true;
+
+        List<Node> path = new List<Node>();
+
+        Node current = startNode.connections[pathToFollow];
+        
+        while (exploring)
         {
-            closed.Add(currentPair);
-            current = currentPair.to;
+            Node[] connections = ValidConnections(current, path);
+            exploring = connections.Length == 1;
 
-            //We need to form a path that goes to all of the nodes in the system
-            //Go down each branch until there are no connections and then retreat back up the path until there are no more branches to explore
-            //This should leave us back at the start point
-
-            bool foundNext = false;
-            NodePair nextPair;
-
-            if (current.connections.Count == 1)
+            //if we only have one path we move to that one
+            if (connections.Length == 1)
             {
-                open.Push(currentPair.Inverse());
-                foundNext = true;
+                Debug.Log("Found Connection");
+                path.Add(current);
+                current = connections[0];
             }
-
-            //Check all connections for fully unexplored connections
-            if (!foundNext) 
+            //if we've reached a dead end
+            else if (connections.Length == 0)
             {
-                foreach (Node conn in current.connections)
-                {
-                    nextPair = new NodePair(currentPair.to, conn);
-                    //if we've been from here to there we don't want to do it again
-                    //if it's going back to where we came from that might not be ideal
-                    //if we've already done the inverse then we might need to explore the other options
-                    if (conn == currentPair.from || closed.Contains(nextPair) || closed.Contains(nextPair.Inverse())) continue;
+                List<Node> rev_path = new List<Node>(path);
+                rev_path.Reverse();
 
-                    open.Push(nextPair);
-                    foundNext = true;
-                    break;
-                }
+                path.Add(current);
+                path.AddRange(rev_path);
+
+                pathList.Add(new Path(path.ToArray()));
             }
-
-            //Check all connections for one way visited connections
-            if (!foundNext)
+            //if we've reached a branch;
+            else if (connections.Length > 1)
             {
-                foreach (Node conn in current.connections)
-                {
-                    nextPair = new NodePair(currentPair.to, conn);
-                    //if we've been from here to there we don't want to do it again
-                    //if it's going back to where we came from that might not be ideal
-                    //if we've already done the inverse then we might need to explore the other options
-                    if (conn == currentPair.from || closed.Contains(nextPair)) continue;
-
-                    open.Push(nextPair);
-                    foundNext = true;
-                    break;
-                }
+                //we need to explore all the paths
             }
-
-            //we need to go backwards
-            if (!foundNext && !closed.Contains(currentPair.Inverse()))
-            {
-                open.Push(currentPair.Inverse());
-            }
-
-            currentPair = open.Pop();
+            
         }
 
-        return closed.ToArray();
-        //return points.ToArray();
+        return path.ToArray();
+    }
 
+    //returns all connections that aren't present in the path or the overall full path
+    private Node[] ValidConnections(Node testNode, List<Node> path) 
+    {
+        List<Node> valids = new List<Node>();
+        foreach (Node connection in testNode.connections)
+        {
+            if (!path.Contains(connection) && !fullPath.Contains(testNode)) valids.Add(connection);
+        }
+
+        return valids.ToArray();
     }
 
     private void TriangulateFromPoints(List<Vector3> points) 
@@ -201,7 +201,7 @@ public class NodeMeshConstructor : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (temp != null && temp.Length >= displayCount)
+        if (fullPath != null && fullPath.Count >= displayCount)
         {
             pTimer -= Time.deltaTime;
 
@@ -211,18 +211,12 @@ public class NodeMeshConstructor : MonoBehaviour
                 currentP++;
             }
 
-            if (currentP >= temp.Length - displayCount) currentP = 0;
+            if (currentP >= fullPath.Count - displayCount) currentP = 0;
 
             for (int i = currentP; i < currentP + displayCount; i++)
             {
                 Gizmos.color = Color.magenta;
-                Gizmos.DrawLine(temp[i].from.point, temp[i].to.point);
-
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawSphere(temp[i].from.point, 4.5f);
-
-                Gizmos.color = Color.green;
-                Gizmos.DrawSphere(temp[i].to.point, 4.5f);
+                Gizmos.DrawSphere(fullPath[i].point, 15);
             }
         }
         else if (shapes != null && shapes.Count >= displayCount)
@@ -331,6 +325,17 @@ public class NodeMeshConstructor : MonoBehaviour
         public NodePair Inverse()
         {
             return new NodePair(to, from);
+        }
+    }
+
+    [System.Serializable]
+    public struct Path 
+    {
+        public Node[] points;
+
+        public Path(Node[] path) 
+        {
+            points = path;
         }
     }
 }

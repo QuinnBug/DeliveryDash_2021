@@ -165,7 +165,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
             yield return new WaitForSeconds(timePerStep);
         }
 
-        Debug.Log("Route Done");
+        //Debug.Log("Route Done");
         nodeGenDone = true;
     }
 
@@ -175,13 +175,13 @@ public class LNode_Manager : Singleton<LNode_Manager>
         {
             if (pos == item.point || Vector3.Distance(pos, item.point) <= nodeLimitRange.min)
             {
-                Debug.Log("No new node needed");
+                //Debug.Log("No new node needed");
                 parent.AddConnection(item);
                 return item;
             }
         }
 
-        Debug.Log("Create Node");
+        //Debug.Log("Create Node");
         Node newSpace = new Node(pos, parent);
         nodes.Add(newSpace);
         return newSpace;
