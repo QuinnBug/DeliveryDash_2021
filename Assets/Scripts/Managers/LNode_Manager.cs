@@ -20,6 +20,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
     public int angle;
     //below the minimum the nodes combine, above the maximum connections are broken
     public Range nodeLimitRange;
+    public int nodesPerStep = 50;
     public float timePerStep;
     [Space]
     internal List<Node> nodes = new List<Node>();
@@ -107,7 +108,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
 
     public IEnumerator CreateRouteCoroutine(string sequence)
     {
-        int count = 0;
+        int counter = 0;
         Stack<LAgent> savePoints = new Stack<LAgent>();
         Vector3 currentPos = transform.position;
         Vector3 tempPos = currentPos;
@@ -124,7 +125,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
                 case Instructions.DRAW:
                     currentPos += direction * length;
                     prevNode = AddNode(currentPos, prevNode);
-                    count++;
+                    counter++;
                     tempPos = currentPos;
                     break;
 
@@ -162,11 +163,17 @@ public class LNode_Manager : Singleton<LNode_Manager>
                 default:
                     break;
             }
+
+            Debug.Log("Counter = " + counter);
+            if (counter % nodesPerStep == 0)
+            {
+                Debug.Log("Step");
+                yield return new WaitForSeconds(timePerStep);
+            }
         }
 
-        //Debug.Log("Route Done");
+        Debug.Log("Route Done");
         nodeGenDone = true;
-        yield return new WaitForSeconds(timePerStep);
     }
 
     private Node AddNode(Vector3 pos, Node parent)

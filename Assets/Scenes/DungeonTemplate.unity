@@ -462,11 +462,12 @@ MonoBehaviour:
     randomRuleOutput: 1
   count: 33
   length: 100
-  angle: 45
+  angle: 30
   nodeLimitRange:
     min: 75
     max: 175
-  timePerStep: 1
+  nodesPerStep: 250
+  timePerStep: 0.1
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0
@@ -500,6 +501,6 @@ MonoBehaviour:
   drawPoints: 0
   drawLines: 1
   currentP: 0
-  displayCount: 50
-  pTimer: 0.2
-  switchTime: 0.2
+  displayCount: 150
+  pTimer: 0.1
+  switchTime: 0.1
