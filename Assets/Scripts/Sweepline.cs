@@ -64,7 +64,7 @@ public class Sweepline : MonoBehaviour
             switch (currentEvent.type)
             {
                 case PointType.START:
-                    Line current = currentEvent.line;
+                    Line current = currentEvent.lines[0];
                     Line above = null, below = null;
 
                     int i = 0;
@@ -80,7 +80,15 @@ public class Sweepline : MonoBehaviour
                     Vector3 intersect = Vector3.zero;
                     if (above != null && below != null && DoesIntersect(above, below, out intersect))
                     {
-                        //remove intersect from events
+                        //remove intersect from events list
+                        foreach (Event item in events)
+                        {
+                            //if it's not an intersection or if it isn't the above/below intersection
+                            if (item.type != PointType.INTERSECTION || !(item.HasLine(above) && item.HasLine(below))) continue;
+                            
+                            events.Remove(item);
+                            break;
+                        }
                     }
 
                     if (above != null && DoesIntersect(current, above, out intersect))
@@ -92,10 +100,6 @@ public class Sweepline : MonoBehaviour
                     {
                         events.Add(new Event(intersect, PointType.INTERSECTION));
                     }
-
-
-
-
                     break;
 
                 case PointType.INTERSECTION:
@@ -212,13 +216,30 @@ public class Event
 {
     public Vector3 point;
     public PointType type;
-    public Line line;
+    public Line[] lines;
 
     public Event(Vector3 p, PointType t, Line l = null) 
     {
         point = p;
         type = t;
-        line = l;
+        lines = new Line[1] { l };
+    }
+
+    public Event(Vector3 p, Line one, Line two)
+    {
+        point = p;
+        type = PointType.INTERSECTION;
+        lines = new Line[2] { one, two };
+    }
+
+    public bool HasLine(Line test) 
+    {
+        foreach (Line line in lines)
+        {
+            if (test == line) return true;
+        }
+
+        return false;
     }
 }
 
