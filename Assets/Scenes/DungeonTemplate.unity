@@ -460,14 +460,14 @@ MonoBehaviour:
     axiom: o
     finalString: ff[<ff][>ff]
     randomRuleOutput: 1
-  count: 33
+  count: 8
   length: 100
   angle: 30
   nodeLimitRange:
     min: 75
     max: 175
-  nodesPerStep: 250
-  timePerStep: 0.1
+  nodesPerStep: 2
+  timePerStep: 0.05
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0
@@ -501,6 +501,6 @@ MonoBehaviour:
   drawPoints: 0
   drawLines: 1
   currentP: 0
-  displayCount: 150
+  displayCount: 10
   pTimer: 0.1
   switchTime: 0.1

@@ -117,5 +117,16 @@ public struct Range
     {
         min = _min;
         max = _max;
+
+        if (min > max)
+        {
+            min = _max;
+            max = _min;
+        }
+    }
+
+    public bool Contains(float test) 
+    {
+        return test >= min && test <= max;
     }
 }

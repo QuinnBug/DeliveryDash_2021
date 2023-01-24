@@ -197,6 +197,7 @@ public class NodeMeshConstructor : MonoBehaviour
                         path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
                         path.Add(current);
                     }
+                    path.Add(current);
                 }
                 else
                 {
