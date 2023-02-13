@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Sweepline : MonoBehaviour
+public class Sweepline : Singleton<Sweepline>
 {
-    List<Node> nodes;
+    public List<Node> nodes;
 
     float closestPair(Node[] points, int n) 
     {
@@ -52,6 +52,7 @@ public class Sweepline : MonoBehaviour
         }
         events.Sort(new EventCompare());
 
+        //Should be sorted from top to bottom by start point
         List<Line> SL = new List<Line>();
 
         List<Vector3> intersections = new List<Vector3>();
@@ -67,13 +68,16 @@ public class Sweepline : MonoBehaviour
                     Line current = currentEvent.lines[0];
                     Line above = null, below = null;
 
+                    //find where this line would fall in the y
                     int i = 0;
                     while (i < SL.Count && current.a.y > SL[i].a.y)
                     {
                         i++;
                     }
 
+                    //Add this line to the correct point in the lines list
                     SL.Insert(i, current);
+                    //we can grab the lines above and below this by simply getting the i - and + this line
                     if (i - 1 >= 0) above = SL[i - 1];
                     if (i + 1 < SL.Count) below = SL[i + 1];
 
@@ -103,16 +107,20 @@ public class Sweepline : MonoBehaviour
                     break;
 
                 case PointType.INTERSECTION:
+                    // Sort the intersections
                     intersections.Add(currentEvent.point);
                     break;
 
                 case PointType.END:
-
+                    // Remove this line from the list of lines since it's over now.
+                    SL.Remove(currentEvent.lines[0]);
                     break;
             }
 
-
             events.RemoveAt(0);
+
+            //sort the events again? To allow for those pesky intersections to be handled
+            events.Sort(new EventCompare());
         }
 
         return intersections.ToArray();
