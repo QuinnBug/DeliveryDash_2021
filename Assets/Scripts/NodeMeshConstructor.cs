@@ -49,6 +49,7 @@ public class NodeMeshConstructor : MonoBehaviour
         if (nodeManager.nodeGenDone && visitedNodes == null)
         {
             GetPolygonFromNodes();
+            Sweepline.Instance.polyPoints = shapePoints;
         }
     }
 
@@ -177,7 +178,7 @@ public class NodeMeshConstructor : MonoBehaviour
             //if we only have one path we move to that one
             if (exploring)
             {
-                Debug.Log("Found Connection");
+                //Debug.Log("Found Connection");
                 path.Add(current);
                 current = connections[0];
             }
@@ -191,7 +192,7 @@ public class NodeMeshConstructor : MonoBehaviour
                 //if we've reached a branching node it will need to explore those paths
                 if (connections.Length > 1)
                 {
-                    Debug.Log("Reached Branch @ " + current.point);
+                    //Debug.Log("Reached Branch @ " + current.point);
                     foreach (Node connection in connections)
                     {
                         path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
@@ -201,7 +202,7 @@ public class NodeMeshConstructor : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("Reached Deadend @ " + current.point);
+                    //Debug.Log("Reached Deadend @ " + current.point);
                 }
 
                 path.AddRange(rev_path);
@@ -240,7 +241,7 @@ public class NodeMeshConstructor : MonoBehaviour
         //Ear Clipping method
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         //if (finalPath != null && finalPath.Count >= displayCount)
         //{

@@ -164,10 +164,10 @@ public class LNode_Manager : Singleton<LNode_Manager>
                     break;
             }
 
-            Debug.Log("Counter = " + counter);
+            //Debug.Log("Counter = " + counter);
             if (counter % nodesPerStep == 0)
             {
-                Debug.Log("Step");
+                //Debug.Log("Step");
                 yield return new WaitForSeconds(timePerStep);
             }
         }
@@ -201,7 +201,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
         return newSpace;
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         if (nodes != null)
         {
@@ -229,7 +229,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
     }
 }
 
-[System.Serializable]
+//[System.Serializable]
 public class Node
 {
     public Vector3 point;
