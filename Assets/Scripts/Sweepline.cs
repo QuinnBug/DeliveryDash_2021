@@ -98,6 +98,7 @@ public class Sweepline : Singleton<Sweepline>
 
         //Should be sorted from top to bottom by start point
         List<Line> SL = new List<Line>();
+        iPoints = new List<Vector3>();
 
         Event currentEvent;
         while (events.Count > 0)
@@ -138,6 +139,7 @@ public class Sweepline : Singleton<Sweepline>
                     Vector3 intersect = Vector3.zero;
                     if (above != null && below != null && DoesIntersect(above, below, out intersect))
                     {
+                        Debug.Log("Both ^");
                         //remove intersect from events list
                         foreach (Event item in events)
                         {
@@ -154,12 +156,16 @@ public class Sweepline : Singleton<Sweepline>
                     if(above != null) Debug.DrawLine(above.a, above.b, Color.blue, timePerStep);
                     if (above != null && DoesIntersect(current, above, out intersect))
                     {
-                        events.Add(new Event(intersect, above, current ));
+                        Debug.Log("Above ^");
+                        Debug.DrawLine(above.a, current.a, Color.magenta, timePerStep);
+                        events.Add(new Event(intersect, above, current));
                     }
 
                     if(below != null) Debug.DrawLine(below.a, below.b, Color.red, timePerStep);
                     if (below != null && DoesIntersect(current, below, out intersect))
                     {
+                        Debug.Log("Below ^");
+                        Debug.DrawLine(below.a, current.a, Color.magenta, timePerStep);
                         events.Add(new Event(intersect, current, below));
                     }
 
@@ -172,8 +178,6 @@ public class Sweepline : Singleton<Sweepline>
 
                 case PointType.INTERSECTION:
                     // Sort the intersections
-                    Debug.DrawLine(currentEvent.lines[0].a, currentEvent.lines[0].b, Color.blue, 10);
-                    Debug.DrawLine(currentEvent.lines[1].a, currentEvent.lines[1].b, Color.green, 10);
                     iPoints.Add(currentEvent.point);
                     break;
 
@@ -205,164 +209,70 @@ public class Sweepline : Singleton<Sweepline>
             return false;
         }
 
-        #region old check
-        //int result = 0;
+        //y = mx + b
 
-        //if (IsParallel(lineA.Direction(), lineB.Direction())) result += 1;
-        ////if (IsOrthogonal(lineA.a - lineB.a, lineA.Normal())) result += 10;
+        float[] equationA = GetLineEquation(lineA);
+        float[] equationB = GetLineEquation(lineB);
 
-        //float A, B, C, D;
-        //A = lineA.Normal().x;
-        //B = lineA.Normal().z;
-        //C = lineB.Normal().x;
-        //D = lineB.Normal().z;
+        if (Mathf.Abs(equationA[0] - equationB[0]) <= 0.001f  || equationA[0] == 0 || equationB[0] == 0) 
+        {
+            //The lines are parellel because they slopes are the same (or close enough) or perhaps one of the lines is vertical
+            // Either way we know they don't overlap (I think for vertical we need to do a diff calc)
+            return false;
+        }
 
-        //float k1 = (A * lineA.a.x) + (B + lineA.a.z);
-        //float k2 = (C * lineB.a.x) + (D + lineB.a.z);
+        //m = A/B
 
-        //float x_intersect = (D * k1 - B * k2) / (A * D - B * C);
-        //float z_intersect = (-C * k1 + A * k2) / (A * D - B * C);
-        //intersection = new Vector3(x_intersect, 0, z_intersect);
+        #region A B calculations
+        // line 1
+        float A1 = equationA[0];
+        int B1 = 1;
+        float C1 = equationA[1];
+        C1 *= B1;
 
-        //result += (!IsBetween(lineA.a, lineA.b, intersection) || !IsBetween(lineB.a, lineB.b, intersection)) ? 0 : 100;
-
-        //Debug.Log("Intersect -> " + result);
-
-        //return result == 0;
+        //line 2
+        float A2 = equationB[0];
+        int B2 = 1;
+        float C2 = equationB[1];
+        C2 *= B2;
         #endregion
 
+        // -(A/B)x + y - b = 0
 
-        bool result = true;
+        intersection.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
+        intersection.z = -1 * ((C1 * A2 - C2 * A1) / (A1 * B2 - A2 * B1));
 
-        float angleA = Vector3.Angle(lineA.Direction(), Vector3.forward);
-        float angleB = Vector3.Angle(lineB.Direction(), Vector3.forward);
-        //if the line is vertical the angle from forward will be 0 or 180
-        if (angleA % 180 == 0 || angleB % 180 == 0)
+        //x = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1)
+        //y = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1)
+
+
+        //if the intersection is not within the range of either line then return false;
+        if (!lineA.Contains(intersection) || !lineB.Contains(intersection))
         {
-            //Debug.DrawLine(lineA.a, lineA.b, Color.yellow, 5);
-            result = false;
+            return false;
         }
 
-        if(!result) Debug.Log("Angles = " + angleA + " & " + angleB);
+        Debug.Log("I @ " + intersection + " > " + equationA[0] + " " + equationA[1] + " :: " + equationB[0] + " " + equationB[1]);
+        //we got through all the checks! that means we found an intersection in range
+        return true;
+    }
 
-        int[] o = new int[]
-        {
-            GetOrientation(lineA.a, lineB.a, lineA.b),
-            GetOrientation(lineA.a, lineB.a, lineB.b),
-            GetOrientation(lineA.b, lineB.b, lineA.a),
-            GetOrientation(lineA.b, lineB.b, lineB.a)
-        };
+    private float[] GetLineEquation(Line line)
+    {
+        float[] result = new float[] { 0,0 };
 
-        if (!(o[0] != o[1] && o[2] != o[3])) result = false;
+        if (line.a.z == line.b.z || line.a.x == line.b.x) return result;
+        //Debug.Log("AH -> " + line.a + " :: " + line.b);
 
-        if (!((o[0] == 0 && OnSegment(lineA.a, lineA.b, lineB.a)) ||
-            (o[1] == 0 && OnSegment(lineA.a, lineB.b, lineB.a)) ||
-            (o[2] == 0 && OnSegment(lineA.b, lineA.a, lineB.b)) ||
-            (o[3] == 0 && OnSegment(lineA.b, lineB.a, lineB.b))
-            )) result = false;
 
-        if (true)
-        {
-            //all of this maths is wrong
+        //m
+        result[0] = (line.b.z - line.a.z) / (line.b.x - line.a.x);
 
-            Debug.Log("Could Overlap");
-            //Here we calculate the intersection
-            Vector3 p = lineA.a;
-            Vector3 r = lineA.b - lineA.a;
-            Vector3 q = lineB.a;
-            Vector3 s = lineB.b - lineB.a;
+        //b
+        result[1] = line.a.z - (result[0] * line.a.x);
 
-            float rXs = Cross(r, s);
-            float qpXs = Cross(q - p, s);
-            float qpXr = Cross(q - p, r);
-
-            if (rXs == 0) { result = false; }
-            else
-            {
-                float t = qpXs / rXs;
-                float u = qpXr / rXs;
-
-                intersection = p + (t * r);
-
-                if (t < 0 || t > 1) result = false;
-                else
-                {
-                    Debug.Log("rxs = " + rXs + " : qpxs = " + qpXs + " : t = " + t + " : point = " + intersection);
-                }
-            }
-        }
 
         return result;
-    }
-
-    float Cross(Vector3 a, Vector3 b) 
-    {
-        return (a.x * b.z) - (a.z * b.x);
-    }
-
-    bool OnSegment(Vector3 p1, Vector3 q, Vector3 p2) 
-    {
-        float maxX = p1.x >= p2.x ? p1.x : p2.x;
-        float maxZ = p1.z >= p2.z ? p1.z : p2.z;
-        float minX = p1.x >= p2.x ? p1.x : p2.x;
-        float minZ = p1.z >= p2.z ? p1.z : p2.z;
-
-        return (q.x <= maxX && q.x >= minX && q.z <= maxZ && q.z >= minZ);
-    }
-
-    //returns 0 for collinnear, 1 for clockwise, -1 for ccw
-    int GetOrientation(Vector3 p1, Vector3 q, Vector3 p2) 
-    {
-        float val = (q.z - p1.z) * (p2.x - q.x) - (q.x - p1.x) * (p2.z - q.z);
-
-        return val == 0 ? 0 : val > 0 ? 1 : -1;
-    }
-
-    //Are 2 vectors parallel?
-    bool IsParallel(Vector3 v1, Vector3 v2)
-    {
-        //2 vectors are parallel if the angle between the vectors are 0 or 180 degrees
-        if (Vector3.Angle(v1, v2) == 0f || Vector3.Angle(v1, v2) == 180f)
-        {
-            Debug.Log(v1 + " - " + v2 + " :: " + Vector3.Angle(v1, v2));
-            return true;
-        }
-
-        return false;
-    }
-
-    //Are 2 vectors orthogonal?
-    bool IsOrthogonal(Vector2 v1, Vector2 v2)
-    {
-        //2 vectors are orthogonal is the dot product is 0
-        //We have to check if close to 0 because of floating numbers
-        if (Mathf.Abs(Vector2.Dot(v1, v2)) < 0.000001f)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    //Is a point c between 2 other points a and b?
-    bool IsBetween(Vector3 a, Vector3 b, Vector3 c)
-    {
-        bool isBetween = false;
-
-        //Entire line segment
-        Vector3 ab = b - a;
-        //The intersection and the first point
-        Vector3 ac = c - a;
-
-        //Need to check 2 things: 
-        //1. If the vectors are pointing in the same direction = if the dot product is positive
-        //2. If the length of the vector between the intersection and the first point is smaller than the entire line
-        if (Vector3.Dot(ab, ac) > 0f && ab.sqrMagnitude >= ac.sqrMagnitude)
-        {
-            isBetween = true;
-        }
-
-        return isBetween;
     }
 
     private void OnDrawGizmos()
@@ -409,6 +319,18 @@ public class Line
         return Quaternion.Euler(0, 90, 0) * Direction();
 
         //return new Vector3(-Direction().y, Direction().x); 
+    }
+
+    public bool Contains(Vector3 point) 
+    {
+        //Lines should always be created with a being leftmost and b being to the right
+        //However the z could be either way around
+        if ((point.x > a.x && point.x < b.x) && ((point.z > a.z && point.z < b.z) || (point.z < a.z && point.z > b.z)))
+        {
+            return true;
+        }
+
+        return false;
     }
 }
 
