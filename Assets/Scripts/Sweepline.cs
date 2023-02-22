@@ -119,37 +119,34 @@ public class Sweepline : Singleton<Sweepline>
                     Line current = currentEvent.lines[0];
                     Line above = null, below = null;
 
-                    //find where this line would fall in the y
-                    int i = 0;
-                    while (i < SL.Count && current.a.z > SL[i].a.z)
-                    {
-                        i++;
-                    }
+                    SL.Add(current);
+                    SL.Sort(new LineCompare());
 
-                    
-                    SL.Insert(i, current);
-
-                    //Add this line to the correct point in the lines list
-                    
+                    int i = SL.IndexOf(current);
 
                     //we can grab the lines above and below this by simply getting the i - and + this line
                     if (i - 1 >= 0) above = SL[i - 1];
                     if (i + 1 < SL.Count) below = SL[i + 1];
 
                     Vector3 intersect = Vector3.zero;
-                    if (above != null && below != null && DoesIntersect(above, below, out intersect))
-                    {
-                        Debug.Log("Both ^");
-                        //remove intersect from events list
-                        foreach (Event item in events)
-                        {
-                            //if it's not an intersection or if it isn't the above/below intersection
-                            if (item.type != PointType.INTERSECTION || !(item.HasLine(above) && item.HasLine(below))) continue;
 
-                            events.Remove(item);
-                            break;
-                        }
-                    }
+                    #region above below intersect handling
+                    /* this was in the original tutorial, not sure why anymore
+					 * if (above != null && below != null && DoesIntersect(above, below, out intersect))
+                     * {
+                     *     Debug.Log("Both ^");
+                     *     //remove intersect from events list
+                     *     foreach (Event item in events)
+                     *     {
+                     *         //if it's not an intersection or if it isn't the above/below intersection
+                     *         if (item.type != PointType.INTERSECTION || !(item.HasLine(above) && item.HasLine(below))) continue;
+                     * 
+                     *         events.Remove(item);
+                     *         break;
+                     *     }
+                     * } 
+                     */
+                    #endregion
 
                     Debug.DrawLine(current.a, current.b, Color.green, timePerStep);
 
@@ -169,9 +166,12 @@ public class Sweepline : Singleton<Sweepline>
                         events.Add(new Event(intersect, current, below));
                     }
 
+                    //temp debug addition
+                    if (intersect != Vector3.zero) iPoints.Add(intersect);
+
                     //testing to see if removing vertical lines from the list immediately will help
-                    float angleA = Vector3.Angle(current.Direction(), Vector3.forward);
                     //if the line is vertical the angle from forward will be 0 or 180
+                    float angleA = Vector3.Angle(current.Direction(), Vector3.forward);
                     if (angleA % 180 == 0 && SL.Contains(current)) SL.Remove(current);
 
                         break;
@@ -182,8 +182,10 @@ public class Sweepline : Singleton<Sweepline>
                     break;
 
                 case PointType.END:
+                    
+                    //I think i need to do something here before I remove the line
+
                     // Remove this line from the list of lines since it's over now.
-                    Debug.DrawLine(currentEvent.lines[0].a, currentEvent.lines[0].b, Color.gray, 60);
                     SL.Remove(currentEvent.lines[0]);
                     break;
             }
@@ -193,7 +195,15 @@ public class Sweepline : Singleton<Sweepline>
 
             if(events.Count > 1) events.Sort(new EventCompare());
 
-            if(counter % eventsPerStep == 0) yield return new WaitForSeconds(timePerStep);
+            if (counter % eventsPerStep == 0)
+            {
+                foreach (Line line in SL)
+                {
+                    Debug.DrawLine(line.a, line.b, Color.gray, timePerStep);
+                }
+
+                yield return new WaitForSeconds(timePerStep);
+            }
         }
 
         //Debug.Log(iPoints.Count);
@@ -225,22 +235,25 @@ public class Sweepline : Singleton<Sweepline>
 
         #region A B calculations
         // line 1
-        float A1 = equationA[0];
-        int B1 = 1;
-        float C1 = equationA[1];
-        C1 *= B1;
+        //float A1 = equationA[0];
+        //int B1 = 1;
+        //float C1 = equationA[1];
+        //C1 *= B1;
 
         //line 2
-        float A2 = equationB[0];
-        int B2 = 1;
-        float C2 = equationB[1];
-        C2 *= B2;
-        #endregion
+        //float A2 = equationB[0];
+        //int B2 = 1;
+        //float C2 = equationB[1];
+        //C2 *= B2;
 
         // -(A/B)x + y - b = 0
 
-        intersection.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
-        intersection.z = -1 * ((C1 * A2 - C2 * A1) / (A1 * B2 - A2 * B1));
+        //intersection.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
+        //intersection.z = -1 * ((C1 * A2 - C2 * A1) / (A1 * B2 - A2 * B1));
+        #endregion
+
+        intersection.x = (equationB[1] - equationA[1]) / (equationA[0] - equationB[0]);
+        intersection.z = -1 * ((equationA[1] * equationB[0] - equationB[1] * equationA[0]) / (equationA[0] - equationB[0]));
 
         //x = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1)
         //y = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1)
@@ -263,7 +276,6 @@ public class Sweepline : Singleton<Sweepline>
 
         if (line.a.z == line.b.z || line.a.x == line.b.x) return result;
         //Debug.Log("AH -> " + line.a + " :: " + line.b);
-
 
         //m
         result[0] = (line.b.z - line.a.z) / (line.b.x - line.a.x);
@@ -372,41 +384,21 @@ public enum PointType
     END
 }
 
-public class NodeCompare : IComparer<Node>
+public class LineCompare : IComparer<Line>
 {
     //returns leftmost or topmost if they are the same x
-    public int Compare(Node first, Node second)
+    public int Compare(Line first, Line second)
     {
-        if (first.point == second.point) return 0;
+        if (first.a == second.a) return 0;
 
-        if (first.point.x != second.point.x)
+        if (first.a.z != second.a.z)
         {
-            return first.point.x < second.point.x ? 1 : -1;
+            return first.a.z > second.a.z ? 1 : -1;
         }
         else
         {
-            return first.point.z < second.point.z ? 1 : -1;
+            return first.a.x < second.a.x ? 1 : -1;
         }
-
-    }
-}
-
-public class VectorCompare : IComparer<Vector3>
-{
-    //returns leftmost or topmost if they are the same x
-    public int Compare(Vector3 first, Vector3 second)
-    {
-        if (first == second) return 0;
-
-        if (first.x != second.x)
-        {
-            return first.x < second.x ? 1 : -1;
-        }
-        else
-        {
-            return first.z < second.z ? 1 : -1;
-        }
-
     }
 }
 
