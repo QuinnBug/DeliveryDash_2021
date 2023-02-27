@@ -152,12 +152,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc9385ff7c1d0f64e90adb8bfa9d92a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugMode: 0
-  timePerStep: 1
+  debugMode: 1
+  timePerStep: 0.1
   eventsPerStep: 1
   polyPoints: []
   polyLines: []
   iPoints: []
+  SL: []
 --- !u!4 &193339239
 Transform:
   m_ObjectHideFlags: 0
