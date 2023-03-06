@@ -10,11 +10,16 @@ public class Sweepline : Singleton<Sweepline>
     public float timePerStep;
     public int eventsPerStep;
     [Space]
+    public float timePerUntangle;
+    [Space]
     public List<Vector3> polyPoints = null;
     public List<Line> polyLines = null;
     public List<Event> iEvents = null;
     [Space]
     public List<Line> SL;
+
+    bool intersectionCheckComplete = false;
+    bool doIntersection = false;
 
     //float closestPair(Node[] points, int n) 
     //{
@@ -59,6 +64,8 @@ public class Sweepline : Singleton<Sweepline>
         iEvents = null;
 
         untangle = false;
+        intersectionCheckComplete = false;
+        doIntersection = false;
     }
 
     private void Update()
@@ -66,13 +73,21 @@ public class Sweepline : Singleton<Sweepline>
         if (polyPoints != null && iEvents == null)
         {
             polyLines = new List<Line>(LinesFromNodes());
-            StartCoroutine(GetIntersections(polyLines.ToArray()));
             polyPoints = null;
+            doIntersection = true;
         }
 
-        if (untangle)
+        if (doIntersection)
         {
+            doIntersection = false;
+            StartCoroutine(GetIntersections(polyLines.ToArray()));
+        }
+
+        if (intersectionCheckComplete && untangle && iEvents.Count > 0)
+        {
+            intersectionCheckComplete = false;
             untangle = false;
+            doIntersection = true;
             DebugUntangle();
         }
     }
@@ -244,6 +259,7 @@ public class Sweepline : Singleton<Sweepline>
         }
 
         //Debug.Log(iPoints.Count);
+        intersectionCheckComplete = true;
     }
 
     public int FindLineIndexWithBinarySearch(Line[] lines, Line line, float x) 
@@ -362,104 +378,43 @@ public class Sweepline : Singleton<Sweepline>
 
     public void DebugUntangle()
     {
-        foreach (Event intersection in iEvents)
+        Event intersection = iEvents[0];
+        iEvents.RemoveAt(0);
+
+        int i = 0, j = 0;
+
+        while (i < polyLines.Count && polyLines[i].id != intersection.lines[0].id)
         {
-            int i = 0, j = 0;
-
-            while (i < polyLines.Count && polyLines[i].id != intersection.lines[0].id)
-            {
-                i++;
-            }
-
-            while (j < polyLines.Count && polyLines[j].id != intersection.lines[1].id)
-            {
-                j++;
-            }
-
-            if (j >= polyLines.Count || i >= polyLines.Count)
-            {
-                Debug.Log(i + " " + j + " - one of those lines may have been deleted");
-                continue;
-            }
-
-            //How do I know which of the lines points is in the wrong place?
-            //if i & j are 1/2 different from each other then they are one of the small overlaps and i+1 can be deleted and both i & j go to/from i.Point
-            //
-
-            int diff = Mathf.Abs(i - j);
-            int x = i < j ? i : j;
-            int y = i < j ? j : i;
-
-            if (diff <= 2)
-            {
-                //there are some issues here, but it seems to work most of the time
-
-                polyLines[x] = new Line(polyLines[x - 1].b, intersection.point, -1);
-                polyLines[y] = new Line(intersection.point, polyLines[y + 1].a, -1);
-
-                if(diff > 1) polyLines.RemoveAt(x + 1);
-            }
-            else
-            {
-                //this is a very odd result...
-                //definitely cleaner than before but not perfectly
-
-                //Vector3 tempV3 = polyLines[x].b;
-                //polyLines[x].b = polyLines[y].a;
-                //polyLines[y].a = tempV3;
-
-                // -- new --
-
-                //Find which direction we need to go
-                //get the 4 points and identify which of them need to be paired to not cross.
-
-                List<Vector3> points = new List<Vector3> { polyLines[x].a, polyLines[x].b, polyLines[y].a, polyLines[y].b };
-                Vector3[] sortedPoints = new Vector3[4];
-
-                Vector3 bottomLeft = Vector3.positiveInfinity, topRight = Vector3.negativeInfinity;
-
-                foreach (Vector3 p in points)
-                {
-                    if (p.x < bottomLeft.x) bottomLeft.x = p.x;
-                    if (p.x > topRight.x) topRight.x = p.x;
-
-                    if (p.z < bottomLeft.z) bottomLeft.z = p.z;
-                    if (p.z < topRight.z) topRight.z = p.z;
-                }
-
-                //bl,tl,tr,bl
-                Vector3[] corners = new Vector3[] { bottomLeft, new Vector3(bottomLeft.x, 0, topRight.z), topRight, new Vector3(topRight.x, 0, bottomLeft.z) };
-
-                for (int k = 0; k < 4; k++)
-                {
-                    int currentBestIdx = 0;
-
-                    if (points.Count > 1)
-                    {
-                        for (int idx = 0; idx < points.Count; idx++)
-                        {
-                            if (currentBestIdx == idx) continue;
-
-                            if (Vector3.Distance(points[currentBestIdx], corners[k]) > Vector3.Distance(points[idx], corners[k]))
-                            {
-                                currentBestIdx = idx;
-                            }
-                        }
-                    }
-
-                    sortedPoints[k] = points[currentBestIdx];
-                    points.RemoveAt(currentBestIdx);
-                }
-
-                //bottom 2 & top 2 connect ????
-                polyLines[x] = new Line(sortedPoints[0], sortedPoints[2], -1);
-                polyLines[y] = new Line(sortedPoints[1], sortedPoints[3], -1);
-            }
-            
+            i++;
         }
 
-        Debug.Log("Untangle complete");
-        iEvents.Clear();
+        while (j < polyLines.Count && polyLines[j].id != intersection.lines[1].id)
+        {
+            j++;
+        }
+
+        if (j >= polyLines.Count || i >= polyLines.Count)
+        {
+            Debug.Log(i + " " + j + " - one of those lines may have been deleted");
+            return;
+        }
+
+        //x = the first line in the loop
+        int x = i < j ? i : j;
+        //y = the second line in the loop
+        int y = i < j ? j : i;
+
+        int diff = y - x;
+
+        for (int t = x + 1; t < y; t++)
+        {
+            polyLines[t].Flip();
+        }
+
+        polyLines[y].a = polyLines[x].b;
+        polyLines[x].b = polyLines[y - 1].b;
+
+        Debug.Log("Untangle done");
     }
 
     private void OnDrawGizmos()
@@ -473,14 +428,14 @@ public class Sweepline : Singleton<Sweepline>
             }
         }
 
-        //if (iEvents != null)
-        //{
-        //    foreach (Event intersection in iEvents)
-        //    {
-        //        Gizmos.color = Color.cyan;
-        //        Gizmos.DrawCube(intersection.point, Vector3.one * 10);
-        //    }
-        //}
+        if (iEvents != null)
+        {
+            foreach (Event intersection in iEvents)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawCube(intersection.point, Vector3.one * 7);
+            }
+        }
     }
 }
 
@@ -583,6 +538,13 @@ public class Line
         }
 
         return result;
+    }
+
+    public void Flip()
+    {
+        Vector3 temp = a;
+        a = b;
+        b = temp;
     }
 }
 
