@@ -5,13 +5,14 @@ using UnityEngine;
 
 public class Sweepline : Singleton<Sweepline>
 {
+    public bool untangle;
     public bool debugMode;
     public float timePerStep;
     public int eventsPerStep;
     [Space]
     public List<Vector3> polyPoints = null;
-    public Line[] polyLines = null;
-    public List<Vector3> iPoints = null;
+    public List<Line> polyLines = null;
+    public List<Event> iEvents = null;
     [Space]
     public List<Line> SL;
 
@@ -55,16 +56,24 @@ public class Sweepline : Singleton<Sweepline>
     {
         polyPoints = null;
         polyLines = null;
-        iPoints = null;
+        iEvents = null;
+
+        untangle = false;
     }
 
     private void Update()
     {
-        if (polyPoints != null && iPoints == null)
+        if (polyPoints != null && iEvents == null)
         {
-            polyLines = LinesFromNodes();
-            StartCoroutine(GetIntersections(polyLines));
+            polyLines = new List<Line>(LinesFromNodes());
+            StartCoroutine(GetIntersections(polyLines.ToArray()));
             polyPoints = null;
+        }
+
+        if (untangle)
+        {
+            untangle = false;
+            DebugUntangle();
         }
     }
 
@@ -77,7 +86,7 @@ public class Sweepline : Singleton<Sweepline>
             Vector3 a = (polyPoints[i].x <= polyPoints[i + 1].x) ? polyPoints[i] : polyPoints[i + 1];
             Vector3 b = (polyPoints[i].x <= polyPoints[i + 1].x) ? polyPoints[i + 1] : polyPoints[i];
 
-            lineList.Add(new Line(a, b));
+            lineList.Add(new Line(a, b, i));
 
             //Debug.DrawLine(a, b, Color.red, 5);
         }
@@ -100,7 +109,7 @@ public class Sweepline : Singleton<Sweepline>
 
         //Should be sorted from top to bottom by start point
         SL = new List<Line>();
-        iPoints = new List<Vector3>();
+        iEvents = new List<Event>();
         
         Event currentEvent;
         while (events.Count > 0)
@@ -122,13 +131,21 @@ public class Sweepline : Singleton<Sweepline>
             {
                 case PointType.START:
                     Line current = currentEvent.lines[0];
+                    Vector3 intersect = Vector3.zero;
+
+                    foreach (Line otherLine in SL)
+                    {
+                        if (DoesIntersect(current, otherLine, out intersect))
+                        {
+                            events.Add(new Event(intersect, current, otherLine));
+                        }
+                    }
+
+                    SL.Add(current);
+
+                    #region old method
+                    /*
                     Line above = null, below = null;
-
-                    //With the way thigns are going I can make this less efficient and simply loop through all active lines and add any intersections that are found.
-
-                    //We need to search through the list of lines and put this line where it falls in the z axis.
-                    //This needs to happen without changing the order of the other lines as they will be moving around when they cross over other lines
-
                     int lineIdx = FindLineIndexWithBinarySearch(SL.ToArray(), current, currentEvent.point.x);
                     Debug.Log(lineIdx);
                     SL.Insert(lineIdx, current);
@@ -137,7 +154,6 @@ public class Sweepline : Singleton<Sweepline>
                     if (lineIdx - 1 >= 0) above = SL[lineIdx - 1];
                     if (lineIdx + 1 < SL.Count) below = SL[lineIdx + 1];
 
-                    Vector3 intersect = Vector3.zero;
 
                     if(above != null) Debug.DrawLine(above.a, above.b, Color.blue, timePerStep);
                     if(below != null) Debug.DrawLine(below.a, below.b, Color.yellow, timePerStep);
@@ -168,25 +184,18 @@ public class Sweepline : Singleton<Sweepline>
                     {
                         events.Add(new Event(intersect, current, below));
                     }
+                    */
+                    #endregion
 
                     break;
 
                 case PointType.INTERSECTION:
-
-                    // Sort the intersections
-
-                    //int one = SL.IndexOf(currentEvent.lines[0]);
-                    //int two = SL.IndexOf(currentEvent.lines[1]);
-
-                    //SL[one] = currentEvent.lines[1];
-                    //SL[two] = currentEvent.lines[0];
-
-                    iPoints.Add(currentEvent.point);
-
-                    //Debug.Log("intersection ");
+                    iEvents.Add(currentEvent);
                     break;
 
                 case PointType.END:
+                    #region old method
+                    /*
                     int idx = SL.IndexOf(currentEvent.lines[0]);
 
                     Line top = null, bottom = null;
@@ -200,6 +209,8 @@ public class Sweepline : Singleton<Sweepline>
                     {
                         events.Add(new Event(intersect, top, bottom));
                     }
+                    */
+                    #endregion
 
                     // Remove this line from the list of lines since it's over now.
                     SL.Remove(currentEvent.lines[0]);
@@ -268,6 +279,8 @@ public class Sweepline : Singleton<Sweepline>
 
     public bool DoesIntersect(Line lineA, Line lineB, out Vector3 intersection)
     {
+        //The vertical lines are still failing to be checked properly
+
         intersection = Vector3.zero;
         if (lineA == lineB)
         {
@@ -281,9 +294,9 @@ public class Sweepline : Singleton<Sweepline>
         float[] equationA = lineA.Equation();
         float[] equationB = lineB.Equation();
 
-        if (Mathf.Abs(equationA[0] - equationB[0]) <= 0.001f /*|| (equationA[0] == 0 && equationB[0] == 0)*/) 
+        if (Mathf.Abs(equationA[0] - equationB[0]) <= 0.001f) 
         {
-            // The lines are parellel because their slopes are the same (or close enough) -- or the lines are both vertical (which would make them parellel anyway)
+            // The lines are parellel because their slopes are the same (or close enough))
             return false;
         }
 
@@ -316,12 +329,12 @@ public class Sweepline : Singleton<Sweepline>
 
             //x = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1)
             //y = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1)
-            //z = -1 * (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1) ???
+            //z = -1 * (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1)
         }
         //if either are vertical lines
         else if (lineA.type == LineType.VERTICAL || lineB.type == LineType.VERTICAL)
         {
-            Debug.Log("One of the lines is vertical > " + lineA.type + " : " + lineB.type);
+            //Debug.Log("One of the lines is vertical > " + lineA.type + " : " + lineB.type);
 
             Line verticalLine = lineA.type == LineType.VERTICAL ? lineA : lineB;
             Line otherLine = lineA.type == LineType.VERTICAL ? lineB : lineA;
@@ -347,6 +360,108 @@ public class Sweepline : Singleton<Sweepline>
         return true;
     }
 
+    public void DebugUntangle()
+    {
+        foreach (Event intersection in iEvents)
+        {
+            int i = 0, j = 0;
+
+            while (i < polyLines.Count && polyLines[i].id != intersection.lines[0].id)
+            {
+                i++;
+            }
+
+            while (j < polyLines.Count && polyLines[j].id != intersection.lines[1].id)
+            {
+                j++;
+            }
+
+            if (j >= polyLines.Count || i >= polyLines.Count)
+            {
+                Debug.Log(i + " " + j + " - one of those lines may have been deleted");
+                continue;
+            }
+
+            //How do I know which of the lines points is in the wrong place?
+            //if i & j are 1/2 different from each other then they are one of the small overlaps and i+1 can be deleted and both i & j go to/from i.Point
+            //
+
+            int diff = Mathf.Abs(i - j);
+            int x = i < j ? i : j;
+            int y = i < j ? j : i;
+
+            if (diff <= 2)
+            {
+                //there are some issues here, but it seems to work most of the time
+
+                polyLines[x] = new Line(polyLines[x - 1].b, intersection.point, -1);
+                polyLines[y] = new Line(intersection.point, polyLines[y + 1].a, -1);
+
+                if(diff > 1) polyLines.RemoveAt(x + 1);
+            }
+            else
+            {
+                //this is a very odd result...
+                //definitely cleaner than before but not perfectly
+
+                //Vector3 tempV3 = polyLines[x].b;
+                //polyLines[x].b = polyLines[y].a;
+                //polyLines[y].a = tempV3;
+
+                // -- new --
+
+                //Find which direction we need to go
+                //get the 4 points and identify which of them need to be paired to not cross.
+
+                List<Vector3> points = new List<Vector3> { polyLines[x].a, polyLines[x].b, polyLines[y].a, polyLines[y].b };
+                Vector3[] sortedPoints = new Vector3[4];
+
+                Vector3 bottomLeft = Vector3.positiveInfinity, topRight = Vector3.negativeInfinity;
+
+                foreach (Vector3 p in points)
+                {
+                    if (p.x < bottomLeft.x) bottomLeft.x = p.x;
+                    if (p.x > topRight.x) topRight.x = p.x;
+
+                    if (p.z < bottomLeft.z) bottomLeft.z = p.z;
+                    if (p.z < topRight.z) topRight.z = p.z;
+                }
+
+                //bl,tl,tr,bl
+                Vector3[] corners = new Vector3[] { bottomLeft, new Vector3(bottomLeft.x, 0, topRight.z), topRight, new Vector3(topRight.x, 0, bottomLeft.z) };
+
+                for (int k = 0; k < 4; k++)
+                {
+                    int currentBestIdx = 0;
+
+                    if (points.Count > 1)
+                    {
+                        for (int idx = 0; idx < points.Count; idx++)
+                        {
+                            if (currentBestIdx == idx) continue;
+
+                            if (Vector3.Distance(points[currentBestIdx], corners[k]) > Vector3.Distance(points[idx], corners[k]))
+                            {
+                                currentBestIdx = idx;
+                            }
+                        }
+                    }
+
+                    sortedPoints[k] = points[currentBestIdx];
+                    points.RemoveAt(currentBestIdx);
+                }
+
+                //bottom 2 & top 2 connect ????
+                polyLines[x] = new Line(sortedPoints[0], sortedPoints[2], -1);
+                polyLines[y] = new Line(sortedPoints[1], sortedPoints[3], -1);
+            }
+            
+        }
+
+        Debug.Log("Untangle complete");
+        iEvents.Clear();
+    }
+
     private void OnDrawGizmos()
     {
         if (debugMode && polyLines != null)
@@ -358,23 +473,41 @@ public class Sweepline : Singleton<Sweepline>
             }
         }
 
-        if (iPoints != null)
-        {
-            foreach (Vector3 point in iPoints)
-            {
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawCube(point, Vector3.one * 10);
-            }
-        }
+        //if (iEvents != null)
+        //{
+        //    foreach (Event intersection in iEvents)
+        //    {
+        //        Gizmos.color = Color.cyan;
+        //        Gizmos.DrawCube(intersection.point, Vector3.one * 10);
+        //    }
+        //}
     }
 }
 
 [System.Serializable]
 public class Line
 {
+    public int id;
     public Vector3 a;
     public Vector3 b;
     public LineType type = LineType.REGULAR;
+
+    public bool CloserToA(Vector3 point) 
+    {
+        return Vector3.Distance(a, point) < Vector3.Distance(b, point);
+    }
+
+    public void AssignClosestPoint(Vector3 point) 
+    {
+        if (CloserToA(point))
+        {
+            a = point;
+        }
+        else
+        {
+            b = point;
+        }
+    }
 
     public Line(Vector3 start, Vector3 end)
     {
@@ -383,6 +516,11 @@ public class Line
 
         if (a.x == b.x) type = LineType.VERTICAL;
         else if (a.z == b.z) type = LineType.HORIZONTAL;
+    }
+
+    public Line(Vector3 start, Vector3 end, int i) : this(start, end)
+    {
+        id = i;
     }
 
     public Vector3 Direction()
@@ -401,12 +539,23 @@ public class Line
     {
         //Lines should always be created with a being leftmost and b being to the right
         //However the z could be either way around
-        if ((point.x > a.x && point.x < b.x) && ((point.z > a.z && point.z < b.z) || (point.z < a.z && point.z > b.z)))
-        {
-            return true;
-        }
 
-        return false;
+        switch (type)
+        {
+            case LineType.REGULAR:
+                return (point.x > a.x && point.x < b.x) && ((point.z > a.z && point.z < b.z) || (point.z < a.z && point.z > b.z));
+                
+            case LineType.HORIZONTAL:
+                //if the lines are vertical then the z should be the same as either points z
+                return (point.x > a.x && point.x < b.x) && point.z == a.z;
+
+            case LineType.VERTICAL:
+                //if the lines are vertical then the x should be the same as either points x
+                return point.x == a.x && ((point.z >= a.z && point.z <= b.z) || (point.z <= a.z && point.z >= b.z));
+
+            default:
+                return false;
+        }
     }
 
     public float GetYAtXOnLine(float x)

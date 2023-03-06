@@ -153,11 +153,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   debugMode: 1
-  timePerStep: 0.1
-  eventsPerStep: 1
+  timePerStep: 0
+  eventsPerStep: 15
   polyPoints: []
   polyLines: []
-  iPoints: []
   SL: []
 --- !u!4 &193339239
 Transform:
