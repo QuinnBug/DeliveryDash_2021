@@ -152,11 +152,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc9385ff7c1d0f64e90adb8bfa9d92a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  untangle: 0
   debugMode: 1
   timePerStep: 0
-  eventsPerStep: 15
-  timePerUntangle: 1
+  eventsPerStep: 25
+  timePerUntangle: 3
+  minPointDistance: 15
   polyPoints: []
   polyLines: []
   SL: []
@@ -517,8 +517,8 @@ MonoBehaviour:
   nodeLimitRange:
     min: 75
     max: 175
-  nodesPerStep: 2
-  timePerStep: 0.05
+  nodesPerStep: 10
+  timePerStep: 0
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0

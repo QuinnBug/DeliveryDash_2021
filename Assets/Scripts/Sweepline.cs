@@ -5,12 +5,12 @@ using UnityEngine;
 
 public class Sweepline : Singleton<Sweepline>
 {
-    public bool untangle;
     public bool debugMode;
     public float timePerStep;
     public int eventsPerStep;
-    [Space]
     public float timePerUntangle;
+    [Space]
+    public float minPointDistance;
     [Space]
     public List<Vector3> polyPoints = null;
     public List<Line> polyLines = null;
@@ -18,8 +18,9 @@ public class Sweepline : Singleton<Sweepline>
     [Space]
     public List<Line> SL;
 
-    bool intersectionCheckComplete = false;
+    bool allLinesChecked = false;
     bool doIntersection = false;
+    int nextId;
 
     //float closestPair(Node[] points, int n) 
     //{
@@ -63,9 +64,8 @@ public class Sweepline : Singleton<Sweepline>
         polyLines = null;
         iEvents = null;
 
-        untangle = false;
-        intersectionCheckComplete = false;
         doIntersection = false;
+        allLinesChecked = false;
     }
 
     private void Update()
@@ -77,18 +77,9 @@ public class Sweepline : Singleton<Sweepline>
             doIntersection = true;
         }
 
-        if (doIntersection)
+        if (!allLinesChecked && doIntersection)
         {
-            doIntersection = false;
             StartCoroutine(GetIntersections(polyLines.ToArray()));
-        }
-
-        if (intersectionCheckComplete && untangle && iEvents.Count > 0)
-        {
-            intersectionCheckComplete = false;
-            untangle = false;
-            doIntersection = true;
-            DebugUntangle();
         }
     }
 
@@ -102,7 +93,7 @@ public class Sweepline : Singleton<Sweepline>
             Vector3 b = (polyPoints[i].x <= polyPoints[i + 1].x) ? polyPoints[i + 1] : polyPoints[i];
 
             lineList.Add(new Line(a, b, i));
-
+            nextId = i;
             //Debug.DrawLine(a, b, Color.red, 5);
         }
 
@@ -111,6 +102,9 @@ public class Sweepline : Singleton<Sweepline>
 
     IEnumerator GetIntersections(Line[] lines) 
     {
+        doIntersection = false;
+        allLinesChecked = false;
+
         int counter = 0;
         List<Event> events = new List<Event>();
         foreach (Line line in lines)
@@ -206,7 +200,12 @@ public class Sweepline : Singleton<Sweepline>
 
                 case PointType.INTERSECTION:
                     iEvents.Add(currentEvent);
-                    break;
+                    //We untangle and then break out once we find an intersection since we need to re-sweep once we find a 
+                    Debug.DrawRay(new Vector3(currentEvent.point.x, 1, 10000), Vector3.back * 20000, Color.blue, timePerUntangle);
+                    yield return new WaitForSeconds(timePerUntangle);
+                    DebugUntangle();
+                    doIntersection = true;
+                    yield break;
 
                 case PointType.END:
                     #region old method
@@ -259,9 +258,10 @@ public class Sweepline : Singleton<Sweepline>
         }
 
         //Debug.Log(iPoints.Count);
-        intersectionCheckComplete = true;
+        allLinesChecked = true;
     }
 
+    //for use with the SL list not the regular list
     public int FindLineIndexWithBinarySearch(Line[] lines, Line line, float x) 
     {
         if (lines.Length == 0) return 0;
@@ -295,8 +295,6 @@ public class Sweepline : Singleton<Sweepline>
 
     public bool DoesIntersect(Line lineA, Line lineB, out Vector3 intersection)
     {
-        //The vertical lines are still failing to be checked properly
-
         intersection = Vector3.zero;
         if (lineA == lineB)
         {
@@ -310,7 +308,7 @@ public class Sweepline : Singleton<Sweepline>
         float[] equationA = lineA.Equation();
         float[] equationB = lineB.Equation();
 
-        if (Mathf.Abs(equationA[0] - equationB[0]) <= 0.001f) 
+        if (Mathf.Abs(equationA[0] - equationB[0]) <= 0.000001f) 
         {
             // The lines are parellel because their slopes are the same (or close enough))
             return false;
@@ -405,26 +403,37 @@ public class Sweepline : Singleton<Sweepline>
         int y = i < j ? j : i;
 
         int diff = y - x;
+        //untangle code
 
-        for (int t = x + 1; t < y; t++)
-        {
-            polyLines[t].Flip();
-        }
+        //This solves most of the untangling. - but fundamentally doesn't actually make that much sense since we need it to not simply untangle but also connect to the correct places
+        
+        Vector3 temp = polyLines[x].b;
+        polyLines[x].b = polyLines[y].b;
+        polyLines[y].b = temp;
 
-        polyLines[y].a = polyLines[x].b;
-        polyLines[x].b = polyLines[y - 1].b;
+        #region Lerp I Point method
+        //Line originalX = polyLines[x];
+        //Line originalY = polyLines[y];
 
-        Debug.Log("Untangle done");
+        //Vector3 adjustedIPointOne = Vector3.Lerp(intersection.point, Vector3.Lerp(originalX.a, originalY.b, 0.5f), 0.99f);
+        //Vector3 adjustedIPointTwo = Vector3.Lerp(intersection.point, Vector3.Lerp(originalY.a, originalX.b, 0.5f), 0.99f);
+
+        //polyLines[x] = new Line(originalX.a, adjustedIPointOne, originalX.id);
+        //polyLines.Insert(x+1, new Line(adjustedIPointOne, originalY.b, nextId++));
+        //y++;
+        //polyLines[y] = new Line(originalY.a, adjustedIPointTwo, originalY.id);
+        //polyLines.Insert(y+1, new Line(adjustedIPointTwo, originalX.b, nextId++));
+        #endregion
     }
 
     private void OnDrawGizmos()
     {
         if (debugMode && polyLines != null)
         {
-            foreach (Line line in polyLines)
+            for (int i = 0; i < polyLines.Count; i++)
             {
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawLine(line.a, line.b);
+                Gizmos.color = i%2 == 0 ? Color.magenta : Color.red;
+                Gizmos.DrawLine(polyLines[i].a, polyLines[i].b);
             }
         }
 
@@ -546,6 +555,11 @@ public class Line
         a = b;
         b = temp;
     }
+
+    internal float Length()
+    {
+        return Vector3.Distance(a,b);
+    }
 }
 
 public class Event 
@@ -622,7 +636,7 @@ public class SweepLineCompare : IComparer<Line>
         float zOne = first.GetYAtXOnLine(x);
         float zTwo = second.GetYAtXOnLine(x);
 
-        if (zOne == zTwo) return first.a.z < second.a.z ? 1 : -1;
+        if (zOne == zTwo) return first.a.z <= second.a.z ? 1 : -1;
         else return zTwo >= zOne ? 1 : -1;
     }
 }
