@@ -89,21 +89,16 @@ public class Sweepline : Singleton<Sweepline>
 
         for (int i = 0; i < polyPoints.Count - 1; i++)
         {
-            Vector3 a = (polyPoints[i].x <= polyPoints[i + 1].x) ? polyPoints[i] : polyPoints[i + 1];
-            Vector3 b = (polyPoints[i].x <= polyPoints[i + 1].x) ? polyPoints[i + 1] : polyPoints[i];
-
-            lineList.Add(new Line(a, b, i));
+            lineList.Add(new Line(polyPoints[i], polyPoints[i+1], nextId));
             nextId = i;
-            //Debug.DrawLine(a, b, Color.red, 5);
         }
 
         return lineList.ToArray();
     }
 
-    IEnumerator GetIntersections(Line[] lines) 
+    IEnumerator GetIntersections(Line[] lines)
     {
-        doIntersection = false;
-        allLinesChecked = false;
+        doIntersection = allLinesChecked = false;
 
         int counter = 0;
         List<Event> events = new List<Event>();
@@ -113,20 +108,17 @@ public class Sweepline : Singleton<Sweepline>
             events.Add(new Event(line.b, PointType.END, line));
         }
         events.Sort(new EventCompare());
-        Debug.Log(events.Count);
 
-
-        //Should be sorted from top to bottom by start point
         SL = new List<Line>();
         iEvents = new List<Event>();
-        
+
         Event currentEvent;
         while (events.Count > 0)
         {
             counter++;
             currentEvent = events[0];
 
-            if (currentEvent == null) 
+            if (currentEvent == null)
             {
                 Debug.Log("NULL EVENT");
                 events.RemoveAt(0);
@@ -140,7 +132,7 @@ public class Sweepline : Singleton<Sweepline>
             {
                 case PointType.START:
                     Line current = currentEvent.lines[0];
-                    Vector3 intersect = Vector3.zero;
+                    Vector3 intersect;
 
                     foreach (Line otherLine in SL)
                     {
@@ -151,84 +143,15 @@ public class Sweepline : Singleton<Sweepline>
                     }
 
                     SL.Add(current);
-
-                    #region old method
-                    /*
-                    Line above = null, below = null;
-                    int lineIdx = FindLineIndexWithBinarySearch(SL.ToArray(), current, currentEvent.point.x);
-                    Debug.Log(lineIdx);
-                    SL.Insert(lineIdx, current);
-
-                    //we can grab the lines above and below this by simply getting the i - and + this line
-                    if (lineIdx - 1 >= 0) above = SL[lineIdx - 1];
-                    if (lineIdx + 1 < SL.Count) below = SL[lineIdx + 1];
-
-
-                    if(above != null) Debug.DrawLine(above.a, above.b, Color.blue, timePerStep);
-                    if(below != null) Debug.DrawLine(below.a, below.b, Color.yellow, timePerStep);
-
-                    //Tell the above and below lines that we have a line in between them now
-				    if (above != null && below != null && DoesIntersect(above, below, out intersect))
-                    {
-                        //remove intersect from events list
-                        foreach (Event testEvent in events)
-                        {
-                            //if it's not an intersection or if it isn't the above/below intersection
-                            if (testEvent.type == PointType.INTERSECTION && testEvent.HasLine(above) && testEvent.HasLine(below)) 
-                            {
-                                events.Remove(testEvent);
-                                break;
-                            }
-                        }
-                    }
-                    
-                    Debug.DrawLine(current.a, current.b, Color.green, timePerStep);
-
-                    if (above != null && DoesIntersect(current, above, out intersect))
-                    {
-                        events.Add(new Event(intersect, above, current));
-                    }
-
-                    if (below != null && DoesIntersect(current, below, out intersect))
-                    {
-                        events.Add(new Event(intersect, current, below));
-                    }
-                    */
-                    #endregion
-
                     break;
 
                 case PointType.INTERSECTION:
                     iEvents.Add(currentEvent);
-                    //We untangle and then break out once we find an intersection since we need to re-sweep once we find a 
-                    Debug.DrawRay(new Vector3(currentEvent.point.x, 1, 10000), Vector3.back * 20000, Color.blue, timePerUntangle);
-                    yield return new WaitForSeconds(timePerUntangle);
-                    DebugUntangle();
-                    doIntersection = true;
-                    yield break;
+                    break;
 
                 case PointType.END:
-                    #region old method
-                    /*
-                    int idx = SL.IndexOf(currentEvent.lines[0]);
-
-                    Line top = null, bottom = null;
-
-                    //we can grab the lines above and below this by simply getting the i - and + this line
-                    if (idx - 1 >= 0) top = SL[idx - 1];
-                    if (idx + 1 < SL.Count) bottom = SL[idx + 1];
-
-                    //Check if the above and below lines intersect
-                    if (top != null && bottom != null && DoesIntersect(top, bottom, out intersect))
-                    {
-                        events.Add(new Event(intersect, top, bottom));
-                    }
-                    */
-                    #endregion
-
                     // Remove this line from the list of lines since it's over now.
                     SL.Remove(currentEvent.lines[0]);
-
                     break;
             }
 
@@ -237,28 +160,19 @@ public class Sweepline : Singleton<Sweepline>
 
             SweepLineCompare slc = new SweepLineCompare();
             slc.x = currentEvent.point.x;
-            SL.Sort(slc);
+
+            if(SL.Count > 1) SL.Sort(slc);
 
             //We sort the events each time to make sure that any added events are placed in the correct point
             if (events.Count > 1) events.Sort(new EventCompare());
 
             if (counter % eventsPerStep == 0)
             {
-                //int i = 1;
-                //foreach (Line line in SL)
-                //{
-                //    Debug.DrawLine(line.a, line.b, Color.gray, 120);
-                //    float colorVal = (i / (float)SL.Count);
-                //    Debug.DrawLine(line.a + Vector3.up, line.b + Vector3.up, new Color(colorVal, colorVal, colorVal), timePerStep);
-                //    i++;
-                //}
-
                 yield return new WaitForSeconds(timePerStep);
             }
         }
 
-        //Debug.Log(iPoints.Count);
-        allLinesChecked = true;
+        DebugUntangle();
     }
 
     //for use with the SL list not the regular list
@@ -272,7 +186,6 @@ public class Sweepline : Singleton<Sweepline>
         if (lines.Length == 1) return zTwo > zOne ? 1 : 0;
 
         int low = 0, high = lines.Length, index = (low + high) / 2;
-
 
         while (high - low > 1)
         {
@@ -295,7 +208,7 @@ public class Sweepline : Singleton<Sweepline>
 
     public bool DoesIntersect(Line lineA, Line lineB, out Vector3 intersection)
     {
-        intersection = Vector3.zero;
+        intersection = lineA.a;
         if (lineA == lineB)
         {
             //this is bad
@@ -308,61 +221,29 @@ public class Sweepline : Singleton<Sweepline>
         float[] equationA = lineA.Equation();
         float[] equationB = lineB.Equation();
 
-        if (Mathf.Abs(equationA[0] - equationB[0]) <= 0.000001f) 
+        float slopeDiff = equationA[0] - equationB[0];
+        if (Mathf.Abs(slopeDiff) <= 0.001f) 
         {
-            // The lines are parellel because their slopes are the same (or close enough))
+            // The lines are parallel because their slopes are the same (or close enough))
             return false;
         }
 
-        //if both are not vertical lines
-        if (lineA.type != LineType.VERTICAL && lineB.type != LineType.VERTICAL)
-        {
-            //m = A/B
-
-            #region A B calculations
-            // line 1
-            //float A1 = equationA[0];
-            //int B1 = 1;
-            //float C1 = equationA[1];
-            //C1 *= B1;
-
-            //line 2
-            //float A2 = equationB[0];
-            //int B2 = 1;
-            //float C2 = equationB[1];
-            //C2 *= B2;
-
-            // -(A/B)x + y - b = 0
-
-            //intersection.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
-            //intersection.z = -1 * ((C1 * A2 - C2 * A1) / (A1 * B2 - A2 * B1));
-            #endregion
-
-            intersection.x = (equationB[1] - equationA[1]) / (equationA[0] - equationB[0]);
-            intersection.z = -1 * ((equationA[1] * equationB[0] - equationB[1] * equationA[0]) / (equationA[0] - equationB[0]));
-
-            //x = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1)
-            //y = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1)
-            //z = -1 * (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1)
-        }
-        //if either are vertical lines
-        else if (lineA.type == LineType.VERTICAL || lineB.type == LineType.VERTICAL)
+        if (lineA.type == LineType.VERTICAL || lineB.type == LineType.VERTICAL)
         {
             //Debug.Log("One of the lines is vertical > " + lineA.type + " : " + lineB.type);
 
             Line verticalLine = lineA.type == LineType.VERTICAL ? lineA : lineB;
             Line otherLine = lineA.type == LineType.VERTICAL ? lineB : lineA;
 
-            intersection = new Vector3(verticalLine.a.x, verticalLine.a.y, otherLine.GetYAtXOnLine(verticalLine.a.x));
+            intersection = new Vector3(verticalLine.a.x, intersection.y, otherLine.GetYAtXOnLine(verticalLine.a.x));
         }
-
-        //if either are horizontal lines
-        if (lineA.type == LineType.HORIZONTAL || lineB.type == LineType.HORIZONTAL)
+        else
         {
-            //Debug.Log("One of the lines is horizontal");
+            intersection.x = (equationB[1] - equationA[1]) / (equationA[0] - equationB[0]);
+            intersection.z = -1 * ((equationA[1] * equationB[0] - equationB[1] * equationA[0]) / (equationA[0] - equationB[0]));
         }
 
-        
+        if (lineA.SharesPoints(lineB)) return false;
 
         //if the intersection is not within the range of either line then return false;
         if (!lineA.Contains(intersection) || !lineB.Contains(intersection))
@@ -370,60 +251,91 @@ public class Sweepline : Singleton<Sweepline>
             return false;
         }
 
+        //Debug.Log(slopeDiff + " > " + lineA.type + " " + lineB.type);
+        //Debug.DrawLine(lineA.a, lineA.b, Color.blue, 1.5f);
+        //Debug.DrawLine(lineB.a, lineB.b, Color.green, 1.5f);
+
         //we got through all the checks! that means we found an intersection in range
         return true;
     }
 
     public void DebugUntangle()
     {
-        Event intersection = iEvents[0];
-        iEvents.RemoveAt(0);
+        Debug.Log("Untangle Time");
 
-        int i = 0, j = 0;
-
-        while (i < polyLines.Count && polyLines[i].id != intersection.lines[0].id)
+        foreach (Event intersection in iEvents)
         {
-            i++;
+            int i = polyLines.IndexOf(intersection.lines[0]);
+            int j = polyLines.IndexOf(intersection.lines[1]);
+
+            if (i >= polyLines.Count || j >= polyLines.Count || j < 0 || i < 0) continue;
+
+            if (i > j)
+            {
+                int temp = i;
+                i = j;
+                j = temp;
+            }
+
+            int diff = j - i;
+
+            //if these 2 lines share endpoints then they can't overlap
+            if (polyLines[i].SharesPoints(polyLines[j])) continue;
+
+            if (DoesIntersect(polyLines[i], polyLines[j], out Vector3 iPoint))
+            {
+                //we're swapping a bunch of the lines but how can i make sure that the lines connect to the proper before/after lines
+
+                polyLines[j] = polyLines[i].SwitchPoints(polyLines[j], false);
+
+                //Line tempILine = polyLines[i];
+                //Line tempJLine = polyLines[j];
+
+                //switch (tempILine.type)
+                //{
+                //    case LineType.REGULAR:
+                //    case LineType.HORIZONTAL:
+                //        polyLines[i].SwitchPoints(tempJLine, false);
+                //        break;
+
+                //    case LineType.VERTICAL:
+                //        break;
+                //    default:
+                //        break;
+                //}
+
+                //switch (tempJLine.type)
+                //{
+                //    case LineType.REGULAR:
+                //    case LineType.HORIZONTAL:
+                //        polyLines[j].SwitchPoints(tempILine, false);
+                //        break;
+
+                //    case LineType.VERTICAL:
+                //        break;
+                //    default:
+                //        break;
+                //}
+
+                if (DoesIntersect(polyLines[i], polyLines[j], out iPoint))
+                {
+                    Debug.Log(i + " " + j + " lines -- " + polyLines[i].type + " " + polyLines[j].type);
+                }
+            }
+            else
+            {
+                Debug.Log("Lines no longer intersect");
+            }
+
+
         }
 
-        while (j < polyLines.Count && polyLines[j].id != intersection.lines[1].id)
-        {
-            j++;
-        }
+        allLinesChecked = false;
+        doIntersection = true;
 
-        if (j >= polyLines.Count || i >= polyLines.Count)
-        {
-            Debug.Log(i + " " + j + " - one of those lines may have been deleted");
-            return;
-        }
+        //iEvents.Clear();
 
-        //x = the first line in the loop
-        int x = i < j ? i : j;
-        //y = the second line in the loop
-        int y = i < j ? j : i;
-
-        int diff = y - x;
-        //untangle code
-
-        //This solves most of the untangling. - but fundamentally doesn't actually make that much sense since we need it to not simply untangle but also connect to the correct places
-        
-        Vector3 temp = polyLines[x].b;
-        polyLines[x].b = polyLines[y].b;
-        polyLines[y].b = temp;
-
-        #region Lerp I Point method
-        //Line originalX = polyLines[x];
-        //Line originalY = polyLines[y];
-
-        //Vector3 adjustedIPointOne = Vector3.Lerp(intersection.point, Vector3.Lerp(originalX.a, originalY.b, 0.5f), 0.99f);
-        //Vector3 adjustedIPointTwo = Vector3.Lerp(intersection.point, Vector3.Lerp(originalY.a, originalX.b, 0.5f), 0.99f);
-
-        //polyLines[x] = new Line(originalX.a, adjustedIPointOne, originalX.id);
-        //polyLines.Insert(x+1, new Line(adjustedIPointOne, originalY.b, nextId++));
-        //y++;
-        //polyLines[y] = new Line(originalY.a, adjustedIPointTwo, originalY.id);
-        //polyLines.Insert(y+1, new Line(adjustedIPointTwo, originalX.b, nextId++));
-        #endregion
+        // After we switch all of the lines we need to run a check to destroy any lines that would be crossed by the inner path
     }
 
     private void OnDrawGizmos()
@@ -452,9 +364,41 @@ public class Sweepline : Singleton<Sweepline>
 public class Line
 {
     public int id;
-    public Vector3 a;
-    public Vector3 b;
+
+    private Vector3 A;
+    private Vector3 B;
+
+    public Vector3 a {
+        get { return A; } 
+        set{ A = value; UpdateType(); }
+    }
+
+    public Vector3 b
+    {
+        get { return B; }
+        set 
+        { 
+            B = value;
+            UpdateType();
+        }
+    }
+
     public LineType type = LineType.REGULAR;
+
+    //this updates the type and makes sure that a is leftmost or topmost based on type
+    public void UpdateType() 
+    {
+        //we always want a to be left and b to be right
+        
+
+        if (a.x == b.x)
+        {
+            type = LineType.VERTICAL;
+            
+        }
+        else if (a.z == b.z) type = LineType.HORIZONTAL;
+        else type = LineType.REGULAR;
+    }
 
     public bool CloserToA(Vector3 point) 
     {
@@ -475,11 +419,16 @@ public class Line
 
     public Line(Vector3 start, Vector3 end)
     {
-        a = start;
-        b = end;
+        //we use the capital A to avoid calling UpdateType more than needed
 
-        if (a.x == b.x) type = LineType.VERTICAL;
-        else if (a.z == b.z) type = LineType.HORIZONTAL;
+        A = (start.x <= end.x) ? start : end;
+        b = (start.x <= end.x) ? end : start;
+
+        if (type == LineType.VERTICAL)
+        {
+            A = (start.z >= end.z) ? start : end;
+            b = (start.z >= end.z) ? end : start;
+        }
     }
 
     public Line(Vector3 start, Vector3 end, int i) : this(start, end)
@@ -559,6 +508,39 @@ public class Line
     internal float Length()
     {
         return Vector3.Distance(a,b);
+    }
+
+    internal bool SharesPoints(Line line)
+    {
+        return a == line.a || a == line.b || b == line.a || b == line.b;
+    }
+
+    internal Line SwitchPoints(Line line, bool doA) 
+    {
+        Vector3 temp = doA ? a:b;
+
+        if (doA)
+        {
+            a = line.a;
+            line.a = temp;
+        }
+        else
+        {
+            b = line.b;
+            line.b = temp;
+        }
+
+        return line;
+    }
+
+    internal Line CrossPoints(Line line) 
+    {
+        Vector3 temp = b;
+
+        b = line.a;
+        line.a = temp;
+
+        return line;
     }
 }
 

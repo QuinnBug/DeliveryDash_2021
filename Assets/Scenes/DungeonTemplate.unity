@@ -154,8 +154,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   debugMode: 1
   timePerStep: 0
-  eventsPerStep: 25
-  timePerUntangle: 3
+  eventsPerStep: 1
+  timePerUntangle: 0.1
   minPointDistance: 15
   polyPoints: []
   polyLines: []
@@ -509,11 +509,11 @@ MonoBehaviour:
       - lo
       - ro
     axiom: o
-    finalString: ff[<ff][>ff]
+    finalString: ff[>ff<<ff][<ff<ff]ff
     randomRuleOutput: 1
-  count: 8
+  count: 10
   length: 100
-  angle: 30
+  angle: 45
   nodeLimitRange:
     min: 75
     max: 175
