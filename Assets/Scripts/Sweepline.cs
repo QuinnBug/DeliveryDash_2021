@@ -18,7 +18,6 @@ public class Sweepline : Singleton<Sweepline>
     [Space]
     public List<Line> SL;
 
-    bool allLinesChecked = false;
     bool doIntersection = false;
     int nextId;
 
@@ -65,7 +64,6 @@ public class Sweepline : Singleton<Sweepline>
         iEvents = null;
 
         doIntersection = false;
-        allLinesChecked = false;
     }
 
     private void Update()
@@ -77,7 +75,7 @@ public class Sweepline : Singleton<Sweepline>
             doIntersection = true;
         }
 
-        if (!allLinesChecked && doIntersection)
+        if (doIntersection)
         {
             StartCoroutine(GetIntersections(polyLines.ToArray()));
         }
@@ -98,7 +96,7 @@ public class Sweepline : Singleton<Sweepline>
 
     IEnumerator GetIntersections(Line[] lines)
     {
-        doIntersection = allLinesChecked = false;
+        doIntersection = false;
 
         int counter = 0;
         List<Event> events = new List<Event>();
@@ -140,6 +138,7 @@ public class Sweepline : Singleton<Sweepline>
                         {
                             events.Add(new Event(intersect, current, otherLine));
                         }
+                        if(timePerUntangle > 0 ) yield return new WaitForSeconds(timePerUntangle);
                     }
 
                     SL.Add(current);
@@ -216,6 +215,12 @@ public class Sweepline : Singleton<Sweepline>
             return false;
         }
 
+        if (lineA.SharesPoints(lineB))
+        {
+            //Debug.Log("These lines share points");
+            return false;
+        }
+
         //y = mx + b
 
         float[] equationA = lineA.Equation();
@@ -224,14 +229,12 @@ public class Sweepline : Singleton<Sweepline>
         float slopeDiff = equationA[0] - equationB[0];
         if (Mathf.Abs(slopeDiff) <= 0.001f) 
         {
-            // The lines are parallel because their slopes are the same (or close enough))
+            //Debug.Log("These lines are parallel");
             return false;
         }
 
         if (lineA.type == LineType.VERTICAL || lineB.type == LineType.VERTICAL)
         {
-            //Debug.Log("One of the lines is vertical > " + lineA.type + " : " + lineB.type);
-
             Line verticalLine = lineA.type == LineType.VERTICAL ? lineA : lineB;
             Line otherLine = lineA.type == LineType.VERTICAL ? lineB : lineA;
 
@@ -243,17 +246,18 @@ public class Sweepline : Singleton<Sweepline>
             intersection.z = -1 * ((equationA[1] * equationB[0] - equationB[1] * equationA[0]) / (equationA[0] - equationB[0]));
         }
 
-        if (lineA.SharesPoints(lineB)) return false;
+        
 
         //if the intersection is not within the range of either line then return false;
         if (!lineA.Contains(intersection) || !lineB.Contains(intersection))
         {
+            //Debug.Log("Intersection point is not on the lines");
             return false;
         }
 
         //Debug.Log(slopeDiff + " > " + lineA.type + " " + lineB.type);
-        //Debug.DrawLine(lineA.a, lineA.b, Color.blue, 1.5f);
-        //Debug.DrawLine(lineB.a, lineB.b, Color.green, 1.5f);
+        //Debug.DrawLine(lineA.a, lineA.b, Color.black, timePerUntangle);
+        //Debug.DrawLine(lineB.a, lineB.b, Color.black, timePerUntangle);
 
         //we got through all the checks! that means we found an intersection in range
         return true;
@@ -288,35 +292,6 @@ public class Sweepline : Singleton<Sweepline>
 
                 polyLines[j] = polyLines[i].SwitchPoints(polyLines[j], false);
 
-                //Line tempILine = polyLines[i];
-                //Line tempJLine = polyLines[j];
-
-                //switch (tempILine.type)
-                //{
-                //    case LineType.REGULAR:
-                //    case LineType.HORIZONTAL:
-                //        polyLines[i].SwitchPoints(tempJLine, false);
-                //        break;
-
-                //    case LineType.VERTICAL:
-                //        break;
-                //    default:
-                //        break;
-                //}
-
-                //switch (tempJLine.type)
-                //{
-                //    case LineType.REGULAR:
-                //    case LineType.HORIZONTAL:
-                //        polyLines[j].SwitchPoints(tempILine, false);
-                //        break;
-
-                //    case LineType.VERTICAL:
-                //        break;
-                //    default:
-                //        break;
-                //}
-
                 if (DoesIntersect(polyLines[i], polyLines[j], out iPoint))
                 {
                     Debug.Log(i + " " + j + " lines -- " + polyLines[i].type + " " + polyLines[j].type);
@@ -330,8 +305,7 @@ public class Sweepline : Singleton<Sweepline>
 
         }
 
-        allLinesChecked = false;
-        doIntersection = true;
+        doIntersection = iEvents.Count > 0;
 
         //iEvents.Clear();
 
@@ -456,11 +430,9 @@ public class Line
         switch (type)
         {
             case LineType.REGULAR:
-                return (point.x > a.x && point.x < b.x) && ((point.z > a.z && point.z < b.z) || (point.z < a.z && point.z > b.z));
-                
             case LineType.HORIZONTAL:
-                //if the lines are vertical then the z should be the same as either points z
-                return (point.x > a.x && point.x < b.x) && point.z == a.z;
+                return ((point.x >= a.x && point.x <= b.x) || (point.x <= a.x && point.x >= b.x)) &&
+                       ((point.z >= a.z && point.z <= b.z) || (point.z <= a.z && point.z >= b.z));
 
             case LineType.VERTICAL:
                 //if the lines are vertical then the x should be the same as either points x
