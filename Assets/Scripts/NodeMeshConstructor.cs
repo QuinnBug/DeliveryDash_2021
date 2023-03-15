@@ -117,7 +117,12 @@ public class NodeMeshConstructor : MonoBehaviour
     void GetPolygonFromNodes()
     {
         //setting the start node.
-        Node startNode = nodeManager.nodes[0];
+        int k = 0;
+        while (nodeManager.nodes[k].connections.Count > 1)
+        {
+            k++;
+        }
+        Node startNode = nodeManager.nodes[k];
 
         visitedNodes = new HashSet<Node>() { startNode };
         finalPath = new List<Node>();
@@ -131,9 +136,14 @@ public class NodeMeshConstructor : MonoBehaviour
         Quaternion rotation;
         Vector3 midDirPoint;
 
-        for (int i = 0; i < finalPath.Count - 1; i++)
+        for (int i = 0; i < finalPath.Count; i++)
         {
             j = i + 1;
+
+            if (j >= finalPath.Count)
+            {
+                j = 0;
+            }
             //we need to get a point to the left of the mid point between current and next
             //(Quaternion * Vector3) gives us the vector rotated by the Quaternion
 
@@ -198,7 +208,7 @@ public class NodeMeshConstructor : MonoBehaviour
                         path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
                         path.Add(current);
                     }
-                    path.Add(current);
+                    //path.Add(current);
                 }
                 else
                 {

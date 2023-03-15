@@ -288,21 +288,17 @@ public class Sweepline : Singleton<Sweepline>
 
             if (DoesIntersect(polyLines[i], polyLines[j], out Vector3 iPoint))
             {
-                //we're swapping a bunch of the lines but how can i make sure that the lines connect to the proper before/after lines
-
                 polyLines[j] = polyLines[i].SwitchPoints(polyLines[j], false);
 
                 if (DoesIntersect(polyLines[i], polyLines[j], out iPoint))
                 {
-                    Debug.Log(i + " " + j + " lines -- " + polyLines[i].type + " " + polyLines[j].type);
+                    Debug.Log(i + " " + j + " lines intersect -- " + polyLines[i].type + " " + polyLines[j].type);
                 }
             }
             else
             {
                 Debug.Log("Lines no longer intersect");
             }
-
-
         }
 
         doIntersection = iEvents.Count > 0;
