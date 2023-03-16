@@ -153,8 +153,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   debugMode: 1
-  timePerStep: 5
-  eventsPerStep: 1
+  timePerStep: 0
+  eventsPerStep: 10
   timePerUntangle: 0
   minPointDistance: 15
   polyPoints: []
@@ -509,15 +509,15 @@ MonoBehaviour:
       - lo
       - ro
     axiom: o
-    finalString: ff[>ff<<ff][<ff<ff]ff
+    finalString: ff[>ff<<<ff][<ff<ff]ff
     randomRuleOutput: 1
-  count: 8
-  length: 100
+  count: 15
+  length: 50
   angle: 30
   nodeLimitRange:
     min: 75
     max: 175
-  nodesPerStep: 10
+  nodesPerStep: 20
   timePerStep: 0
 --- !u!4 &2109595311
 Transform:
@@ -546,7 +546,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   minVDistance: 3
-  cornerDistance: 25
+  cornerDistance: 15
   shapePoints: []
   drawPoints: 0
   drawLines: 1

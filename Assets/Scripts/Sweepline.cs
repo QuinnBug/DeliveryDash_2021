@@ -138,6 +138,7 @@ public class Sweepline : Singleton<Sweepline>
                         {
                             events.Add(new Event(intersect, current, otherLine));
                         }
+
                         if(timePerUntangle > 0 ) yield return new WaitForSeconds(timePerUntangle);
                     }
 
@@ -286,11 +287,60 @@ public class Sweepline : Singleton<Sweepline>
             //if these 2 lines share endpoints then they can't overlap
             if (polyLines[i].SharesPoints(polyLines[j])) continue;
 
-            if (DoesIntersect(polyLines[i], polyLines[j], out Vector3 iPoint))
+            if (DoesIntersect(polyLines[i], polyLines[j], out Vector3 intPoint))
             {
-                polyLines[j] = polyLines[i].SwitchPoints(polyLines[j], false);
+                bool iACloser = Vector3.Distance(polyLines[i].a, intPoint) < Vector3.Distance(polyLines[i].b, intPoint);
+                bool jACloser = Vector3.Distance(polyLines[j].a, intPoint) < Vector3.Distance(polyLines[j].b, intPoint);
 
-                if (DoesIntersect(polyLines[i], polyLines[j], out iPoint))
+                Vector3[] points = new Vector3[] { polyLines[i].a, polyLines[i].b, polyLines[j].a, polyLines[j].b };
+                float closestDist = 99999;
+                int closestIdx = -1;
+                for (int p = 0; p < points.Length; p++)
+                {
+                    float dist = Vector3.Distance(points[p], intPoint);
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        closestIdx = p;
+                    }
+                }
+                
+                
+
+                //if the distance from any of the 4 line points to the iPoint is within a certain range, the lines should simply meet at that point.
+                if (closestDist < minPointDistance && closestIdx != -1)
+                {
+                    //line I which point is closest?
+                    //line J which point is closest?
+                    //set that point to the point that was closest distance
+                }
+                else if(diff == 1)
+                {
+                    //the lines are 1 apart so we can remove the line between them and make them end at the iPoint;
+                    //we need to find the line that starts first (a with the left most x)
+                }
+                else
+                {
+                    polyLines[i].SwitchPoints(polyLines[j], false);
+                }
+
+                //it's not untangling properly - there are a lot of issues
+
+                #region Lerp I Point method
+                //Line originalI = polyLines[i];
+                //Line originalJ = polyLines[j];
+
+                //Vector3 adjustedIPointOne = Vector3.Lerp(intersection.point, Vector3.Lerp(originalI.a, originalJ.b, 0.5f), 0.5f);
+                //Vector3 adjustedIPointTwo = Vector3.Lerp(intersection.point, Vector3.Lerp(originalJ.a, originalI.b, 0.5f), 0.5f);
+
+                //polyLines[i] = new Line(originalI.a, adjustedIPointOne, originalI.id);
+                //polyLines.Insert(i + 1, new Line(adjustedIPointOne, originalJ.b, nextId++));
+                //j++;
+                //polyLines[j] = new Line(originalJ.a, adjustedIPointTwo, originalJ.id);
+                //polyLines.Insert(j + 1, new Line(adjustedIPointTwo, originalI.b, nextId++));
+                #endregion
+
+                if (DoesIntersect(polyLines[i], polyLines[j], out intPoint))
                 {
                     Debug.Log(i + " " + j + " lines intersect -- " + polyLines[i].type + " " + polyLines[j].type);
                 }

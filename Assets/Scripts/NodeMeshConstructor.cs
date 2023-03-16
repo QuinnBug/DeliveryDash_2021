@@ -153,6 +153,7 @@ public class NodeMeshConstructor : MonoBehaviour
             float distance = Vector3.Distance(finalPath[i].point, finalPath[j].point); 
 
             //a quarter of the way between the points and to the left.
+
             midDirPoint = finalPath[i].point + (rotation * (Vector3.forward * distance * 0.25f));
             shapePoints.Add(midDirPoint + (rotation * (Vector3.right * abDistance * -1)));
 
@@ -178,12 +179,12 @@ public class NodeMeshConstructor : MonoBehaviour
         
         while (exploring)
         {
-            Node[] connections = ValidConnections(current, path);
+            List<Node> connections = new List<Node>(ValidConnections(current, path));
 
             visitedNodes.Add(current);
 
             //we continue exploring until reaching a deadend or a branch
-            exploring = connections.Length == 1;
+            exploring = connections.Count == 1;
 
             //if we only have one path we move to that one
             if (exploring)
@@ -200,15 +201,20 @@ public class NodeMeshConstructor : MonoBehaviour
                 path.Add(current);
 
                 //if we've reached a branching node it will need to explore those paths
-                if (connections.Length > 1)
+                if (connections.Count > 1)
                 {
+                    ConnectionSort cs = new ConnectionSort();
+                    cs.start = startNode;
+                    cs.current = current;
+                    connections.Sort(cs);
+
                     //Debug.Log("Reached Branch @ " + current.point);
                     foreach (Node connection in connections)
                     {
                         path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
                         path.Add(current);
                     }
-                    //path.Add(current);
+                    path.Add(current);
                 }
                 else
                 {
@@ -395,6 +401,25 @@ public class NodeMeshConstructor : MonoBehaviour
         public Path(Node[] path) 
         {
             points = path;
+        }
+    }
+
+    public class ConnectionSort : IComparer<Node>
+    {
+        public Node start, current;
+
+        //returns which line starts most to the left
+
+        public int Compare(Node x, Node y)
+        {
+            Vector3 incomingDir = Vector3.Normalize(current.point - start.point);
+
+            float xRot = Vector3.SignedAngle(incomingDir, Vector3.Normalize(x.point - start.point), Vector3.up);
+            float yRot = Vector3.SignedAngle(incomingDir, Vector3.Normalize(y.point - start.point), Vector3.up);
+
+            if (xRot == yRot) return 0;
+
+            return  xRot > yRot ? 1 : -1;
         }
     }
 }
