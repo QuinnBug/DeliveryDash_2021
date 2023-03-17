@@ -291,28 +291,18 @@ public class Sweepline : Singleton<Sweepline>
             {
                 bool iACloser = Vector3.Distance(polyLines[i].a, intPoint) < Vector3.Distance(polyLines[i].b, intPoint);
                 bool jACloser = Vector3.Distance(polyLines[j].a, intPoint) < Vector3.Distance(polyLines[j].b, intPoint);
-
-                Vector3[] points = new Vector3[] { polyLines[i].a, polyLines[i].b, polyLines[j].a, polyLines[j].b };
-                float closestDist = 99999;
-                int closestIdx = -1;
-                for (int p = 0; p < points.Length; p++)
-                {
-                    float dist = Vector3.Distance(points[p], intPoint);
-                    if (dist < closestDist)
-                    {
-                        closestDist = dist;
-                        closestIdx = p;
-                    }
-                }
-                
-                
+                Vector3 closeI = iACloser ? polyLines[i].a : polyLines[i].b;
+                Vector3 closeJ = jACloser ? polyLines[j].a : polyLines[j].b;
 
                 //if the distance from any of the 4 line points to the iPoint is within a certain range, the lines should simply meet at that point.
-                if (closestDist < minPointDistance && closestIdx != -1)
+                if (Vector3.Distance(closeJ, intPoint) < minPointDistance || Vector3.Distance(closeI, intPoint) < minPointDistance)
                 {
-                    //line I which point is closest?
-                    //line J which point is closest?
-                    //set that point to the point that was closest distance
+                    if (iACloser) polyLines[i].a = intPoint;
+                    else polyLines[i].b = intPoint;
+
+                    if (jACloser) polyLines[j].a = intPoint;
+                    else polyLines[j].b = intPoint;
+
                 }
                 else if(diff == 1)
                 {
