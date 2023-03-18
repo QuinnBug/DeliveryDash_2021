@@ -138,8 +138,6 @@ public class Sweepline : Singleton<Sweepline>
                         {
                             events.Add(new Event(intersect, current, otherLine));
                         }
-
-                        if(timePerUntangle > 0 ) yield return new WaitForSeconds(timePerUntangle);
                     }
 
                     SL.Add(current);
@@ -172,7 +170,11 @@ public class Sweepline : Singleton<Sweepline>
             }
         }
 
-        DebugUntangle();
+        doIntersection = iEvents.Count > 0;
+        while (DebugUntangle())
+        {
+            if (timePerUntangle > 0) yield return new WaitForSeconds(timePerUntangle);
+        }
     }
 
     //for use with the SL list not the regular list
@@ -264,86 +266,128 @@ public class Sweepline : Singleton<Sweepline>
         return true;
     }
 
-    public void DebugUntangle()
+    public bool DebugUntangle()
     {
+        if (iEvents.Count == 0) return false;
+
         Debug.Log("Untangle Time");
 
-        foreach (Event intersection in iEvents)
+        Event intersection = iEvents[0];
+        iEvents.RemoveAt(0);
+
+        int i = polyLines.IndexOf(intersection.lines[0]);
+        int j = polyLines.IndexOf(intersection.lines[1]);
+
+        //if i or j is out of range, or if these 2 lines share endpoints (they can't overlap), return out.
+        if (i >= polyLines.Count || j >= polyLines.Count || j < 0 || i < 0 || polyLines[i].SharesPoints(polyLines[j])) return iEvents.Count > 0;
+
+        if (i > j)
         {
-            int i = polyLines.IndexOf(intersection.lines[0]);
-            int j = polyLines.IndexOf(intersection.lines[1]);
+            int temp = i;
+            i = j;
+            j = temp;
+        }
 
-            if (i >= polyLines.Count || j >= polyLines.Count || j < 0 || i < 0) continue;
+        int diff = j - i;
 
-            if (i > j)
+        if (timePerUntangle > 0)
+        {
+            Debug.DrawLine(polyLines[i].a, polyLines[i].b, Color.black, timePerUntangle);
+            Debug.DrawLine(polyLines[j].a, polyLines[j].b, Color.black, timePerUntangle);
+        }
+
+        if (DoesIntersect(polyLines[i], polyLines[j], out Vector3 intPoint))
+        {
+            //These values help calculate the second check
+            bool iACloser = Vector3.Distance(polyLines[i].a, intPoint) < Vector3.Distance(polyLines[i].b, intPoint);
+            bool jACloser = Vector3.Distance(polyLines[j].a, intPoint) < Vector3.Distance(polyLines[j].b, intPoint);
+            Vector3 closeI = iACloser ? polyLines[i].a : polyLines[i].b;
+            Vector3 closeJ = jACloser ? polyLines[j].a : polyLines[j].b;
+            bool iTooClose = Vector3.Distance(closeI, intPoint) < minPointDistance;
+            bool jTooClose = Vector3.Distance(closeJ, intPoint) < minPointDistance;
+
+            if (diff == 1)
             {
-                int temp = i;
-                i = j;
-                j = temp;
+                //the lines are 1 apart so we can remove the line between them and make them end at the iPoint;
+                //we need to find the line that starts first (a with the left most x)
+
+                Line middleLine = polyLines[i + 1];
+
+                if (middleLine.Contains(polyLines[i].a)) polyLines[i].a = intPoint;
+                else if (middleLine.Contains(polyLines[i].b)) polyLines[i].b = intPoint;
+
+                if (middleLine.Contains(polyLines[j].a)) polyLines[j].a = intPoint;
+                else if (middleLine.Contains(polyLines[j].b)) polyLines[j].b = intPoint;
+
+                Debug.Log("diff of 1");
+
+                if (timePerUntangle > 0)
+                {
+                    Debug.DrawLine(polyLines[i].a, polyLines[i].b, Color.white, timePerUntangle);
+                    Debug.DrawLine(polyLines[j].a, polyLines[j].b, Color.white, timePerUntangle);
+                }
+
+                polyLines.Remove(middleLine);
             }
-
-            int diff = j - i;
-
-            //if these 2 lines share endpoints then they can't overlap
-            if (polyLines[i].SharesPoints(polyLines[j])) continue;
-
-            if (DoesIntersect(polyLines[i], polyLines[j], out Vector3 intPoint))
+            else if (iTooClose || jTooClose)
             {
-                bool iACloser = Vector3.Distance(polyLines[i].a, intPoint) < Vector3.Distance(polyLines[i].b, intPoint);
-                bool jACloser = Vector3.Distance(polyLines[j].a, intPoint) < Vector3.Distance(polyLines[j].b, intPoint);
-                Vector3 closeI = iACloser ? polyLines[i].a : polyLines[i].b;
-                Vector3 closeJ = jACloser ? polyLines[j].a : polyLines[j].b;
-
                 //if the distance from any of the 4 line points to the iPoint is within a certain range, the lines should simply meet at that point.
-                if (Vector3.Distance(closeJ, intPoint) < minPointDistance || Vector3.Distance(closeI, intPoint) < minPointDistance)
+
+                if (iACloser) polyLines[i].a = intPoint;
+                else polyLines[i].b = intPoint;
+
+                if (jACloser) polyLines[j].a = intPoint;
+                else polyLines[j].b = intPoint;
+
+                Debug.Log("closer than min distance");
+
+                if (timePerUntangle > 0)
                 {
-                    if (iACloser) polyLines[i].a = intPoint;
-                    else polyLines[i].b = intPoint;
-
-                    if (jACloser) polyLines[j].a = intPoint;
-                    else polyLines[j].b = intPoint;
-
-                }
-                else if(diff == 1)
-                {
-                    //the lines are 1 apart so we can remove the line between them and make them end at the iPoint;
-                    //we need to find the line that starts first (a with the left most x)
-                }
-                else
-                {
-                    polyLines[i].SwitchPoints(polyLines[j], false);
-                }
-
-                //it's not untangling properly - there are a lot of issues
-
-                #region Lerp I Point method
-                //Line originalI = polyLines[i];
-                //Line originalJ = polyLines[j];
-
-                //Vector3 adjustedIPointOne = Vector3.Lerp(intersection.point, Vector3.Lerp(originalI.a, originalJ.b, 0.5f), 0.5f);
-                //Vector3 adjustedIPointTwo = Vector3.Lerp(intersection.point, Vector3.Lerp(originalJ.a, originalI.b, 0.5f), 0.5f);
-
-                //polyLines[i] = new Line(originalI.a, adjustedIPointOne, originalI.id);
-                //polyLines.Insert(i + 1, new Line(adjustedIPointOne, originalJ.b, nextId++));
-                //j++;
-                //polyLines[j] = new Line(originalJ.a, adjustedIPointTwo, originalJ.id);
-                //polyLines.Insert(j + 1, new Line(adjustedIPointTwo, originalI.b, nextId++));
-                #endregion
-
-                if (DoesIntersect(polyLines[i], polyLines[j], out intPoint))
-                {
-                    Debug.Log(i + " " + j + " lines intersect -- " + polyLines[i].type + " " + polyLines[j].type);
+                    Debug.DrawLine(polyLines[i].a, polyLines[i].b, Color.green, timePerUntangle);
+                    Debug.DrawLine(polyLines[j].a, polyLines[j].b, Color.green, timePerUntangle);
                 }
             }
             else
             {
-                Debug.Log("Lines no longer intersect");
+                polyLines[i].SwitchPoints(polyLines[j], false);
+
+                if (timePerUntangle > 0)
+                {
+                    Debug.DrawLine(polyLines[i].a, polyLines[i].b, Color.yellow, timePerUntangle);
+                    Debug.DrawLine(polyLines[j].a, polyLines[j].b, Color.yellow, timePerUntangle);
+                }
+
+                polyLines.Add(new Line(polyLines[i].a, polyLines[j].a, nextId++));
+                polyLines.Add(new Line(polyLines[i].b, polyLines[j].b, nextId++));
+
+                Debug.Log("switching b's");
+            }
+
+            #region Lerp I Point method
+            //Line originalI = polyLines[i];
+            //Line originalJ = polyLines[j];
+
+            //Vector3 adjustedIPointOne = Vector3.Lerp(intersection.point, Vector3.Lerp(originalI.a, originalJ.b, 0.5f), 0.5f);
+            //Vector3 adjustedIPointTwo = Vector3.Lerp(intersection.point, Vector3.Lerp(originalJ.a, originalI.b, 0.5f), 0.5f);
+
+            //polyLines[i] = new Line(originalI.a, adjustedIPointOne, originalI.id);
+            //polyLines.Insert(i + 1, new Line(adjustedIPointOne, originalJ.b, nextId++));
+            //j++;
+            //polyLines[j] = new Line(originalJ.a, adjustedIPointTwo, originalJ.id);
+            //polyLines.Insert(j + 1, new Line(adjustedIPointTwo, originalI.b, nextId++));
+            #endregion
+
+            if (DoesIntersect(polyLines[i], polyLines[j], out intPoint))
+            {
+                Debug.Log(i + " " + j + " lines intersect -- " + polyLines[i].type + " " + polyLines[j].type);
             }
         }
+        else
+        {
+            //Debug.Log("Lines no longer intersect");
+        }
 
-        doIntersection = iEvents.Count > 0;
-
-        //iEvents.Clear();
+        return iEvents.Count > 0;
 
         // After we switch all of the lines we need to run a check to destroy any lines that would be crossed by the inner path
     }

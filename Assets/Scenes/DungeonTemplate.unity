@@ -156,7 +156,7 @@ MonoBehaviour:
   timePerStep: 0
   eventsPerStep: 10
   timePerUntangle: 0
-  minPointDistance: 15
+  minPointDistance: 7
   polyPoints: []
   polyLines: []
   SL: []
@@ -549,8 +549,8 @@ MonoBehaviour:
   cornerDistance: 15
   shapePoints: []
   drawPoints: 0
-  drawLines: 1
+  drawLines: 0
   currentP: 0
   displayCount: 100
-  pTimer: 0.1
-  switchTime: 0.1
+  pTimer: 999999
+  switchTime: 999999
