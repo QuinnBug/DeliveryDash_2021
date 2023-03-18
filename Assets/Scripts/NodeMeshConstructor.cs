@@ -161,6 +161,8 @@ public class NodeMeshConstructor : MonoBehaviour
             shapePoints.Add(midDirPoint + (rotation * (Vector3.right * abDistance * -1)));
         }
 
+        shapePoints.Add(shapePoints[0]);
+
     }
 
     /// <summary>
@@ -214,11 +216,23 @@ public class NodeMeshConstructor : MonoBehaviour
                         path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
                         path.Add(current);
                     }
-                    path.Add(current);
+                    //path.Add(current);
                 }
                 else
                 {
                     //Debug.Log("Reached Deadend @ " + current.point);
+                    //if this node has more than one connection it should reach out to each of it's connections before returning, except for the connection we just came from.
+                    Node previousNode = path[path.Count - 1];
+                    if (current.connections.Count > 1)
+                    {
+                        foreach (Node newNode in current.connections)
+                        {
+                            if (newNode == previousNode) continue;
+
+                            path.Add(newNode);
+                            path.Add(current);
+                        }
+                    }
                 }
 
                 path.AddRange(rev_path);
