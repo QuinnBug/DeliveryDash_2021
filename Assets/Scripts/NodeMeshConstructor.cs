@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class NodeMeshConstructor : MonoBehaviour
 {
@@ -17,7 +18,10 @@ public class NodeMeshConstructor : MonoBehaviour
     [Space]
     public List<Vector3> shapePoints = null;
     public List<Bounds> shapes = null;
-
+    [Space]
+    [Tooltip("Set above 1 to force all connections to be skipped, below 0 to do all connections")]
+    public float connSkipChance = 0.5f;
+    [Space]
     //display variables
     public bool drawPoints;
     public bool drawLines;
@@ -140,7 +144,7 @@ public class NodeMeshConstructor : MonoBehaviour
         {
             j = i + 1;
 
-            if (j >= finalPath.Count) break;
+            if (j >= finalPath.Count) continue;
 
             //we need to get a point to the left of the mid point between current and next
             //(Quaternion * Vector3) gives us the vector rotated by the Quaternion
@@ -220,11 +224,15 @@ public class NodeMeshConstructor : MonoBehaviour
                     //Debug.Log("Reached Deadend @ " + current.point);
                     //if this node has more than one connection it should reach out to each of it's connections before returning, except for the connection we just came from.
                     Node previousNode = path[path.Count - 2];
+                    
                     if (current.connections.Count > 1)
                     {
+                        float rndNum;
                         foreach (Node newNode in current.connections)
                         {
                             if (newNode == previousNode) continue;
+                            rndNum = Random.Range(0.0f, 1.0f);
+                            if (rndNum > connSkipChance) { Debug.Log("Skipped Connection"); continue; }
 
                             path.Add(newNode);
                             path.Add(current);

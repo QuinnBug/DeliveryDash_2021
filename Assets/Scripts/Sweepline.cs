@@ -269,36 +269,12 @@ public class Sweepline : Singleton<Sweepline>
             bool jACloser = Vector3.Distance(polyLines[j].a, intPoint) < Vector3.Distance(polyLines[j].b, intPoint);
             Vector3 closeI = iACloser ? polyLines[i].a : polyLines[i].b;
             Vector3 closeJ = jACloser ? polyLines[j].a : polyLines[j].b;
-            bool iTooClose = Vector3.Distance(closeI, intPoint) < minPointDistance;
-            bool jTooClose = Vector3.Distance(closeJ, intPoint) < minPointDistance;
+            bool iTooClose = Vector3.Distance(closeI, intPoint) < polyLines[i].Length() * minPointDistance;
+            bool jTooClose = Vector3.Distance(closeJ, intPoint) < polyLines[j].Length() * minPointDistance;
 
-            /* if (diff == 1)
-            {
-                //the lines are 1 apart so we can remove the line between them and make them end at the iPoint;
-                //we need to find the line that starts first (a with the left most x)
-
-                Line middleLine = polyLines[i + 1];
-
-                if (middleLine.Contains(polyLines[i].a)) polyLines[i].a = intPoint;
-                else if (middleLine.Contains(polyLines[i].b)) polyLines[i].b = intPoint;
-
-                if (middleLine.Contains(polyLines[j].a)) polyLines[j].a = intPoint;
-                else if (middleLine.Contains(polyLines[j].b)) polyLines[j].b = intPoint;
-
-                Debug.Log("diff of 1");
-
-                if (timePerUntangle > 0)
-                {
-                    Debug.DrawLine(polyLines[i].a, polyLines[i].b, Color.white, timePerUntangle);
-                    Debug.DrawLine(polyLines[j].a, polyLines[j].b, Color.white, timePerUntangle);
-                }
-
-                polyLines.Remove(middleLine);
-            }
-            else */ if (iTooClose || jTooClose)
+            if (iTooClose || jTooClose)
             {
                 //if the distance from any of the 4 line points to the iPoint is within a certain range, the lines should simply meet at that point.
-
                 
                 if (iACloser) polyLines[i].a = intPoint;
                 else polyLines[i].b = intPoint;
@@ -308,11 +284,14 @@ public class Sweepline : Singleton<Sweepline>
 
                 Debug.Log("closer than min distance");
 
+                polyLines.Add(new Line(closeI, closeJ, nextId++));
+
                 if (timePerUntangle > 0)
                 {
                     Debug.DrawLine(polyLines[i].a, polyLines[i].b, Color.green, timePerUntangle);
                     Debug.DrawLine(polyLines[j].a, polyLines[j].b, Color.green, timePerUntangle);
                 }
+
             }
             else
             {
@@ -329,20 +308,6 @@ public class Sweepline : Singleton<Sweepline>
 
                 Debug.Log("switching b's");
             }
-
-            #region Lerp I Point method
-            //Line originalI = polyLines[i];
-            //Line originalJ = polyLines[j];
-
-            //Vector3 adjustedIPointOne = Vector3.Lerp(intersection.point, Vector3.Lerp(originalI.a, originalJ.b, 0.5f), 0.5f);
-            //Vector3 adjustedIPointTwo = Vector3.Lerp(intersection.point, Vector3.Lerp(originalJ.a, originalI.b, 0.5f), 0.5f);
-
-            //polyLines[i] = new Line(originalI.a, adjustedIPointOne, originalI.id);
-            //polyLines.Insert(i + 1, new Line(adjustedIPointOne, originalJ.b, nextId++));
-            //j++;
-            //polyLines[j] = new Line(originalJ.a, adjustedIPointTwo, originalJ.id);
-            //polyLines.Insert(j + 1, new Line(adjustedIPointTwo, originalI.b, nextId++));
-            #endregion
 
             if (DoesIntersect(polyLines[i], polyLines[j], out intPoint))
             {
