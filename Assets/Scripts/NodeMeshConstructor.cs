@@ -161,7 +161,7 @@ public class NodeMeshConstructor : MonoBehaviour
             shapePoints.Add(midDirPoint + (rotation * (Vector3.right * abDistance * -1)));
         }
 
-        shapePoints.Add(shapePoints[0]);
+        //shapePoints.Add(shapePoints[0]);
 
     }
 

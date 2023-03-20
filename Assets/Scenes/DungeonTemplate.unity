@@ -511,7 +511,7 @@ MonoBehaviour:
     axiom: o
     finalString: ff[>ff<<<ff][<ff<ff]ff
     randomRuleOutput: 1
-  count: 15
+  count: 10
   length: 50
   angle: 30
   nodeLimitRange:

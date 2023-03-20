@@ -21,42 +21,6 @@ public class Sweepline : Singleton<Sweepline>
     bool doIntersection = false;
     int nextId;
 
-    //float closestPair(Node[] points, int n) 
-    //{
-    //    polyPoints = new List<Vector3>(points);
-    //    polyPoints.Sort(new NodeCompare());
-
-    //    List<Node> box = new List<Node>() { polyPoints[0] };
-
-    //    float best = Mathf.Infinity;
-    //    int left = 0;
-    //    for (int i = 1; i < n; i++)
-    //    {
-    //        while (left < i && polyPoints[i].point.x - polyPoints[left].point.x > best)
-    //        {
-    //            box.Remove(polyPoints[left++]);
-    //        }
-
-    //        Range xRange = new Range(polyPoints[i].point.x - best, polyPoints[i].point.x);
-    //        Range yRange = new Range(polyPoints[i].point.y - best, polyPoints[i].point.y + best);
-
-    //        foreach (Node item in box)
-    //        {
-    //            if (item.point.x > xRange.max) break;
-
-    //            if (xRange.Contains(item.point.x) && yRange.Contains(item.point.y))
-    //            {
-    //                float distance = Vector2.Distance(polyPoints[i].point, item.point);
-    //                if (distance < best) best = distance;
-    //            }
-    //        }
-
-    //        box.Add(polyPoints[i]);
-    //    }
-
-    //    return best;
-    //}
-
     private void Start()
     {
         polyPoints = null;
@@ -90,6 +54,8 @@ public class Sweepline : Singleton<Sweepline>
             lineList.Add(new Line(polyPoints[i], polyPoints[i+1], nextId));
             nextId = i;
         }
+
+        lineList.Add(new Line(polyPoints[polyPoints.Count - 1], polyPoints[0], nextId++));
 
         return lineList.ToArray();
     }
