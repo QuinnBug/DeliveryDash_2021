@@ -140,10 +140,8 @@ public class NodeMeshConstructor : MonoBehaviour
         {
             j = i + 1;
 
-            if (j >= finalPath.Count)
-            {
-                j = 0;
-            }
+            if (j >= finalPath.Count) break;
+
             //we need to get a point to the left of the mid point between current and next
             //(Quaternion * Vector3) gives us the vector rotated by the Quaternion
 
@@ -181,19 +179,18 @@ public class NodeMeshConstructor : MonoBehaviour
         
         while (exploring)
         {
-            List<Node> connections = new List<Node>(ValidConnections(current, path));
-
             visitedNodes.Add(current);
+            List<Node> validConnections = new List<Node>(ValidConnections(current, path));
 
             //we continue exploring until reaching a deadend or a branch
-            exploring = connections.Count == 1;
+            exploring = validConnections.Count == 1;
 
             //if we only have one path we move to that one
             if (exploring)
             {
                 //Debug.Log("Found Connection");
                 path.Add(current);
-                current = connections[0];
+                current = validConnections[0];
             }
             else
             {
@@ -203,15 +200,15 @@ public class NodeMeshConstructor : MonoBehaviour
                 path.Add(current);
 
                 //if we've reached a branching node it will need to explore those paths
-                if (connections.Count > 1)
+                if (validConnections.Count > 1)
                 {
                     ConnectionSort cs = new ConnectionSort();
                     cs.start = startNode;
                     cs.current = current;
-                    connections.Sort(cs);
+                    validConnections.Sort(cs);
 
                     //Debug.Log("Reached Branch @ " + current.point);
-                    foreach (Node connection in connections)
+                    foreach (Node connection in validConnections)
                     {
                         path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
                         path.Add(current);
@@ -222,7 +219,7 @@ public class NodeMeshConstructor : MonoBehaviour
                 {
                     //Debug.Log("Reached Deadend @ " + current.point);
                     //if this node has more than one connection it should reach out to each of it's connections before returning, except for the connection we just came from.
-                    Node previousNode = path[path.Count - 1];
+                    Node previousNode = path[path.Count - 2];
                     if (current.connections.Count > 1)
                     {
                         foreach (Node newNode in current.connections)
@@ -302,7 +299,7 @@ public class NodeMeshConstructor : MonoBehaviour
                 currentP++;
             }
 
-            if (currentP >= shapePoints.Count - displayCount) currentP = 0;
+            if (currentP > shapePoints.Count - displayCount) currentP = 0;
 
             if (drawPoints)
             {

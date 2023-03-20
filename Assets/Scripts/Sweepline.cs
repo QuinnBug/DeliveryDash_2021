@@ -272,7 +272,7 @@ public class Sweepline : Singleton<Sweepline>
             bool iTooClose = Vector3.Distance(closeI, intPoint) < minPointDistance;
             bool jTooClose = Vector3.Distance(closeJ, intPoint) < minPointDistance;
 
-            if (diff == 1)
+            /* if (diff == 1)
             {
                 //the lines are 1 apart so we can remove the line between them and make them end at the iPoint;
                 //we need to find the line that starts first (a with the left most x)
@@ -295,10 +295,11 @@ public class Sweepline : Singleton<Sweepline>
 
                 polyLines.Remove(middleLine);
             }
-            else if (iTooClose || jTooClose)
+            else */ if (iTooClose || jTooClose)
             {
                 //if the distance from any of the 4 line points to the iPoint is within a certain range, the lines should simply meet at that point.
 
+                
                 if (iACloser) polyLines[i].a = intPoint;
                 else polyLines[i].b = intPoint;
 

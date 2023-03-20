@@ -156,7 +156,7 @@ MonoBehaviour:
   timePerStep: 0
   eventsPerStep: 10
   timePerUntangle: 0
-  minPointDistance: 7
+  minPointDistance: 20
   polyPoints: []
   polyLines: []
   SL: []
@@ -509,11 +509,11 @@ MonoBehaviour:
       - lo
       - ro
     axiom: o
-    finalString: ff[>ff<<<ff][<ff<ff]ff
+    finalString: ff[>ff<ff][<ff<ff]>>>>ff
     randomRuleOutput: 1
-  count: 10
+  count: 15
   length: 50
-  angle: 30
+  angle: 45
   nodeLimitRange:
     min: 75
     max: 175
@@ -549,8 +549,8 @@ MonoBehaviour:
   cornerDistance: 15
   shapePoints: []
   drawPoints: 0
-  drawLines: 0
+  drawLines: 1
   currentP: 0
-  displayCount: 100
-  pTimer: 999999
-  switchTime: 999999
+  displayCount: 2
+  pTimer: 0.5
+  switchTime: 0.5
