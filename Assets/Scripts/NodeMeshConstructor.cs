@@ -152,7 +152,6 @@ public class NodeMeshConstructor : MonoBehaviour
             h = i - 1;
 
             if (h >= 0 && j < finalPath.Count && finalPath[h] == finalPath[j])
-            //if (h < 0 && j >= finalPath.Count)
             {
                 shapePoints.AddRange(polyNodes[pni].GetNextPoints(4));
             }
@@ -229,7 +228,7 @@ public class NodeMeshConstructor : MonoBehaviour
             }
             else if (Quaternion.Angle(preRotation, postRotation) == 180)
             {
-                //the point before and after are the same direction so we need to do all 4 points
+                //the point before and after are the same direction so we need to do all 4 points but only if the node has only 1 connection, else it's just the front post and back pre
                 midDirPoint = finalPath[n].point + (preRotation * -forwardVect);
                 pNodes[pni].AddPoint(midDirPoint + (preRotation * leftVect), minVDistance);
 

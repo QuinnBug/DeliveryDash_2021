@@ -513,11 +513,11 @@ MonoBehaviour:
     finalString: ff[>ff<ff][<ff<ff]>>>>ff
     randomRuleOutput: 1
   count: 8
-  length: 30
+  length: 50
   angle: 30
   nodeLimitRange:
-    min: 15
-    max: 45
+    min: 25
+    max: 75
   nodesPerStep: 20
   timePerStep: 0
 --- !u!4 &2109595311
