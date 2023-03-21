@@ -513,11 +513,11 @@ MonoBehaviour:
     finalString: ff[>ff<ff][<ff<ff]>>>>ff
     randomRuleOutput: 1
   count: 8
-  length: 50
-  angle: 45
+  length: 30
+  angle: 30
   nodeLimitRange:
-    min: 75
-    max: 175
+    min: 15
+    max: 45
   nodesPerStep: 20
   timePerStep: 0
 --- !u!4 &2109595311
@@ -546,10 +546,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e7b09b4b007a84493a949705dd8ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minVDistance: 10
-  cornerDistance: 15
+  minVDistance: 2
+  cornerDistance: 10
   shapePoints: []
-  connSkipChance: 1.1
+  connSkipChance: 0
   drawPoints: 0
   drawLines: 1
   currentP: 0

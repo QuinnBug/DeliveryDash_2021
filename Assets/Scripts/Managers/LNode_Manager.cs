@@ -210,10 +210,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
                 if (showNodes)
                 {
                     Gizmos.color = Color.red;
-                    Gizmos.DrawSphere(item.point, 10.0f);
-
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawSphere(item.point + (item.forward * 5), 3.0f);
+                    Gizmos.DrawSphere(item.point, length / 10.0f);
                 }
 
                 if (showConnections)

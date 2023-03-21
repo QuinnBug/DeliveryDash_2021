@@ -17,6 +17,7 @@ public class NodeMeshConstructor : MonoBehaviour
     public List<Node> finalPath;
     [Space]
     public List<Vector3> shapePoints = null;
+    public List<PolyNode> polyNodes = null;
     public List<Bounds> shapes = null;
     [Space]
     [Tooltip("Set above 1 to force all connections to be skipped, below 0 to do all connections")]
@@ -133,12 +134,67 @@ public class NodeMeshConstructor : MonoBehaviour
 
         finalPath.AddRange(ExploreBranch(startNode, 0));
 
+        //We need to use the final path to create a poly node list
+        polyNodes = GeneratePolyNodeList(finalPath);
+
         //We have a list of nodes that we can follow to visit all connected nodes
 
         int j = 0;
         int h = 0;
         shapePoints = new List<Vector3>();
-        List<Vector3> newPoints;
+
+        for (int i = 0; i < finalPath.Count; i++)
+        {
+            int pni = GetPolyNodeIndexFromNode(polyNodes, finalPath[i], false);
+            if (pni == -1) continue;
+
+            j = i + 1;
+            h = i - 1;
+
+            if (h >= 0 && j < finalPath.Count && finalPath[h] == finalPath[j])
+            //if (h < 0 && j >= finalPath.Count)
+            {
+                shapePoints.AddRange(polyNodes[pni].GetNextPoints(4));
+            }
+            else
+            {
+                shapePoints.AddRange(polyNodes[pni].GetNextPoints(2));
+            }
+        }
+
+        shapePoints.Add(shapePoints[0]);
+
+    }
+
+    private int GetPolyNodeIndexFromNode(List<PolyNode> pnList, Node node, bool addIfMissing = true)
+    {
+        int pni = -1;
+
+        for (int i = 0; i < pnList.Count; i++)
+        {
+            if (pnList[i].parent == node)
+            {
+                pni = i;
+                break;
+            }
+        }
+
+        if (pni == -1 && addIfMissing)
+        {
+            pni = pnList.Count;
+            pnList.Add(new PolyNode(node));
+        }
+
+        return pni;
+    }
+
+    private List<PolyNode> GeneratePolyNodeList(List<Node> finalPath)
+    {
+        int pni;
+        List<PolyNode> pNodes = new List<PolyNode>();
+
+        int j = 0;
+        int h = 0;
         Quaternion preRotation = Quaternion.identity;
         Quaternion postRotation = Quaternion.identity;
         Vector3 midDirPoint;
@@ -147,60 +203,57 @@ public class NodeMeshConstructor : MonoBehaviour
         Vector3 forwardVect = (Vector3.forward * abDistance);
         Vector3 leftVect = (Vector3.right * abDistance * -1);
 
-        for (int i = 0; i < finalPath.Count; i++)
+        for (int n = 0; n < finalPath.Count; n++)
         {
-            newPoints = new List<Vector3>();
+            //Setting up the index of the current polynode
+            pni = GetPolyNodeIndexFromNode(pNodes, finalPath[n]);
 
-            j = i + 1;
-            h = i - 1;
+            j = n + 1;
+            h = n - 1;
             bool validPre = h >= 0;
             bool validPost = j < finalPath.Count;
 
-            if(validPre) preRotation = Quaternion.LookRotation(finalPath[i].point - finalPath[h].point, Vector3.up);
-            if(validPost) postRotation = Quaternion.LookRotation(finalPath[j].point - finalPath[i].point, Vector3.up);
+            if (validPre) preRotation = Quaternion.LookRotation(finalPath[n].point - finalPath[h].point, Vector3.up);
+            if (validPost) postRotation = Quaternion.LookRotation(finalPath[j].point - finalPath[n].point, Vector3.up);
 
             if ((validPre || validPost) && !(validPre && validPost))
             {
                 //one of the directions doesn't exist (start or end points -> i = 0 or finalPath.count-1) so we need to do 2 points with the one available rot
                 Quaternion rot = validPre ? preRotation : postRotation;
 
-                midDirPoint = finalPath[i].point + (rot * -forwardVect);
-                newPoints.Add(midDirPoint + (rot * leftVect));
+                midDirPoint = finalPath[n].point + (rot * -forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (rot * leftVect), minVDistance);
 
-                midDirPoint = finalPath[i].point + (rot * forwardVect);
-                newPoints.Add(midDirPoint + (rot * leftVect));
+                midDirPoint = finalPath[n].point + (rot * forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (rot * leftVect), minVDistance);
             }
             else if (Quaternion.Angle(preRotation, postRotation) == 180)
             {
                 //the point before and after are the same direction so we need to do all 4 points
-                midDirPoint = finalPath[i].point + (preRotation * -forwardVect);
-                newPoints.Add(midDirPoint + (preRotation * leftVect));
+                midDirPoint = finalPath[n].point + (preRotation * -forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (preRotation * leftVect), minVDistance);
 
-                midDirPoint = finalPath[i].point + (preRotation * forwardVect);
-                newPoints.Add(midDirPoint + (preRotation * leftVect));
+                midDirPoint = finalPath[n].point + (preRotation * forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (preRotation * leftVect), minVDistance);
 
-                midDirPoint = finalPath[i].point + (postRotation * -forwardVect);
-                newPoints.Add(midDirPoint + (postRotation * leftVect));
+                midDirPoint = finalPath[n].point + (postRotation * -forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (postRotation * leftVect), minVDistance);
 
-                midDirPoint = finalPath[i].point + (postRotation * forwardVect);
-                newPoints.Add(midDirPoint + (postRotation * leftVect));
+                midDirPoint = finalPath[n].point + (postRotation * forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (postRotation * leftVect), minVDistance);
             }
             else
             {
                 //do the prepoint for the prerot, the postpoint for the postrot
-                midDirPoint = finalPath[i].point + (preRotation * -forwardVect);
-                newPoints.Add(midDirPoint + (preRotation * leftVect));
+                midDirPoint = finalPath[n].point + (preRotation * -forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (preRotation * leftVect), minVDistance);
 
-                midDirPoint = finalPath[i].point + (postRotation * forwardVect);
-                rotatedPoint = midDirPoint + (postRotation * leftVect);
-                if (Vector3.Distance(newPoints[newPoints.Count - 1], rotatedPoint) > minVDistance) newPoints.Add(rotatedPoint);
+                midDirPoint = finalPath[n].point + (postRotation * forwardVect);
+                pNodes[pni].AddPoint(midDirPoint + (postRotation * leftVect), minVDistance);
             }
-
-            shapePoints.AddRange(newPoints);
         }
 
-        //shapePoints.Add(shapePoints[0]);
-
+        return pNodes;
     }
 
     /// <summary>
@@ -268,7 +321,7 @@ public class NodeMeshConstructor : MonoBehaviour
                         {
                             if (newNode == previousNode) continue;
                             rndNum = Random.Range(0.0f, 1.0f);
-                            if (rndNum > connSkipChance) { Debug.Log("Skipped Connection"); continue; }
+                            if (rndNum > connSkipChance) { /*Debug.Log("Skipped Connection");*/ continue; }
 
                             path.Add(newNode);
                             path.Add(current);
@@ -456,6 +509,53 @@ public class NodeMeshConstructor : MonoBehaviour
         public Path(Node[] path) 
         {
             points = path;
+        }
+    }
+
+    public class PolyNode 
+    {
+        public Node parent;
+        private List<Vector3> points;
+        public int visitCounter;
+
+        public PolyNode(Node node)
+        {
+            parent = node;
+            points = new List<Vector3>();
+            visitCounter = 0;
+        }
+
+        public void AddPoint(Vector3 newPoint, float minDistance = 0) 
+        {
+            if (minDistance > 0 && points.Count > 0)
+            {
+                foreach (Vector3 item in points)
+                {
+                    if (Vector3.Distance(newPoint, item) < minDistance)
+                    {
+                        newPoint = item;
+                        break;
+                    }
+                }
+            }
+
+            points.Add(newPoint);
+        }
+
+        internal Vector3[] GetNextPoints(int count)
+        {
+            Vector3[] output = new Vector3[count];
+            for (int i = 0; i < count; i++)
+            {
+                if (visitCounter >= points.Count)
+                {
+                    Debug.LogError("We've breached the amount of points in the array");
+                    break;
+                }
+
+                output[i] = points[visitCounter++];
+            }
+            return output;
         }
     }
 
