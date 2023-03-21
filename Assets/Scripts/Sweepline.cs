@@ -6,6 +6,7 @@ using UnityEngine;
 public class Sweepline : Singleton<Sweepline>
 {
     public bool debugMode;
+    public bool paused;
     public float timePerStep;
     public int eventsPerStep;
     public float timePerUntangle;
@@ -64,6 +65,8 @@ public class Sweepline : Singleton<Sweepline>
     {
         doIntersection = false;
 
+       
+
         int counter = 0;
         List<Event> events = new List<Event>();
         foreach (Line line in lines)
@@ -79,6 +82,11 @@ public class Sweepline : Singleton<Sweepline>
         Event currentEvent;
         while (events.Count > 0)
         {
+            while (paused)
+            {
+                yield return new WaitForEndOfFrame();
+            }
+
             counter++;
             currentEvent = events[0];
 

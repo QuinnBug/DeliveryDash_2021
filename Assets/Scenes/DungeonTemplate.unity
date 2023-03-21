@@ -153,10 +153,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   debugMode: 1
-  timePerStep: 2
-  eventsPerStep: 1
+  paused: 1
+  timePerStep: 0
+  eventsPerStep: 10
   timePerUntangle: 0
-  minPointDistance: 0.2
+  minPointDistance: 0.1
   polyPoints: []
   polyLines: []
   SL: []
@@ -545,7 +546,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e7b09b4b007a84493a949705dd8ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minVDistance: 3
+  minVDistance: 10
   cornerDistance: 15
   shapePoints: []
   connSkipChance: 1.1

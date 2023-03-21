@@ -136,31 +136,67 @@ public class NodeMeshConstructor : MonoBehaviour
         //We have a list of nodes that we can follow to visit all connected nodes
 
         int j = 0;
+        int h = 0;
         shapePoints = new List<Vector3>();
-        Quaternion rotation;
+        List<Vector3> newPoints;
+        Quaternion preRotation = Quaternion.identity;
+        Quaternion postRotation = Quaternion.identity;
         Vector3 midDirPoint;
+        Vector3 rotatedPoint;
+
+        Vector3 forwardVect = (Vector3.forward * abDistance);
+        Vector3 leftVect = (Vector3.right * abDistance * -1);
 
         for (int i = 0; i < finalPath.Count; i++)
         {
+            newPoints = new List<Vector3>();
+
             j = i + 1;
+            h = i - 1;
+            bool validPre = h >= 0;
+            bool validPost = j < finalPath.Count;
 
-            if (j >= finalPath.Count) continue;
+            if(validPre) preRotation = Quaternion.LookRotation(finalPath[i].point - finalPath[h].point, Vector3.up);
+            if(validPost) postRotation = Quaternion.LookRotation(finalPath[j].point - finalPath[i].point, Vector3.up);
 
-            //we need to get a point to the left of the mid point between current and next
-            //(Quaternion * Vector3) gives us the vector rotated by the Quaternion
+            if ((validPre || validPost) && !(validPre && validPost))
+            {
+                //one of the directions doesn't exist (start or end points -> i = 0 or finalPath.count-1) so we need to do 2 points with the one available rot
+                Quaternion rot = validPre ? preRotation : postRotation;
 
-            if ((finalPath[j].point - finalPath[i].point).sqrMagnitude == 0) { Debug.Log(finalPath[i].point + " " + finalPath[j].point); continue; }
-            rotation = Quaternion.LookRotation(finalPath[j].point - finalPath[i].point, Vector3.up);
+                midDirPoint = finalPath[i].point + (rot * -forwardVect);
+                newPoints.Add(midDirPoint + (rot * leftVect));
 
-            float distance = Vector3.Distance(finalPath[i].point, finalPath[j].point); 
+                midDirPoint = finalPath[i].point + (rot * forwardVect);
+                newPoints.Add(midDirPoint + (rot * leftVect));
+            }
+            else if (Quaternion.Angle(preRotation, postRotation) == 180)
+            {
+                //the point before and after are the same direction so we need to do all 4 points
+                midDirPoint = finalPath[i].point + (preRotation * -forwardVect);
+                newPoints.Add(midDirPoint + (preRotation * leftVect));
 
-            //a quarter of the way between the points and to the left.
+                midDirPoint = finalPath[i].point + (preRotation * forwardVect);
+                newPoints.Add(midDirPoint + (preRotation * leftVect));
 
-            midDirPoint = finalPath[i].point + (rotation * (Vector3.forward * distance * 0.25f));
-            shapePoints.Add(midDirPoint + (rotation * (Vector3.right * abDistance * -1)));
+                midDirPoint = finalPath[i].point + (postRotation * -forwardVect);
+                newPoints.Add(midDirPoint + (postRotation * leftVect));
 
-            midDirPoint = finalPath[i].point + (rotation * (Vector3.forward * distance * 0.75f));
-            shapePoints.Add(midDirPoint + (rotation * (Vector3.right * abDistance * -1)));
+                midDirPoint = finalPath[i].point + (postRotation * forwardVect);
+                newPoints.Add(midDirPoint + (postRotation * leftVect));
+            }
+            else
+            {
+                //do the prepoint for the prerot, the postpoint for the postrot
+                midDirPoint = finalPath[i].point + (preRotation * -forwardVect);
+                newPoints.Add(midDirPoint + (preRotation * leftVect));
+
+                midDirPoint = finalPath[i].point + (postRotation * forwardVect);
+                rotatedPoint = midDirPoint + (postRotation * leftVect);
+                if (Vector3.Distance(newPoints[newPoints.Count - 1], rotatedPoint) > minVDistance) newPoints.Add(rotatedPoint);
+            }
+
+            shapePoints.AddRange(newPoints);
         }
 
         //shapePoints.Add(shapePoints[0]);
