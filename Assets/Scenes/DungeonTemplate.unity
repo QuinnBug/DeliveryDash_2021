@@ -483,7 +483,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testConnections: 0
   showConnections: 1
-  showNodes: 1
+  showNodes: 0
   lSys:
     rules:
     - input: 111
@@ -509,7 +509,7 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: o
+    axiom: '>>ff'
     finalString: ff[>ff<ff][<ff<ff]>>>>ff
     randomRuleOutput: 1
   count: 8
@@ -547,10 +547,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   minVDistance: 2
-  cornerDistance: 10
+  cornerDistance: 7.5
+  nodeRadius: 15
   shapePoints: []
+  shapeLines: []
   connSkipChance: 0
-  drawPoints: 0
+  drawPoints: 1
   drawLines: 1
   currentP: 0
   displayCount: 2

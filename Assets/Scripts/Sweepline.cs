@@ -381,9 +381,7 @@ public class Line
 
     //this updates the type and makes sure that a is leftmost or topmost based on type
     public void UpdateType() 
-    {
-        //we always want a to be left and b to be right
-        
+    {   
 
         if (a.x == b.x)
         {
@@ -415,14 +413,17 @@ public class Line
     {
         //we use the capital A to avoid calling UpdateType more than needed
 
-        A = (start.x <= end.x) ? start : end;
-        b = (start.x <= end.x) ? end : start;
+        //A = (start.x <= end.x) ? start : end;
+        //b = (start.x <= end.x) ? end : start;
 
-        if (type == LineType.VERTICAL)
-        {
-            A = (start.z >= end.z) ? start : end;
-            b = (start.z >= end.z) ? end : start;
-        }
+        //if (type == LineType.VERTICAL)
+        //{
+        //    A = (start.z >= end.z) ? start : end;
+        //    b = (start.z >= end.z) ? end : start;
+        //}
+
+        A = start;
+        b = end;
     }
 
     public Line(Vector3 start, Vector3 end, int i) : this(start, end)
@@ -474,7 +475,7 @@ public class Line
 
     public float[] Equation() 
     {
-        //return {m, b, flag for horiz, vert, regular}
+        //return {m, b}
         float[] result = new float[] { 0, 0 };
 
         //vertical lines can't use this calulation
@@ -533,6 +534,106 @@ public class Line
         line.a = temp;
 
         return line;
+    }
+
+    public bool DoesIntersect(Line lineB, out Vector3 intersection)
+    {
+        intersection = a;
+        if (this == lineB)
+        {
+            //this is bad
+            Debug.Log("Self Line Comparison");
+            return false;
+        }
+
+        if (SharesPoints(lineB))
+        {
+            //Debug.Log("These lines share points");
+            return false;
+        }
+
+        //y = mx + b
+
+        float[] equationA = Equation();
+        float[] equationB = lineB.Equation();
+
+        float slopeDiff = equationA[0] - equationB[0];
+        if (Mathf.Abs(slopeDiff) <= 0.001f)
+        {
+            //Debug.Log("These lines are parallel");
+            return false;
+        }
+
+        if (type == LineType.VERTICAL || lineB.type == LineType.VERTICAL)
+        {
+            Line verticalLine = type == LineType.VERTICAL ? this : lineB;
+            Line otherLine = type == LineType.VERTICAL ? lineB : this;
+
+            intersection = new Vector3(verticalLine.a.x, intersection.y, otherLine.GetYAtXOnLine(verticalLine.a.x));
+        }
+        else
+        {
+            intersection.x = (equationB[1] - equationA[1]) / (equationA[0] - equationB[0]);
+            intersection.z = -1 * ((equationA[1] * equationB[0] - equationB[1] * equationA[0]) / (equationA[0] - equationB[0]));
+        }
+
+
+
+        //if the intersection is not within the range of either line then return false;
+        if (!Contains(intersection) || !lineB.Contains(intersection))
+        {
+            return false;
+        }
+
+        //we got through all the checks! that means we found an intersection in range
+        return true;
+    }
+
+    public bool CircleIntersections(Vector3 circlePos, float radius, out Vector3 intersection) 
+    {
+        //This isn't generating the correct intersections...
+
+        intersection = circlePos;
+
+        float m = Equation()[0];
+        float c = Equation()[1];
+        float r = radius;
+        float x;
+
+        float D = ((2*m*c) * (2*m*c)) - 4 * (1 + (m * m)) * ((c * c) - (r * r));
+
+
+
+        if (D > 0)
+        {
+            float xPlus = (-((2 * m * c) * (2 * m * c)) + Mathf.Sqrt(D)) / (2 * (1 + (m * m)));
+            float xSubt = (-((2 * m * c) * (2 * m * c)) - Mathf.Sqrt(D)) / (2 * (1 + (m * m)));
+
+            if (Contains(new Vector3(xPlus, circlePos.y, GetYAtXOnLine(xPlus))))
+            {
+                Debug.Log("plus");
+                x = xPlus;
+            }
+            else
+            {
+                Debug.Log("subt");
+                x = xSubt;
+            }
+        }
+        else if(D == 0)
+        {
+            x = (-((2 * m * c) * (2 * m * c))) / (2 * (1 + (m * m)));
+        }
+        else
+        {
+            Debug.Log("AHHH");
+            //the line does not intersect the circle
+            return false;
+        }
+
+        Debug.Log("x = " + x + " & D = " + D);
+        intersection = new Vector3(x, circlePos.y, GetYAtXOnLine(x));
+        return true;
     }
 }
 

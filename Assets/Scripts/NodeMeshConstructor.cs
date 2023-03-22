@@ -10,6 +10,7 @@ public class NodeMeshConstructor : MonoBehaviour
 
     public float minVDistance;
     public float cornerDistance;
+    public float nodeRadius;
     private float abDistance;
 
     [Space]
@@ -17,8 +18,7 @@ public class NodeMeshConstructor : MonoBehaviour
     public List<Node> finalPath;
     [Space]
     public List<Vector3> shapePoints = null;
-    public List<PolyNode> polyNodes = null;
-    public List<Bounds> shapes = null;
+    public List<Line> shapeLines = null;
     [Space]
     [Tooltip("Set above 1 to force all connections to be skipped, below 0 to do all connections")]
     public float connSkipChance = 0.5f;
@@ -30,6 +30,8 @@ public class NodeMeshConstructor : MonoBehaviour
     public int displayCount = 64;
     public float pTimer = 0;
     public float switchTime = 0.5f;
+
+    private Node startNode;
 
     // Start is called before the first frame update
     void Start()
@@ -46,80 +48,15 @@ public class NodeMeshConstructor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (nodeManager.nodeGenDone && shapePoints == null)
-        {
-            //GetAllPoints();
-        }
-
         if (nodeManager.nodeGenDone && visitedNodes == null)
         {
-            GetPolygonFromNodes();
+            //GetFullExplorationPath();
+            CreatePolygonFromNodes();
             Sweepline.Instance.polyPoints = shapePoints;
         }
     }
 
-    void GetAllPoints() 
-    {
-        shapePoints = new List<Vector3>();
-        shapes = new List<Bounds>();
-
-        foreach (Node item in nodeManager.nodes)
-        {
-            if (item == null) continue;
-
-            shapes.Add(GetMeshPointsFromNode(item));
-        }
-
-        for (int i = 0; i < shapes.Count; i++)
-        {
-            for (int j = 0; j < shapes.Count; j++)
-            {
-                
-            }
-        }
-
-        Debug.Log("Mesh Points Done");
-    }
-
-    Bounds GetMeshPointsFromNode(Node node) 
-    {
-        //for each conn
-        //get the direction from node to conn[i]
-        //find midIPoint xDist in direction
-        //get sidePoints to the left & right of midIPoint
-        //add sidePoints to points if sidepoint is further away than mid corner dist from other points
-        //sort points
-        //return points;
-
-        List<Vector3> points = new List<Vector3>();
-
-        Quaternion rotation;
-        Vector3 midDirPoint;
-
-        foreach (Node conn in node.connections)
-        {
-            if ((conn.point - node.point).sqrMagnitude == 0) { Debug.Log(node.point + " " + conn.point); continue; }
-            rotation = Quaternion.LookRotation(conn.point - node.point, Vector3.up);
-            midDirPoint = node.point + (rotation * (Vector3.forward * abDistance));
-            //does -1 and 1 for left & right
-            for (int i = -1; i < 2; i += 2)
-            {
-                //                        (Quaternion * Vector3) gives us the vector rotated by the Quaternion
-                Vector3 p = midDirPoint + (rotation * (Vector3.right * abDistance * i));
-                if (points.Contains(p)) continue;
-                points.Add(p);
-            }
-        }
-
-        if (node.connections.Count == 1)
-        {
-            points.Add(node.point);
-        }
-
-        return new Bounds(points.ToArray());
-    }
-
-    void GetPolygonFromNodes()
+    void GetFullExplorationPath()
     {
         //setting the start node.
         int k = 0;
@@ -127,132 +64,82 @@ public class NodeMeshConstructor : MonoBehaviour
         {
             k++;
         }
-        Node startNode = nodeManager.nodes[k];
+        startNode = nodeManager.nodes[k];
 
         visitedNodes = new HashSet<Node>() { startNode };
         finalPath = new List<Node>();
 
         finalPath.AddRange(ExploreBranch(startNode, 0));
+    }
 
-        //We need to use the final path to create a poly node list
-        polyNodes = GeneratePolyNodeList(finalPath);
+    void CreatePolygonFromNodes() 
+    {
+        shapeLines = new List<Line>();
+        visitedNodes = new HashSet<Node>();
 
-        //We have a list of nodes that we can follow to visit all connected nodes
-
-        int j = 0;
-        int h = 0;
-        shapePoints = new List<Vector3>();
-
-        for (int i = 0; i < finalPath.Count; i++)
+        foreach (Node node in nodeManager.nodes)
         {
-            int pni = GetPolyNodeIndexFromNode(polyNodes, finalPath[i], false);
-            if (pni == -1) continue;
-
-            j = i + 1;
-            h = i - 1;
-
-            if (h >= 0 && j < finalPath.Count && finalPath[h] == finalPath[j])
+            List<Line> nodeLines = new List<Line>();
+            foreach (Node conn in node.connections)
             {
-                shapePoints.AddRange(polyNodes[pni].GetNextPoints(4));
+                //find midpoint from node to conn
+                Vector3 farPoint = Vector3.Lerp(node.point, conn.point, 0.5f);
+                Quaternion rotation = Quaternion.LookRotation(conn.point - node.point, Vector3.up);
+                Vector3[] points = new Vector3[4];
+
+                //close points
+                points[0] = node.point + (rotation * (-Vector3.right * cornerDistance));
+                points[3] = node.point + (rotation * (Vector3.right * cornerDistance));
+
+                //middle points
+                points[1] = farPoint + (rotation * (-Vector3.right * cornerDistance));
+                points[2] = farPoint + (rotation * (Vector3.right * cornerDistance));
+
+                Line[] lines = new Line[3];
+
+                lines[0] = new Line(points[0], points[1]);
+                lines[1] = new Line(points[1], points[2]);
+                lines[2] = new Line(points[2], points[3]);
+
+                if (lines[0].CircleIntersections(node.point, nodeRadius, out Vector3 onePoint))
+                {
+                    Debug.DrawLine(lines[0].a, onePoint, Color.red, 60);
+                    lines[0].a = onePoint;
+                }
+                else
+                {
+                    Debug.Log("How come line 0 doesn't intersect the node?");
+                }
+
+                if (lines[2].CircleIntersections(node.point, nodeRadius, out Vector3 twoPoint))
+                {
+                    Debug.DrawLine(twoPoint, lines[2].b, Color.magenta, 60);
+                    lines[2].b = twoPoint;
+                }
+                else
+                {
+                    Debug.Log("How come line 2 doesn't intersect the node?");
+                }
+
+                if (nodeLines.Count > 0)
+                {
+                    nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, lines[0].a));
+                }
+                nodeLines.AddRange(lines);
+            }
+
+            if (node.connections.Count == 1)
+            {
+                //this is a dead end node so we need to draw around the node a lil extra (and replace this line)
+                nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, nodeLines[0].a));
             }
             else
             {
-                shapePoints.AddRange(polyNodes[pni].GetNextPoints(2));
+                nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, nodeLines[0].a));
             }
+
+            shapeLines.AddRange(nodeLines);
         }
-
-        shapePoints.Add(shapePoints[0]);
-
-    }
-
-    private int GetPolyNodeIndexFromNode(List<PolyNode> pnList, Node node, bool addIfMissing = true)
-    {
-        int pni = -1;
-
-        for (int i = 0; i < pnList.Count; i++)
-        {
-            if (pnList[i].parent == node)
-            {
-                pni = i;
-                break;
-            }
-        }
-
-        if (pni == -1 && addIfMissing)
-        {
-            pni = pnList.Count;
-            pnList.Add(new PolyNode(node));
-        }
-
-        return pni;
-    }
-
-    private List<PolyNode> GeneratePolyNodeList(List<Node> finalPath)
-    {
-        int pni;
-        List<PolyNode> pNodes = new List<PolyNode>();
-
-        int j = 0;
-        int h = 0;
-        Quaternion preRotation = Quaternion.identity;
-        Quaternion postRotation = Quaternion.identity;
-        Vector3 midDirPoint;
-        Vector3 rotatedPoint;
-
-        Vector3 forwardVect = (Vector3.forward * abDistance);
-        Vector3 leftVect = (Vector3.right * abDistance * -1);
-
-        for (int n = 0; n < finalPath.Count; n++)
-        {
-            //Setting up the index of the current polynode
-            pni = GetPolyNodeIndexFromNode(pNodes, finalPath[n]);
-
-            j = n + 1;
-            h = n - 1;
-            bool validPre = h >= 0;
-            bool validPost = j < finalPath.Count;
-
-            if (validPre) preRotation = Quaternion.LookRotation(finalPath[n].point - finalPath[h].point, Vector3.up);
-            if (validPost) postRotation = Quaternion.LookRotation(finalPath[j].point - finalPath[n].point, Vector3.up);
-
-            if ((validPre || validPost) && !(validPre && validPost))
-            {
-                //one of the directions doesn't exist (start or end points -> i = 0 or finalPath.count-1) so we need to do 2 points with the one available rot
-                Quaternion rot = validPre ? preRotation : postRotation;
-
-                midDirPoint = finalPath[n].point + (rot * -forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (rot * leftVect), minVDistance);
-
-                midDirPoint = finalPath[n].point + (rot * forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (rot * leftVect), minVDistance);
-            }
-            else if (Quaternion.Angle(preRotation, postRotation) == 180)
-            {
-                //the point before and after are the same direction so we need to do all 4 points but only if the node has only 1 connection, else it's just the front post and back pre
-                midDirPoint = finalPath[n].point + (preRotation * -forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (preRotation * leftVect), minVDistance);
-
-                midDirPoint = finalPath[n].point + (preRotation * forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (preRotation * leftVect), minVDistance);
-
-                midDirPoint = finalPath[n].point + (postRotation * -forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (postRotation * leftVect), minVDistance);
-
-                midDirPoint = finalPath[n].point + (postRotation * forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (postRotation * leftVect), minVDistance);
-            }
-            else
-            {
-                //do the prepoint for the prerot, the postpoint for the postrot
-                midDirPoint = finalPath[n].point + (preRotation * -forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (preRotation * leftVect), minVDistance);
-
-                midDirPoint = finalPath[n].point + (postRotation * forwardVect);
-                pNodes[pni].AddPoint(midDirPoint + (postRotation * leftVect), minVDistance);
-            }
-        }
-
-        return pNodes;
     }
 
     /// <summary>
@@ -352,21 +239,36 @@ public class NodeMeshConstructor : MonoBehaviour
         List<Node> valids = new List<Node>();
         foreach (Node connection in testNode.connections)
         {
-            //if (!path.Contains(connection) && !visitedNodes.Contains(testNode)) valids.Add(connection);
             if (!visitedNodes.Contains(connection) && !valids.Contains(connection)) valids.Add(connection);
         }
 
         return valids.ToArray();
     }
 
-    private void TriangulateFromPoints(List<Vector3> points) 
-    {
-        //Ear Clipping method
-    }
-
     private void OnDrawGizmosSelected()
     {
-        //if (finalPath != null && finalPath.Count >= displayCount)
+        if (shapeLines != null && shapeLines.Count > 0)
+        {
+            if (drawPoints)
+            {
+                foreach (Node node in nodeManager.nodes)
+                {
+                    Gizmos.color = Color.gray;
+                    Gizmos.DrawSphere(node.point, nodeRadius);
+                }
+            }
+
+            if (drawLines)
+            {
+                for (int i = 0; i < shapeLines.Count; i++)
+                {
+                    Gizmos.color = i % 2 == 0 ? Color.green : Color.cyan;
+                    Gizmos.DrawLine(shapeLines[i].a, shapeLines[i].b);
+                }
+            }
+        }
+
+        //if (shapePoints != null && shapePoints.Count >= displayCount)
         //{
         //    pTimer -= Time.deltaTime;
 
@@ -376,50 +278,31 @@ public class NodeMeshConstructor : MonoBehaviour
         //        currentP++;
         //    }
 
-        //    if (currentP >= finalPath.Count - displayCount) currentP = 0;
+        //    if (currentP > shapePoints.Count - displayCount) currentP = 0;
 
-        //    for (int i = currentP; i < currentP + displayCount; i++)
+        //    if (drawPoints)
         //    {
-        //        Gizmos.color = Color.magenta;
-        //        Gizmos.DrawSphere(finalPath[i].point, 30);
+        //        for (int i = currentP; i < currentP + displayCount; i++)
+        //        {
+        //            Gizmos.color = Color.green;
+        //            Gizmos.DrawSphere(shapePoints[i] + Vector3.up, 10);
+        //        }
+        //    }
+
+        //    if (drawLines)
+        //    {
+        //        for (int i = currentP; i < currentP + displayCount - 1; i++)
+        //        {
+        //            Gizmos.color = Color.green;
+        //            Gizmos.DrawLine(shapePoints[i], shapePoints[i+1]);
+        //        }
         //    }
         //}
-
-        if (shapePoints != null && shapePoints.Count >= displayCount)
-        {
-            pTimer -= Time.deltaTime;
-
-            if (pTimer <= 0)
-            {
-                pTimer = switchTime;
-                currentP++;
-            }
-
-            if (currentP > shapePoints.Count - displayCount) currentP = 0;
-
-            if (drawPoints)
-            {
-                for (int i = currentP; i < currentP + displayCount; i++)
-                {
-                    Gizmos.color = Color.green;
-                    Gizmos.DrawSphere(shapePoints[i] + Vector3.up, 10);
-                }
-            }
-
-            if (drawLines)
-            {
-                for (int i = currentP; i < currentP + displayCount - 1; i++)
-                {
-                    Gizmos.color = Color.green;
-                    Gizmos.DrawLine(shapePoints[i], shapePoints[i+1]);
-                }
-            }
-        }
-        else
-        {
-            currentP = 0;
-            pTimer = switchTime;
-        }
+        //else
+        //{
+        //    currentP = 0;
+        //    pTimer = switchTime;
+        //}
     }
 
     public class Bounds 
@@ -497,64 +380,6 @@ public class NodeMeshConstructor : MonoBehaviour
         public NodePair Inverse()
         {
             return new NodePair(to, from);
-        }
-    }
-
-    [System.Serializable]
-    public struct Path 
-    {
-        public Node[] points;
-
-        public Path(Node[] path) 
-        {
-            points = path;
-        }
-    }
-
-    public class PolyNode 
-    {
-        public Node parent;
-        private List<Vector3> points;
-        public int visitCounter;
-
-        public PolyNode(Node node)
-        {
-            parent = node;
-            points = new List<Vector3>();
-            visitCounter = 0;
-        }
-
-        public void AddPoint(Vector3 newPoint, float minDistance = 0) 
-        {
-            if (minDistance > 0 && points.Count > 0)
-            {
-                foreach (Vector3 item in points)
-                {
-                    if (Vector3.Distance(newPoint, item) < minDistance)
-                    {
-                        newPoint = item;
-                        break;
-                    }
-                }
-            }
-
-            points.Add(newPoint);
-        }
-
-        internal Vector3[] GetNextPoints(int count)
-        {
-            Vector3[] output = new Vector3[count];
-            for (int i = 0; i < count; i++)
-            {
-                if (visitCounter >= points.Count)
-                {
-                    Debug.LogError("We've breached the amount of points in the array");
-                    break;
-                }
-
-                output[i] = points[visitCounter++];
-            }
-            return output;
         }
     }
 
