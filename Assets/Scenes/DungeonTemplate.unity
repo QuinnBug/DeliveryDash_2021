@@ -482,7 +482,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testConnections: 0
-  showConnections: 1
+  showConnections: 0
   showNodes: 0
   lSys:
     rules:
@@ -509,12 +509,12 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: '>>ff'
+    axiom: o
     finalString: ff[>ff<ff][<ff<ff]>>>>ff
     randomRuleOutput: 1
-  count: 8
+  count: 10
   length: 50
-  angle: 30
+  angle: 45
   nodeLimitRange:
     min: 25
     max: 75
@@ -547,12 +547,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   minVDistance: 2
-  cornerDistance: 7.5
+  cornerDistance: 5
   nodeRadius: 15
   shapePoints: []
   shapeLines: []
   connSkipChance: 0
-  drawPoints: 1
+  drawPoints: 0
   drawLines: 1
   currentP: 0
   displayCount: 2

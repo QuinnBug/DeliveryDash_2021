@@ -77,11 +77,23 @@ public class NodeMeshConstructor : MonoBehaviour
         shapeLines = new List<Line>();
         visitedNodes = new HashSet<Node>();
 
+        ConnectionSort cs = new ConnectionSort();
+
         foreach (Node node in nodeManager.nodes)
         {
+            cs.current = node;
+            cs.start = node.connections[0];
+
+            node.connections.Sort(cs);
             List<Line> nodeLines = new List<Line>();
+            //float colourVal = 1;
             foreach (Node conn in node.connections)
             {
+                //Debug.DrawLine(node.point, Vector3.Lerp(node.point, conn.point, (0.45f * (colourVal / node.connections.Count) + 0.1f)),
+                //    new Color(1, 0, colourVal / node.connections.Count), 120);
+
+                //colourVal += 1;
+
                 //find midpoint from node to conn
                 Vector3 farPoint = Vector3.Lerp(node.point, conn.point, 0.5f);
                 Quaternion rotation = Quaternion.LookRotation(conn.point - node.point, Vector3.up);
@@ -101,20 +113,48 @@ public class NodeMeshConstructor : MonoBehaviour
                 lines[1] = new Line(points[1], points[2]);
                 lines[2] = new Line(points[2], points[3]);
 
-                if (lines[0].CircleIntersections(node.point, nodeRadius, out Vector3 onePoint))
+                if (lines[0].CircleIntersections(node.point, nodeRadius, out Vector3[] iOne))
                 {
-                    Debug.DrawLine(lines[0].a, onePoint, Color.red, 60);
-                    lines[0].a = onePoint;
+                    Vector3 point = lines[0].a;
+                    if (iOne.Length == 2)
+                    {
+                        if (Vector3.Distance(iOne[0], lines[0].b) < Vector3.Distance(iOne[1], lines[0].b))
+                        {
+                            point = iOne[0];
+                        }
+                        else
+                        {
+                            point = iOne[1];
+                        }
+                    }
+                    else point = iOne[0];
+
+                    //Debug.DrawLine(lines[0].a, point, Color.red, 60);
+                    lines[0].a = point;
                 }
                 else
                 {
                     Debug.Log("How come line 0 doesn't intersect the node?");
                 }
 
-                if (lines[2].CircleIntersections(node.point, nodeRadius, out Vector3 twoPoint))
+                if (lines[2].CircleIntersections(node.point, nodeRadius, out Vector3[] iTwo))
                 {
-                    Debug.DrawLine(twoPoint, lines[2].b, Color.magenta, 60);
-                    lines[2].b = twoPoint;
+                    Vector3 point = lines[2].a;
+                    if (iTwo.Length == 2)
+                    {
+                        if (Vector3.Distance(iTwo[0], lines[1].a) < Vector3.Distance(iTwo[1], lines[1].a))
+                        {
+                            point = iTwo[0];
+                        }
+                        else
+                        {
+                            point = iTwo[1];
+                        }
+                    }
+                    else point = iTwo[0];
+
+                    //Debug.DrawLine(point, lines[2].b, Color.magenta, 60);
+                    lines[2].b = point;
                 }
                 else
                 {
@@ -123,19 +163,23 @@ public class NodeMeshConstructor : MonoBehaviour
 
                 if (nodeLines.Count > 0)
                 {
-                    nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, lines[0].a));
+                    nodeLines.Add(new Line(lines[2].b, nodeLines[nodeLines.Count - 3].a));
+                    //Debug.DrawLine(nodeLines[nodeLines.Count - 3].a, node.point, Color.magenta, 120);
+                    //Debug.DrawLine(lines[2].b, nodeLines[nodeLines.Count - 3].a, Color.yellow, 120);
                 }
+
                 nodeLines.AddRange(lines);
             }
 
             if (node.connections.Count == 1)
             {
-                //this is a dead end node so we need to draw around the node a lil extra (and replace this line)
+                //this is a dead end node so we need to draw around the node a lil extra (and replace this line which just cuts through a line)
                 nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, nodeLines[0].a));
             }
             else
             {
-                nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, nodeLines[0].a));
+                nodeLines.Add(new Line(nodeLines[2].b, nodeLines[nodeLines.Count - 3].a));
+                //Debug.DrawLine(nodeLines[2].b, nodeLines[nodeLines.Count - 3].a, Color.gray, 120);
             }
 
             shapeLines.AddRange(nodeLines);
@@ -393,12 +437,12 @@ public class NodeMeshConstructor : MonoBehaviour
         {
             Vector3 incomingDir = Vector3.Normalize(current.point - start.point);
 
-            float xRot = Vector3.SignedAngle(incomingDir, Vector3.Normalize(x.point - start.point), Vector3.up);
-            float yRot = Vector3.SignedAngle(incomingDir, Vector3.Normalize(y.point - start.point), Vector3.up);
+            float xRot = Vector3.SignedAngle(incomingDir, Vector3.Normalize(current.point - x.point), Vector3.up);
+            float yRot = Vector3.SignedAngle(incomingDir, Vector3.Normalize(current.point - y.point), Vector3.up);
 
             if (xRot == yRot) return 0;
 
-            return  xRot > yRot ? 1 : -1;
+            return  xRot < yRot ? 1 : -1;
         }
     }
 }

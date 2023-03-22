@@ -589,50 +589,85 @@ public class Line
         return true;
     }
 
-    public bool CircleIntersections(Vector3 circlePos, float radius, out Vector3 intersection) 
+    public bool CircleIntersections(Vector3 circle, float r, out Vector3[] intersections) 
     {
-        //This isn't generating the correct intersections...
+        intersections = null;
+        List<Vector3> iPoints = new List<Vector3>();
 
-        intersection = circlePos;
+        float m, c;
+        m = Equation()[0];
+        c = Equation()[1];
 
-        float m = Equation()[0];
-        float c = Equation()[1];
-        float r = radius;
-        float x;
+        float x, z, m_A, m_B, m_C, m_D, p, q;
+        p = circle.x;
+        q = circle.z;
 
-        float D = ((2*m*c) * (2*m*c)) - 4 * (1 + (m * m)) * ((c * c) - (r * r));
-
-
-
-        if (D > 0)
+        if (type == LineType.VERTICAL)
         {
-            float xPlus = (-((2 * m * c) * (2 * m * c)) + Mathf.Sqrt(D)) / (2 * (1 + (m * m)));
-            float xSubt = (-((2 * m * c) * (2 * m * c)) - Mathf.Sqrt(D)) / (2 * (1 + (m * m)));
-
-            if (Contains(new Vector3(xPlus, circlePos.y, GetYAtXOnLine(xPlus))))
+            x = a.x;
+            m_B = -2 * q;
+            m_C = p * p + q * q - r * r + x * x - 2 * p * x;
+            m_D = m_B * m_B - 4 * m_C;
+            if (m_D == 0)
             {
-                Debug.Log("plus");
-                x = xPlus;
+                iPoints.Add(new Vector3(x, circle.y, -q));
+                Debug.Log("vert tangent point");
+            }
+            else if (m_D > 0)
+            {
+                m_D = Mathf.Sqrt(m_D);
+
+                iPoints.Add(new Vector3(x, circle.y, (-m_B - m_D) / 2));
+                iPoints.Add(new Vector3(x, circle.y, (-m_B + m_D) / 2));
+                Debug.Log("vert double point");
             }
             else
             {
-                Debug.Log("subt");
-                x = xSubt;
+                Debug.Log("vert none");
+                return false;
             }
         }
-        else if(D == 0)
+        else if(type == LineType.HORIZONTAL) 
         {
-            x = (-((2 * m * c) * (2 * m * c))) / (2 * (1 + (m * m)));
+            if (c > q + r || c < q - r)
+            {
+                return false;
+            }
+
+
         }
         else
         {
-            Debug.Log("AHHH");
-            //the line does not intersect the circle
-            return false;
+            m_A = m * m + 1;
+            m_B = 2 * (m * c - m * q - p);
+            m_C = p * p + q * q - r * r + c * c - 2 * c * q;
+            m_D = m_B * m_B - 4 * m_A * m_C;
+            if (m_D == 0)
+            {
+                x = -m_B / (2 * m_A);
+                z = m * x + c;
+                iPoints.Add(new Vector3(x, circle.y, z));
+                Debug.Log("regular tangent point"); 
+            }
+            else if (m_D > 0)
+            {
+                m_D = Mathf.Sqrt(m_D);
+                x = (-m_B - m_D) / (2 * m_A);
+                z = m * x + c;
+                iPoints.Add(new Vector3(x, circle.y, z));
+                x = (-m_B + m_D) / (2 * m_A);
+                z = m * x + c;
+                iPoints.Add(new Vector3(x, circle.y, z));
+                Debug.Log("regular double point");
+            }
+            else
+            {
+                Debug.Log("regular none");
+                return false;
+            }
         }
 
-        Debug.Log("x = " + x + " & D = " + D);
-        intersection = new Vector3(x, circlePos.y, GetYAtXOnLine(x));
+        intersections = iPoints.ToArray();
         return true;
     }
 }
