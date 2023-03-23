@@ -513,11 +513,11 @@ MonoBehaviour:
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
   count: 10
-  length: 50
-  angle: 45
+  length: 75
+  angle: 30
   nodeLimitRange:
-    min: 25
-    max: 75
+    min: 70
+    max: 150
   nodesPerStep: 20
   timePerStep: 0
 --- !u!4 &2109595311
@@ -548,7 +548,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minVDistance: 2
   cornerDistance: 10
-  nodeRadius: 15
+  nodeRadius: 20
   shapePoints: []
   shapeLines: []
   connSkipChance: 0

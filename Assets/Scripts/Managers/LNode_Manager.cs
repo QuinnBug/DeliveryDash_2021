@@ -201,6 +201,19 @@ public class LNode_Manager : Singleton<LNode_Manager>
         return newSpace;
     }
 
+    private void OnValidate()
+    {
+        if (nodeLimitRange.min >= length)
+        {
+            nodeLimitRange.min = length - 5;
+        }
+
+        if (nodeLimitRange.max <= length)
+        {
+            nodeLimitRange.max = length + 5;
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         if (nodes != null)

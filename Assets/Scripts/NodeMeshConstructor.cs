@@ -164,8 +164,6 @@ public class NodeMeshConstructor : MonoBehaviour
                 if (nodeLines.Count > 0)
                 {
                     nodeLines.Add(new Line(lines[2].b, nodeLines[nodeLines.Count - 3].a));
-                    //Debug.DrawLine(nodeLines[nodeLines.Count - 3].a, node.point, Color.magenta, 120);
-                    //Debug.DrawLine(lines[2].b, nodeLines[nodeLines.Count - 3].a, Color.yellow, 120);
                 }
 
                 nodeLines.AddRange(lines);
@@ -179,7 +177,6 @@ public class NodeMeshConstructor : MonoBehaviour
             else
             {
                 nodeLines.Add(new Line(nodeLines[2].b, nodeLines[nodeLines.Count - 3].a));
-                //Debug.DrawLine(nodeLines[2].b, nodeLines[nodeLines.Count - 3].a, Color.gray, 120);
             }
 
             shapeLines.AddRange(nodeLines);

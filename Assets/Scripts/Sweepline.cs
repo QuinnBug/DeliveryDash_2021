@@ -611,7 +611,7 @@ public class Line
             if (m_D == 0)
             {
                 iPoints.Add(new Vector3(x, circle.y, -q));
-                Debug.Log("vert tangent point");
+               //Debug.Log("vert tangent point");
             }
             else if (m_D > 0)
             {
@@ -619,11 +619,11 @@ public class Line
 
                 iPoints.Add(new Vector3(x, circle.y, (-m_B - m_D) / 2));
                 iPoints.Add(new Vector3(x, circle.y, (-m_B + m_D) / 2));
-                Debug.Log("vert double point");
+                //Debug.Log("vert double point");
             }
             else
             {
-                Debug.Log("vert none");
+                //Debug.Log("vert none");
                 return false;
             }
         }
@@ -633,20 +633,20 @@ public class Line
             //if the rise is above or below the circle then it cannot intersect
             if (Mathf.Abs(z) > r)
             {
-                Debug.Log("horiz none");
+                //Debug.Log("horiz none");
                 return false;
             }
             else if (Mathf.Abs(z) == r)
             {
                 iPoints.Add(new Vector3(p, circle.y, q + z));
-                Debug.Log("horiz tangent point"); 
+                //Debug.Log("horiz tangent point"); 
             }
             else
             {
                 x = Mathf.Sqrt(Mathf.Abs((z * z) - (r * r)));
                 iPoints.Add(new Vector3(p + x, circle.y, q + z));
                 iPoints.Add(new Vector3(p - x, circle.y, q + z));
-                Debug.Log("horiz double point " + x + " " + z + " " + r);
+                //Debug.Log("horiz double point " + x + " " + z + " " + r);
             }
         }
         else
@@ -660,7 +660,7 @@ public class Line
                 x = -m_B / (2 * m_A);
                 z = m * x + c;
                 iPoints.Add(new Vector3(x, circle.y, z));
-                Debug.Log("regular tangent point"); 
+                //Debug.Log("regular tangent point"); 
             }
             else if (m_D > 0)
             {
@@ -671,7 +671,7 @@ public class Line
                 x = (-m_B + m_D) / (2 * m_A);
                 z = m * x + c;
                 iPoints.Add(new Vector3(x, circle.y, z));
-                Debug.Log("regular double point");
+                //Debug.Log("regular double point");
             }
             else
             {
