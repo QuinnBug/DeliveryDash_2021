@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+// Probably need to change this to work on nodes
+
 public class Sweepline : Singleton<Sweepline>
 {
     public bool debugMode;
