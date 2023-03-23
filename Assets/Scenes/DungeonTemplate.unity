@@ -510,7 +510,7 @@ MonoBehaviour:
       - lo
       - ro
     axiom: o
-    finalString: ff[>ff<ff][<ff<ff]>>>>ff
+    finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
   count: 10
   length: 50
@@ -547,7 +547,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   minVDistance: 2
-  cornerDistance: 5
+  cornerDistance: 10
   nodeRadius: 15
   shapePoints: []
   shapeLines: []

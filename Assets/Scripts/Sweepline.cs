@@ -383,12 +383,12 @@ public class Line
     public void UpdateType() 
     {   
 
-        if (a.x == b.x)
+        if (Mathf.Abs(a.x - b.x) < 0.001f)
         {
             type = LineType.VERTICAL;
             
         }
-        else if (a.z == b.z) type = LineType.HORIZONTAL;
+        else if (Mathf.Abs(a.z - b.z) < 0.001f) type = LineType.HORIZONTAL;
         else type = LineType.REGULAR;
     }
 
@@ -629,12 +629,25 @@ public class Line
         }
         else if(type == LineType.HORIZONTAL) 
         {
-            if (c > q + r || c < q - r)
+            z = c - q;
+            //if the rise is above or below the circle then it cannot intersect
+            if (Mathf.Abs(z) > r)
             {
+                Debug.Log("horiz none");
                 return false;
             }
-
-
+            else if (Mathf.Abs(z) == r)
+            {
+                iPoints.Add(new Vector3(p, circle.y, q + z));
+                Debug.Log("horiz tangent point"); 
+            }
+            else
+            {
+                x = Mathf.Sqrt(Mathf.Abs((z * z) - (r * r)));
+                iPoints.Add(new Vector3(p + x, circle.y, q + z));
+                iPoints.Add(new Vector3(p - x, circle.y, q + z));
+                Debug.Log("horiz double point " + x + " " + z + " " + r);
+            }
         }
         else
         {
@@ -662,7 +675,8 @@ public class Line
             }
             else
             {
-                Debug.Log("regular none");
+                Debug.Log("regular none " + m_D);
+                Debug.DrawLine(a, b, Color.red, 120);
                 return false;
             }
         }
