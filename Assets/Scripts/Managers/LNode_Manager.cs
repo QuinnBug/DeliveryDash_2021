@@ -210,7 +210,7 @@ public class LNode_Manager : Singleton<LNode_Manager>
 
         if (nodeLimitRange.max <= length)
         {
-            nodeLimitRange.max = length + 5;
+            nodeLimitRange.max = nodeLimitRange.min + length + 5;
         }
     }
 
@@ -265,7 +265,7 @@ public class Node
     {
         //if node
 
-        if (connections.Contains(node) || Vector3.Distance(point, node.point) >= LNode_Manager.Instance.nodeLimitRange.max)
+        if (node == this || connections.Contains(node) || Vector3.Distance(point, node.point) >= LNode_Manager.Instance.nodeLimitRange.max)
             return;
         else 
         {

@@ -512,14 +512,14 @@ MonoBehaviour:
     axiom: o
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
-  count: 25
+  count: 10
   length: 100
-  angle: 40
+  angle: 50
   nodeLimitRange:
-    min: 75
+    min: 90
     max: 200
-  nodesPerStep: 20
-  timePerStep: 0.1
+  nodesPerStep: 175
+  timePerStep: 0
 --- !u!4 &2109595311
 Transform:
   m_ObjectHideFlags: 0

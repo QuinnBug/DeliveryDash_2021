@@ -171,12 +171,50 @@ public class NodeMeshConstructor : MonoBehaviour
 
             if (node.connections.Count == 1)
             {
-                //this is a dead end node so we need to draw around the node a lil extra (and replace this line which just cuts through a line)
+                //this is a dead end node so we need to draw around the node a lil extra (and replace this line which just cuts through a node)
                 nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, nodeLines[0].a));
             }
             else
             {
                 nodeLines.Add(new Line(nodeLines[2].b, nodeLines[nodeLines.Count - 3].a));
+            }
+
+            //untangling any overlapping lines in the node before adding the final connection line in
+            int lineCount = nodeLines.Count;
+            for (int i = 0; i < lineCount; i++)
+            {
+                for (int j = i; j < lineCount; j++)
+                {
+                    if (j == i) continue;
+                    
+                    if (nodeLines[i].DoesIntersect(nodeLines[j], out Vector3 intersection))
+                    {
+                        Debug.Log("j - i = " + j + " - " + i + " : " + lineCount);
+
+                        if (nodeLines[i].CloserToA(node.point)) nodeLines[i].a = intersection;
+                        else nodeLines[i].b = intersection;
+
+                        if (nodeLines[j].CloserToA(node.point)) nodeLines[j].a = intersection;
+                        else nodeLines[j].b = intersection;
+
+                        if (j - i == 6)
+                        {
+                            Debug.DrawLine(nodeLines[i].a, nodeLines[i].b, Color.yellow, 120);
+                            Debug.DrawLine(nodeLines[j].a, nodeLines[j].b, Color.red, 120);
+                            Debug.DrawLine(nodeLines[i + 3].a, nodeLines[i + 3].b, Color.blue, 120);
+                            Debug.Log("j = " + j + " i = " + i + " -- ");
+                            //nodeLines.RemoveAt(i + 1);
+                            //lineCount--;
+                        }
+                        else if (j == lineCount - 2 && i == 0)
+                        {
+                            Debug.Log("j = " + j + " i = " + i + " ++ ");
+                            //Debug.DrawLine(nodeLines[j - 1].a + Vector3.up, nodeLines[j - 1].b + Vector3.up, Color.red, 120);
+                            //nodeLines.RemoveAt(j + 1);
+                            //lineCount--;
+                        }
+                    }
+                }
             }
 
             shapeLines.AddRange(nodeLines);
