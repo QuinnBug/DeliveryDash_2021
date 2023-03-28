@@ -189,7 +189,18 @@ public class NodeMeshConstructor : MonoBehaviour
                     
                     if (nodeLines[i].DoesIntersect(nodeLines[j], out Vector3 intersection))
                     {
-                        Debug.Log("j - i = " + j + " - " + i + " : " + lineCount);
+                        //Debug.Log("j - i = " + j + " - " + i + " : " + lineCount);
+
+                        int m = 0;
+                        for (int k = i; k < lineCount; k++)
+                        {
+                            if (nodeLines[k] == nodeLines[i] || nodeLines[k] == nodeLines[j]) continue;
+                            if (nodeLines[k].SharesPoints(nodeLines[i]) && nodeLines[k].SharesPoints(nodeLines[j]))
+                            {
+                                m = k;
+                                break;
+                            }
+                        }
 
                         if (nodeLines[i].CloserToA(node.point)) nodeLines[i].a = intersection;
                         else nodeLines[i].b = intersection;
@@ -197,22 +208,9 @@ public class NodeMeshConstructor : MonoBehaviour
                         if (nodeLines[j].CloserToA(node.point)) nodeLines[j].a = intersection;
                         else nodeLines[j].b = intersection;
 
-                        if (j - i == 6)
-                        {
-                            Debug.DrawLine(nodeLines[i].a, nodeLines[i].b, Color.yellow, 120);
-                            Debug.DrawLine(nodeLines[j].a, nodeLines[j].b, Color.red, 120);
-                            Debug.DrawLine(nodeLines[i + 3].a, nodeLines[i + 3].b, Color.blue, 120);
-                            Debug.Log("j = " + j + " i = " + i + " -- ");
-                            //nodeLines.RemoveAt(i + 1);
-                            //lineCount--;
-                        }
-                        else if (j == lineCount - 2 && i == 0)
-                        {
-                            Debug.Log("j = " + j + " i = " + i + " ++ ");
-                            //Debug.DrawLine(nodeLines[j - 1].a + Vector3.up, nodeLines[j - 1].b + Vector3.up, Color.red, 120);
-                            //nodeLines.RemoveAt(j + 1);
-                            //lineCount--;
-                        }
+                        nodeLines.RemoveAt(m);
+                        lineCount--;
+                        j--;
                     }
                 }
             }
