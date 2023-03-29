@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Earclipping;
 
 public class NodeMeshConstructor : MonoBehaviour
 {
@@ -11,18 +12,14 @@ public class NodeMeshConstructor : MonoBehaviour
     public float minVDistance;
     public float cornerDistance;
     public float nodeRadius;
-    private float abDistance;
 
     [Space]
     public HashSet<Node> visitedNodes;
     public List<Node> finalPath;
     [Space]
-    public List<Vector3> shapePoints = null;
-    public List<Line> shapeLines = null;
+    internal List<Vector3> shapePoints = null;
+    internal List<Line> shapeLines = null;
     public List<Polygon> polygons = null;
-    [Space]
-    [Tooltip("Set above 1 to force all connections to be skipped, below 0 to do all connections")]
-    public float connSkipChance = 0.5f;
     [Space]
     //display variables
     public bool drawPoints;
@@ -30,8 +27,6 @@ public class NodeMeshConstructor : MonoBehaviour
     public bool drawPolygons;
     [Space]
     public float timePerNode;
-
-    private Node startNode;
 
     // Start is called before the first frame update
     void Start()
@@ -41,8 +36,6 @@ public class NodeMeshConstructor : MonoBehaviour
         shapePoints = null;
         visitedNodes = null;
         finalPath = null;
-
-        abDistance = Mathf.Sqrt((cornerDistance * cornerDistance) / 2);
     }
 
     // Update is called once per frame
@@ -50,26 +43,8 @@ public class NodeMeshConstructor : MonoBehaviour
     {
         if (nodeManager.nodeGenDone && visitedNodes == null)
         {
-            //GetFullExplorationPath();
-            CreatePolygonFromNodes();
-            Sweepline.Instance.polyPoints = shapePoints;
+            StartCoroutine(CreatePolygonFromNodes());
         }
-    }
-
-    void GetFullExplorationPath()
-    {
-        //setting the start node.
-        int k = 0;
-        while (nodeManager.nodes[k].connections.Count > 1)
-        {
-            k++;
-        }
-        startNode = nodeManager.nodes[k];
-
-        visitedNodes = new HashSet<Node>() { startNode };
-        finalPath = new List<Node>();
-
-        finalPath.AddRange(ExploreBranch(startNode, 0));
     }
 
     IEnumerator CreatePolygonFromNodes() 
@@ -87,14 +62,8 @@ public class NodeMeshConstructor : MonoBehaviour
 
             node.connections.Sort(cs);
             List<Line> nodeLines = new List<Line>();
-            //float colourVal = 1;
             foreach (Node conn in node.connections)
             {
-                //Debug.DrawLine(node.point, Vector3.Lerp(node.point, conn.point, (0.45f * (colourVal / node.connections.Count) + 0.1f)),
-                //    new Color(1, 0, colourVal / node.connections.Count), 120);
-
-                //colourVal += 1;
-
                 //find midpoint from node to conn
                 Vector3 farPoint = Vector3.Lerp(node.point, conn.point, 0.5f);
                 Quaternion rotation = Quaternion.LookRotation(conn.point - node.point, Vector3.up);
@@ -218,170 +187,57 @@ public class NodeMeshConstructor : MonoBehaviour
 
             polygons.Add(new Polygon(nodeLines));
             shapeLines.AddRange(nodeLines);
+
+            if(timePerNode > 0) yield return new WaitForSeconds(timePerNode);
         }
-    }
-
-    /// <summary>
-    /// Recursive exploration function. It will find a path that will move from the start node to any dead end or branching points
-    /// </summary>
-    private Node[] ExploreBranch(Node startNode, int pathToFollow)
-    {
-        bool exploring = true;
-        visitedNodes.Add(startNode);
-
-        List<Node> path = new List<Node>();
-        path.Add(startNode);
-
-
-        Node current = startNode.connections[pathToFollow];
-        
-        while (exploring)
-        {
-            visitedNodes.Add(current);
-            List<Node> validConnections = new List<Node>(ValidConnections(current, path));
-
-            //we continue exploring until reaching a deadend or a branch
-            exploring = validConnections.Count == 1;
-
-            //if we only have one path we move to that one
-            if (exploring)
-            {
-                //Debug.Log("Found Connection");
-                path.Add(current);
-                current = validConnections[0];
-            }
-            else
-            {
-                List<Node> rev_path = new List<Node>(path);
-                rev_path.Reverse();
-
-                path.Add(current);
-
-                //if we've reached a branching node it will need to explore those paths
-                if (validConnections.Count > 1)
-                {
-                    ConnectionSort cs = new ConnectionSort();
-                    cs.start = startNode;
-                    cs.current = current;
-                    validConnections.Sort(cs);
-
-                    //Debug.Log("Reached Branch @ " + current.point);
-                    foreach (Node connection in validConnections)
-                    {
-                        path.AddRange(ExploreBranch(current, current.connections.IndexOf(connection)));
-                        path.Add(current);
-                    }
-                    //path.Add(current);
-                }
-                else
-                {
-                    //Debug.Log("Reached Deadend @ " + current.point);
-                    //if this node has more than one connection it should reach out to each of it's connections before returning, except for the connection we just came from.
-                    Node previousNode = path[path.Count - 2];
-                    
-                    if (current.connections.Count > 1)
-                    {
-                        float rndNum;
-                        foreach (Node newNode in current.connections)
-                        {
-                            if (newNode == previousNode) continue;
-                            rndNum = Random.Range(0.0f, 1.0f);
-                            if (rndNum > connSkipChance) { /*Debug.Log("Skipped Connection");*/ continue; }
-
-                            path.Add(newNode);
-                            path.Add(current);
-                        }
-                    }
-                }
-
-                path.AddRange(rev_path);
-            }
-        }
-
-        int length = path.Count - 1;
-        for (int i = 0; i < length; i++)
-        {
-            if (path[i] == path[i + 1])
-            {
-                path.RemoveAt(i + 1);
-                length--;
-                i--;
-            }
-        }
-
-        return path.ToArray();
-    }
-
-    //returns all connections that aren't present in the path or the overall full path
-    private Node[] ValidConnections(Node testNode, List<Node> path) 
-    {
-        List<Node> valids = new List<Node>();
-        foreach (Node connection in testNode.connections)
-        {
-            if (!visitedNodes.Contains(connection) && !valids.Contains(connection)) valids.Add(connection);
-        }
-
-        return valids.ToArray();
     }
 
     private void OnDrawGizmosSelected()
     {
-        if (shapeLines != null && shapeLines.Count > 0)
+        if (nodeManager != null && nodeManager.nodes != null && drawPoints)
         {
-            if (drawPoints)
+            foreach (Node node in nodeManager.nodes)
             {
-                foreach (Node node in nodeManager.nodes)
-                {
-                    Gizmos.color = Color.gray;
-                    Gizmos.DrawSphere(node.point, nodeRadius);
-                }
-            }
-
-            if (drawLines)
-            {
-                for (int i = 0; i < shapeLines.Count; i++)
-                {
-                    Gizmos.color = i % 2 == 0 ? Color.green : Color.cyan;
-                    Gizmos.DrawLine(shapeLines[i].a, shapeLines[i].b);
-                }
+                Gizmos.color = Color.gray;
+                Gizmos.DrawSphere(node.point, nodeRadius);
             }
         }
 
-        //if (shapePoints != null && shapePoints.Count >= displayCount)
-        //{
-        //    pTimer -= Time.deltaTime;
+        if (shapeLines != null && drawLines)
+        {
+            for (int i = 0; i < shapeLines.Count; i++)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawLine(shapeLines[i].a, shapeLines[i].b);
+            }
+        }
 
-        //    if (pTimer <= 0)
-        //    {
-        //        pTimer = switchTime;
-        //        currentP++;
-        //    }
+        if (polygons != null && drawPolygons)
+        {
+            for (int i = 0; i < polygons.Count; i++)
+            {
+                foreach (Line line in polygons[i].lines)
+                {
+                    Gizmos.color = Color.cyan;
+                    Gizmos.DrawLine(line.a, line.b);
+                }
 
-        //    if (currentP > shapePoints.Count - displayCount) currentP = 0;
+                foreach (Vector3 item in polygons[i].vertices)
+                {
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawSphere(item, 2.0f);
+                }
 
-        //    if (drawPoints)
-        //    {
-        //        for (int i = currentP; i < currentP + displayCount; i++)
-        //        {
-        //            Gizmos.color = Color.green;
-        //            Gizmos.DrawSphere(shapePoints[i] + Vector3.up, 10);
-        //        }
-        //    }
+                //for (int j = 1; j < polygons[i].vertices.Length; j++)
+                //{
+                //    Gizmos.color = Color.cyan;
+                //    Gizmos.DrawLine(polygons[i].vertices[j], polygons[i].vertices[j - 1]);
+                //}
 
-        //    if (drawLines)
-        //    {
-        //        for (int i = currentP; i < currentP + displayCount - 1; i++)
-        //        {
-        //            Gizmos.color = Color.green;
-        //            Gizmos.DrawLine(shapePoints[i], shapePoints[i+1]);
-        //        }
-        //    }
-        //}
-        //else
-        //{
-        //    currentP = 0;
-        //    pTimer = switchTime;
-        //}
+                //Gizmos.color = Color.cyan;
+                //Gizmos.DrawLine(polygons[i].vertices[0], polygons[i].vertices[polygons[i].vertices.Length - 1]);
+            }
+        }
     }
 
     public class Bounds 

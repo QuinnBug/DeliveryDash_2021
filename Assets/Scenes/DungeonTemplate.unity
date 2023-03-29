@@ -509,14 +509,14 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: o
+    axiom: '>f>f[ff][>ff][<<ff]'
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
   count: 10
   length: 100
   angle: 50
   nodeLimitRange:
-    min: 90
+    min: 75
     max: 200
   nodesPerStep: 175
   timePerStep: 0
@@ -549,12 +549,8 @@ MonoBehaviour:
   minVDistance: 2
   cornerDistance: 10
   nodeRadius: 20
-  shapePoints: []
-  shapeLines: []
-  connSkipChance: 0
+  polygons: []
   drawPoints: 0
-  drawLines: 1
-  currentP: 0
-  displayCount: 2
-  pTimer: 0.5
-  switchTime: 0.5
+  drawLines: 0
+  drawPolygons: 1
+  timePerNode: 0.1
