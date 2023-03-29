@@ -19,6 +19,7 @@ public class NodeMeshConstructor : MonoBehaviour
     [Space]
     public List<Vector3> shapePoints = null;
     public List<Line> shapeLines = null;
+    public List<Polygon> polygons = null;
     [Space]
     [Tooltip("Set above 1 to force all connections to be skipped, below 0 to do all connections")]
     public float connSkipChance = 0.5f;
@@ -26,10 +27,9 @@ public class NodeMeshConstructor : MonoBehaviour
     //display variables
     public bool drawPoints;
     public bool drawLines;
-    public int currentP = 0;
-    public int displayCount = 64;
-    public float pTimer = 0;
-    public float switchTime = 0.5f;
+    public bool drawPolygons;
+    [Space]
+    public float timePerNode;
 
     private Node startNode;
 
@@ -72,9 +72,10 @@ public class NodeMeshConstructor : MonoBehaviour
         finalPath.AddRange(ExploreBranch(startNode, 0));
     }
 
-    void CreatePolygonFromNodes() 
+    IEnumerator CreatePolygonFromNodes() 
     {
         shapeLines = new List<Line>();
+        polygons = new List<Polygon>();
         visitedNodes = new HashSet<Node>();
 
         ConnectionSort cs = new ConnectionSort();
@@ -215,6 +216,7 @@ public class NodeMeshConstructor : MonoBehaviour
                 }
             }
 
+            polygons.Add(new Polygon(nodeLines));
             shapeLines.AddRange(nodeLines);
         }
     }

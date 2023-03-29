@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 193339239}
   - component: {fileID: 193339238}
   m_Layer: 0
-  m_Name: SWEEPLINE
+  m_Name: Other Gens
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
