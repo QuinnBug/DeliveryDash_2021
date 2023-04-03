@@ -189,7 +189,7 @@ public class NodeMeshConstructor : MonoBehaviour
                 }
             }
 
-            polygons.Add(new Polygon(nodeLines));
+            polygons.Add(new Polygon(nodeLines, node.point));
             shapeLines.AddRange(nodeLines);
 
             if(timePerNode > 0) yield return new WaitForSeconds(timePerNode);

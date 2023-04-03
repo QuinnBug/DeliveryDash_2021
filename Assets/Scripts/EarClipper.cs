@@ -1,16 +1,22 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Utility;
 
 namespace Earclipping 
 {
 	public class EarClipper : MonoBehaviour
 	{
-        public float polygonPerSecond;
+		public bool drawTris;
+        public float timePerPoly;
 		private NodeMeshConstructor nmc;
 		internal List<Triangle[]> triList = null;
+		[Space]
+		public List<Vertex> vertices;
 
-        public void Start()
+
+		public void Start()
         {
 			nmc = FindObjectOfType<NodeMeshConstructor>();
 			triList = null;
@@ -30,14 +36,14 @@ namespace Earclipping
 			foreach (Polygon poly in nmc.polygons)
 			{
 				ClipPolygon(poly);
-				yield return new WaitForSeconds(polygonPerSecond);
+				yield return new WaitForSeconds(timePerPoly);
 			}
 			Debug.Log("Clipping done");
 		}
 
         private void OnDrawGizmos()
         {
-            if (triList != null)
+            if (triList != null && drawTris)
             {
                 foreach (Triangle[] tris in triList)
                 {
@@ -45,12 +51,10 @@ namespace Earclipping
                     {
                         for (int i = 0; i < 3; i++)
                         {
-							int j = i + 1;
-							if (j >= 3) j = 0;
+							int j = Lists.ClampListIndex(i + 1, 3);
 
 							Gizmos.color = Color.red;
 							Gizmos.DrawLine(triangle.vertices[i], triangle.vertices[j]);
-
 						}
 						
                     }
@@ -71,7 +75,7 @@ namespace Earclipping
 			}
 	
 			//Step 1. Store the vertices in a list and we also need to know the next and prev vertex
-			List<Vertex> vertices = new List<Vertex>();
+			vertices = new List<Vertex>();
 	
 			for (int i = 0; i < poly.vertices.Length; i++)
 			{
@@ -81,9 +85,9 @@ namespace Earclipping
 			//Find the next and previous vertex
 			for (int i = 0; i < vertices.Count; i++)
 			{
-				int nextPos = ClampListIndex(i + 1, vertices.Count);
+				int nextPos = Lists.ClampListIndex(i + 1, vertices.Count);
 	
-				int prevPos = ClampListIndex(i - 1, vertices.Count);
+				int prevPos = Lists.ClampListIndex(i - 1, vertices.Count);
 	
 				vertices[i].prev = vertices[prevPos];
 	
@@ -100,13 +104,7 @@ namespace Earclipping
 			List<Vertex> earVertices = new List<Vertex>();
 	
 			for (int i = 0; i < vertices.Count; i++)
-			{
-				int prev = i - 1;
-				if (prev < 0) prev = vertices.Count - 1;
-	
-				int next = i + 1;
-				if (next >= vertices.Count) next = 0;
-	
+			{	
 				IsVertexEar(vertices[i], vertices, earVertices);
 			}
 	
@@ -128,19 +126,27 @@ namespace Earclipping
 				Vertex earVertexNext = earVertex.next;
 	
 				Triangle newTriangle = new Triangle(earVertex.point, earVertexPrev.point, earVertexNext.point);
-	
+
+				//if (poly.TriInBounds(newTriangle))
+				//{
+				//for (int j = 0; j < 3; j++)
+				//{
+				//		int k = Lists.ClampListIndex(j + 1, 3);
+				//		Debug.DrawLine(newTriangle.vertices[j], newTriangle.vertices[k], Color.blue, 120);
+				//	}
+				//}
+
 				triangles.Add(newTriangle);
-	
+
 				//Remove the vertex from the lists
 				earVertices.Remove(earVertex);
-	
 				vertices.Remove(earVertex);
-	
+
 				//Update the previous vertex and next vertex
 				earVertexPrev.next = earVertexNext;
 				earVertexNext.prev = earVertexPrev;
-	
-				//...see if we have found a new ear by investigating the two vertices that was part of the ear
+
+				//...see if we have found a new ear by investigating the two vertices that were part of the ear
 				CheckIfReflexOrConvex(earVertexPrev);
 				CheckIfReflexOrConvex(earVertexNext);
 	
@@ -199,13 +205,9 @@ namespace Earclipping
 				earVertices.Add(v);
 			}
 		}
-	
-		public int ClampListIndex(int index, int listSize)
-	    {
-	        return ((index % listSize) + listSize) % listSize;
-	    }
 	}
 	
+	[System.Serializable]
 	public class Vertex
 	{
 		//position
@@ -213,7 +215,7 @@ namespace Earclipping
 		public Vertex next;
 		public Vertex prev;
 	
-		public bool isReflex;
+		public bool isReflex = false;
 	
 	    public Vertex(Vector3 p)
 	    {
@@ -264,18 +266,19 @@ namespace Earclipping
 			//    isWithinTriangle = true;
 			//}
 	
-			//The point is within the triangle
-			return (a > 0f && a < 1f && b > 0f && b < 1f && c > 0f && c < 1f);
+			//The point is within the triangle (including on the border)
+			return (a >= 0f && a <= 1f && b >= 0f && b <= 1f && c >= 0f && c <= 1f);
 		}
 	}
 
 	[System.Serializable]
 	public class Polygon
 	{
+		public Vector3 center;
 		public Vector3[] vertices;
 		public Line[] lines;
 
-		public Polygon(List<Line> nodeLines)
+		public Polygon(List<Line> nodeLines, Vector3 center)
 		{
 			lines = nodeLines.ToArray();
 
@@ -305,10 +308,44 @@ namespace Earclipping
 				}
             }
             
-
 			vertices = points.ToArray();
 		}
 
+        internal bool TriInBounds(Triangle newTriangle)
+        {
+			Line testLine = new Line(center, center + (Vector3.up + Vector3.right) * 99999999);
+
+			//loop through the 3 midpoints of the lines
+            for (int i = 0; i < 3; i++)
+            {
+				int intersectionCount = 0;
+				int j = Lists.ClampListIndex(i + 1, 3);
+				testLine.a = Vector3.Lerp(newTriangle.vertices[i], newTriangle.vertices[j], 0.5f);
+
+                foreach (Line line in lines)
+                {
+					if (line.Contains(testLine.a) || line.DoesIntersect(testLine, out Vector3 iPoint))
+                    {
+						intersectionCount++;
+                    }
+                }
+
+				if (intersectionCount % 2 == 0) return false;
+            }
+
+			return true;
+        }
+    }
+}
+
+namespace Utility 
+{
+	public static class Lists 
+	{
+		public static int ClampListIndex(int index, int listSize)
+		{
+			return ((index % listSize) + listSize) % listSize;
+		}
 	}
 }
 

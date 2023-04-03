@@ -188,7 +188,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c48d00931287a84b9ece90ab1b6e787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  polygonPerSecond: 1
+  drawTris: 1
+  timePerPoly: 0.5
+  vertices: []
 --- !u!1 &600199003
 GameObject:
   m_ObjectHideFlags: 0
