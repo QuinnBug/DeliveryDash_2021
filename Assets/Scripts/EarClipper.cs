@@ -6,12 +6,62 @@ namespace Earclipping
 {
 	public class EarClipper : MonoBehaviour
 	{
-	    List<Triangle[]> triList = new List<Triangle[]>();
-	
-	    void ClipPolygon(Polygon poly) 
+        public float polygonPerSecond;
+		private NodeMeshConstructor nmc;
+		internal List<Triangle[]> triList = null;
+
+        public void Start()
+        {
+			nmc = FindObjectOfType<NodeMeshConstructor>();
+			triList = null;
+		}
+
+        public void Update()
+        {
+            if (nmc.meshCreated && triList == null)
+            {
+				StartCoroutine(ClipAllPolygons());
+            }
+        }
+
+		public IEnumerator ClipAllPolygons() 
+		{
+			triList = new List<Triangle[]>();
+			foreach (Polygon poly in nmc.polygons)
+			{
+				ClipPolygon(poly);
+				yield return new WaitForSeconds(polygonPerSecond);
+			}
+			Debug.Log("Clipping done");
+		}
+
+        private void OnDrawGizmos()
+        {
+            if (triList != null)
+            {
+                foreach (Triangle[] tris in triList)
+                {
+                    foreach (Triangle triangle in tris)
+                    {
+                        for (int i = 0; i < 3; i++)
+                        {
+							int j = i + 1;
+							if (j >= 3) j = 0;
+
+							Gizmos.color = Color.red;
+							Gizmos.DrawLine(triangle.vertices[i], triangle.vertices[j]);
+
+						}
+						
+                    }
+                }
+            }
+        }
+
+        void ClipPolygon(Polygon poly) 
 	    {
-	        List<Triangle> triangles = new List<Triangle>();
-	
+			List<Triangle> triangles = new List<Triangle>();
+
 			//If we just have three points, then we dont have to do all calculations
 			if (poly.vertices.Length == 3)
 			{
@@ -173,7 +223,7 @@ namespace Earclipping
 	
 	public class Triangle 
 	{
-	    Vector3[] vertices = new Vector3[3];
+	    public Vector3[] vertices = new Vector3[3];
 	
 		public Triangle(Vector3 a, Vector3 b, Vector3 c) 
 		{
@@ -228,14 +278,33 @@ namespace Earclipping
 		public Polygon(List<Line> nodeLines)
 		{
 			lines = nodeLines.ToArray();
-			vertices = new Vector3[lines.Length];
 
+			List<Line> tempLines = new List<Line>(lines);
 			List<Vector3> points = new List<Vector3>();
-			for (int i = 0; i < lines.Length; i++)
-			{
-				if (points.Count > 0 && points[points.Count - 1] != lines[i].a) points.Add(lines[i].a);
-				if (points.Count > 0 && points[points.Count - 1] != lines[i].b) points.Add(lines[i].b);
-			}
+
+			points.Add(tempLines[0].a);
+			points.Add(tempLines[0].b);
+			tempLines.RemoveAt(0);
+
+            while (tempLines.Count > 0)
+            {
+                for (int i = 0; i < tempLines.Count; i++)
+                {
+					if (tempLines[i].a == points[points.Count - 1])
+					{
+						points.Add(tempLines[i].b);
+						tempLines.RemoveAt(i);
+						break;
+					}
+					else if (tempLines[i].b == points[points.Count - 1])
+					{
+						points.Add(tempLines[i].a);
+						tempLines.RemoveAt(i);
+						break;
+					}
+				}
+            }
+            
 
 			vertices = points.ToArray();
 		}

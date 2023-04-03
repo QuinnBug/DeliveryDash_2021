@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Earclipping;
+using UnityEditor;
 
 public class NodeMeshConstructor : MonoBehaviour
 {
@@ -27,6 +28,7 @@ public class NodeMeshConstructor : MonoBehaviour
     public bool drawPolygons;
     [Space]
     public float timePerNode;
+    public bool meshCreated;
 
     // Start is called before the first frame update
     void Start()
@@ -36,12 +38,14 @@ public class NodeMeshConstructor : MonoBehaviour
         shapePoints = null;
         visitedNodes = null;
         finalPath = null;
+
+        meshCreated = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (nodeManager.nodeGenDone && visitedNodes == null)
+        if (nodeManager.nodeGenDone && visitedNodes == null && !meshCreated)
         {
             StartCoroutine(CreatePolygonFromNodes());
         }
@@ -190,9 +194,11 @@ public class NodeMeshConstructor : MonoBehaviour
 
             if(timePerNode > 0) yield return new WaitForSeconds(timePerNode);
         }
+
+        meshCreated = true;
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
         if (nodeManager != null && nodeManager.nodes != null && drawPoints)
         {
@@ -216,23 +222,22 @@ public class NodeMeshConstructor : MonoBehaviour
         {
             for (int i = 0; i < polygons.Count; i++)
             {
-                foreach (Line line in polygons[i].lines)
-                {
-                    Gizmos.color = Color.cyan;
-                    Gizmos.DrawLine(line.a, line.b);
-                }
-
-                foreach (Vector3 item in polygons[i].vertices)
-                {
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawSphere(item, 2.0f);
-                }
-
-                //for (int j = 1; j < polygons[i].vertices.Length; j++)
+                //foreach (Line line in polygons[i].lines)
                 //{
                 //    Gizmos.color = Color.cyan;
-                //    Gizmos.DrawLine(polygons[i].vertices[j], polygons[i].vertices[j - 1]);
+                //    Gizmos.DrawLine(line.a, line.b);
                 //}
+
+
+                for (int j = 0; j < polygons[i].vertices.Length; j++)
+                {
+                    if (j > 0)
+                    {
+                        Gizmos.color = Color.cyan;
+                        Gizmos.DrawLine(polygons[i].vertices[j], polygons[i].vertices[j - 1]);
+                    }
+                    //Handles.Label(polygons[i].vertices[j], j.ToString());
+                }
 
                 //Gizmos.color = Color.cyan;
                 //Gizmos.DrawLine(polygons[i].vertices[0], polygons[i].vertices[polygons[i].vertices.Length - 1]);
