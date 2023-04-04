@@ -18,13 +18,14 @@ public class MeshBuilder : MonoBehaviour
     void Start()
     {
         meshes = null;
+        roads = null;
         clipper = GetComponent<EarClipper>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (clipper.clippingDone)
+        if (clipper.clippingDone && meshes == null)
         {
             CreateMeshes(clipper.triList);
         }

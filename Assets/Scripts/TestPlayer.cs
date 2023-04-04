@@ -30,8 +30,6 @@ public class TestPlayer : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space)) rb.useGravity = !rb.useGravity;
 
-        Debug.Log(movement + " " + rotation);
-
         rb.AddForce(transform.forward * movement * speed);
         transform.Rotate(rotation * rotSpeed);
     }
