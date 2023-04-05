@@ -34,7 +34,7 @@ public class MeshBuilder : MonoBehaviour
         {
             spawnMesh = false;
             CreateRoads();
-            roadHolder.transform.Rotate(180, 0, 0);
+            //roadHolder.transform.Rotate(180, 0, 0);
         }
     }
 
@@ -72,6 +72,8 @@ public class MeshBuilder : MonoBehaviour
                     idxList.Add(verts.IndexOf(v));
                 }
             }
+            idxList.Reverse();
+
             meshes[i].vertices = verts.ToArray();
             meshes[i].triangles = idxList.ToArray();
             meshes[i].tangents = new Vector4[verts.Count];

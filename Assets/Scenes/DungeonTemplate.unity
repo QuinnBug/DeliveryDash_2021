@@ -189,7 +189,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c48d00931287a84b9ece90ab1b6e787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  drawTris: 0
+  drawTris: 1
+  doClip: 1
   timePerTri: 0
   timePerPoly: 0
   clippingDone: 0
@@ -792,8 +793,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testConnections: 0
-  showConnections: 0
-  showNodes: 0
+  showConnections: 1
+  showNodes: 1
   lSys:
     rules:
     - input: 111
@@ -823,10 +824,10 @@ MonoBehaviour:
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
   count: 15
-  length: 100
-  angle: 90
+  length: 75
+  angle: 30
   nodeLimitRange:
-    min: 75
+    min: 50
     max: 200
   nodesPerStep: 175
   timePerStep: 0
@@ -856,12 +857,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e7b09b4b007a84493a949705dd8ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minVDistance: 2
-  cornerDistance: 10
-  nodeRadius: 20
-  polygons: []
+  roadWidth: 10
+  nodeRadius: 15
   drawPoints: 0
-  drawLines: 0
-  drawPolygons: 0
+  drawPolygons: 1
   timePerNode: 0
-  meshCreated: 0

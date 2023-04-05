@@ -25,77 +25,11 @@ public class LNode_Manager : Singleton<LNode_Manager>
     [Space]
     internal List<Node> nodes = new List<Node>();
 
-    bool initDone = false;
     internal bool nodeGenDone = false;
-    bool testRunning = false;
 
     public void Start()
     {
         VisualizeSequence();
-    }
-
-    public void Update()
-    {
-        if (testConnections && initDone && !testRunning)
-        {
-            StartCoroutine(ConnectionTest());
-        }
-    }
-
-    private IEnumerator ConnectionTest()
-    {
-        //float delay = 1;
-        //testRunning = true;
-        //Road currentRoad = roads[0];
-        //RoadConnection connection = currentRoad.startConnectedRoads.Count > 0 ? RoadConnection.START : RoadConnection.END;
-        //Road nextRoad = currentRoad.GetRandomConnected(connection);
-
-        //Vector3 rayStart, rayEnd;
-
-        //while(testConnections)
-        //{
-        //    Debug.Log(currentRoad.gameObject.name + " -> " + nextRoad.gameObject.name + " @ " + connection.ToString());
-        //    rayStart = currentRoad.startPoint;
-        //    rayEnd = currentRoad.endPoint;
-
-        //    Debug.DrawLine(rayStart, rayEnd, Color.cyan, delay + 600);
-
-        //    if (nextRoad.startConnectedRoads.Count > 0 && nextRoad.startConnectedRoads.Contains(currentRoad)) 
-        //    {
-        //        connection = RoadConnection.END;
-        //    }
-        //    else if(nextRoad.endConnectedRoads.Count > 0 && nextRoad.endConnectedRoads.Contains(currentRoad))
-        //    {
-        //        connection = RoadConnection.START;
-        //    }
-        //    else
-        //    {
-        //        Debug.Log("There's an error here");
-        //    }
-
-        //    switch (connection)
-        //    {
-        //        case RoadConnection.START:
-        //            if (nextRoad.startConnectedRoads.Count == 0)
-        //            {
-        //                connection = RoadConnection.END;
-        //            }
-        //            break;
-        //        case RoadConnection.END:
-        //            if (nextRoad.endConnectedRoads.Count == 0)
-        //            {
-        //                connection = RoadConnection.START;
-        //            }
-        //            break;
-        //    }
-
-        //    currentRoad = nextRoad;
-        //    nextRoad = currentRoad.GetRandomConnected(connection);
-
-        //    yield return new WaitForSeconds(delay);
-        //}
-        //testRunning = false;
-        yield return new WaitForSeconds(1);
     }
 
     //This is the start point of generating a route
@@ -103,7 +37,6 @@ public class LNode_Manager : Singleton<LNode_Manager>
     {
         lSys.GenerateSequence(count);
         StartCoroutine(CreateRouteCoroutine(lSys.finalString));
-        initDone = true;
     }
 
     public IEnumerator CreateRouteCoroutine(string sequence)

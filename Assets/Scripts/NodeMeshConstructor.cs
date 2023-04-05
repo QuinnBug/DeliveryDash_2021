@@ -10,34 +10,23 @@ public class NodeMeshConstructor : MonoBehaviour
 {
     LNode_Manager nodeManager;
 
-    public float minVDistance;
-    public float cornerDistance;
+    public float roadWidth;
     public float nodeRadius;
-
     [Space]
-    public HashSet<Node> visitedNodes;
-    public List<Node> finalPath;
-    [Space]
-    internal List<Vector3> shapePoints = null;
-    internal List<Line> shapeLines = null;
-    public List<Polygon> polygons = null;
-    [Space]
-    //display variables
     public bool drawPoints;
-    public bool drawLines;
     public bool drawPolygons;
     [Space]
     public float timePerNode;
-    public bool meshCreated;
+
+    internal bool meshCreated;
+    internal List<Polygon> polygons = null;
 
     // Start is called before the first frame update
     void Start()
     {
         nodeManager = LNode_Manager.Instance;
 
-        shapePoints = null;
-        visitedNodes = null;
-        finalPath = null;
+        polygons = null;
 
         meshCreated = false;
     }
@@ -45,17 +34,16 @@ public class NodeMeshConstructor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (nodeManager.nodeGenDone && visitedNodes == null && !meshCreated)
+        if (nodeManager.nodeGenDone && polygons == null && !meshCreated)
         {
+            Debug.Log("A");
             StartCoroutine(CreatePolygonFromNodes());
         }
     }
 
     IEnumerator CreatePolygonFromNodes() 
     {
-        shapeLines = new List<Line>();
         polygons = new List<Polygon>();
-        visitedNodes = new HashSet<Node>();
 
         ConnectionSort cs = new ConnectionSort();
 
@@ -74,12 +62,12 @@ public class NodeMeshConstructor : MonoBehaviour
                 Vector3[] points = new Vector3[4];
 
                 //close points
-                points[0] = node.point + (rotation * (-Vector3.right * cornerDistance));
-                points[3] = node.point + (rotation * (Vector3.right * cornerDistance));
+                points[0] = node.point + (rotation * (-Vector3.right * roadWidth));
+                points[3] = node.point + (rotation * (Vector3.right * roadWidth));
 
                 //middle points
-                points[1] = farPoint + (rotation * (-Vector3.right * cornerDistance));
-                points[2] = farPoint + (rotation * (Vector3.right * cornerDistance));
+                points[1] = farPoint + (rotation * (-Vector3.right * roadWidth));
+                points[2] = farPoint + (rotation * (Vector3.right * roadWidth));
 
                 Line[] lines = new Line[3];
 
@@ -190,11 +178,11 @@ public class NodeMeshConstructor : MonoBehaviour
             }
 
             polygons.Add(new Polygon(nodeLines, node.point));
-            shapeLines.AddRange(nodeLines);
 
             if(timePerNode > 0) yield return new WaitForSeconds(timePerNode);
         }
 
+        Debug.Log("Mesh Created");
         meshCreated = true;
     }
 
@@ -209,14 +197,14 @@ public class NodeMeshConstructor : MonoBehaviour
             }
         }
 
-        if (shapeLines != null && drawLines)
-        {
-            for (int i = 0; i < shapeLines.Count; i++)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawLine(shapeLines[i].a, shapeLines[i].b);
-            }
-        }
+        //if (shapeLines != null && drawLines)
+        //{
+        //    for (int i = 0; i < shapeLines.Count; i++)
+        //    {
+        //        Gizmos.color = Color.green;
+        //        Gizmos.DrawLine(shapeLines[i].a, shapeLines[i].b);
+        //    }
+        //}
 
         if (polygons != null && drawPolygons)
         {

@@ -12,6 +12,8 @@ namespace Earclipping
 	{
 		public bool drawTris;
 		[Space]
+        public bool doClip;
+		[Space]
         public float timePerTri;
         public float timePerPoly;
 		[Space]
@@ -33,9 +35,9 @@ namespace Earclipping
 
         public void Update()
         {
-            if (nmc.meshCreated && triList == null)
+            if (nmc.meshCreated && triList == null && !clippingDone && doClip)
             {
-				clippingDone = false;
+				doClip = false;
 				ClipAllPolygons();
             }
         }
@@ -75,10 +77,18 @@ namespace Earclipping
 
         IEnumerator ClipPolygon(Polygon[] polygons) 
 	    {
-            foreach (Polygon poly in polygons)
-            {
-				List<Triangle> triangles = new List<Triangle>();
+			List<Triangle> triangles = new List<Triangle>();
+			vertices = new List<Vertex>();
+			List<Vertex> earVertices = new List<Vertex>();
 
+			Vertex earVertex;
+			Vertex earVertexPrev;
+			Vertex earVertexNext;
+			Triangle newTriangle;
+
+			foreach (Polygon poly in polygons)
+            {
+				triangles.Clear();
 				//If we just have three points, then we dont have to do all calculations
 				if (poly.vertices.Length == 3)
 				{
@@ -88,8 +98,7 @@ namespace Earclipping
 				}
 
 				//Step 1. Store the vertices in a list and we also need to know the next and prev vertex
-				vertices = new List<Vertex>();
-
+				vertices.Clear();
 				for (int i = 0; i < poly.vertices.Length; i++)
 				{
 					vertices.Add(new Vertex(poly.vertices[i]));
@@ -98,13 +107,8 @@ namespace Earclipping
 				//Find the next and previous vertex
 				for (int i = 0; i < vertices.Count; i++)
 				{
-					int nextPos = Lists.ClampListIndex(i + 1, vertices.Count);
-
-					int prevPos = Lists.ClampListIndex(i - 1, vertices.Count);
-
-					vertices[i].prev = vertices[prevPos];
-
-					vertices[i].next = vertices[nextPos];
+					vertices[i].prev = vertices[Lists.ClampListIndex(i - 1, vertices.Count)];
+					vertices[i].next = vertices[Lists.ClampListIndex(i + 1, vertices.Count)];
 				}
 
 				//Step 2. Find the reflex (concave) and convex vertices, and ear vertices
@@ -114,16 +118,19 @@ namespace Earclipping
 				}
 
 				//Have to find the ears after we have found if the vertex is reflex or convex
-				List<Vertex> earVertices = new List<Vertex>();
-
+				earVertices.Clear();
 				for (int i = 0; i < vertices.Count; i++)
 				{
 					IsVertexEar(vertices[i], vertices, earVertices, poly);
 				}
 
+				int loopCount = 0;
 				//Step 3. Triangulate!
+				
 				while (true)
 				{
+					loopCount++;
+
 					//This means we have just one triangle left
 					if (vertices.Count == 3)
 					{
@@ -134,11 +141,11 @@ namespace Earclipping
 					else if (vertices.Count < 3 || earVertices.Count == 0) break;
 
 					//Make a triangle of the first ear
-					Vertex earVertex = earVertices[0];
-					Vertex earVertexPrev = earVertex.prev;
-					Vertex earVertexNext = earVertex.next;
+					earVertex = earVertices[0];
+					earVertexPrev = earVertex.prev;
+					earVertexNext = earVertex.next;
 
-					Triangle newTriangle = new Triangle(earVertex.point, earVertexPrev.point, earVertexNext.point);
+					newTriangle = new Triangle(earVertex.point, earVertexPrev.point, earVertexNext.point);
 					
 					//newTriangle.DebugDraw(Color.blue, timePerTri * 0.95f);
 
@@ -166,8 +173,6 @@ namespace Earclipping
 					IsVertexEar(earVertexPrev, vertices, earVertices, poly);
 					IsVertexEar(earVertexNext, vertices, earVertices, poly);
 				}
-
-				//Debug.Log(triangles.Count);
 
 				triList.Add(triangles.ToArray());
                 if (timePerPoly > 0) yield return new WaitForSeconds(timePerPoly);
@@ -323,21 +328,30 @@ namespace Earclipping
 
             while (tempLines.Count > 0)
             {
+				bool found = false;
                 for (int i = 0; i < tempLines.Count; i++)
                 {
 					if (tempLines[i].a == points[points.Count - 1])
 					{
 						points.Add(tempLines[i].b);
 						tempLines.RemoveAt(i);
+						found = true;
 						break;
 					}
 					else if (tempLines[i].b == points[points.Count - 1])
 					{
 						points.Add(tempLines[i].a);
 						tempLines.RemoveAt(i);
+						found = true;
 						break;
 					}
 				}
+
+                if (!found)
+                {
+					Debug.Log("This polygon has failed to create");
+					break;
+                }
             }
             
 			vertices = points.ToArray();
