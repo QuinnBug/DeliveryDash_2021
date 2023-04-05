@@ -823,9 +823,9 @@ MonoBehaviour:
     axiom: o
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
-  count: 15
+  count: 8
   length: 75
-  angle: 30
+  angle: 90
   nodeLimitRange:
     min: 50
     max: 200
@@ -857,7 +857,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e7b09b4b007a84493a949705dd8ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roadWidth: 10
+  roadWidth: 8
   nodeRadius: 15
   drawPoints: 0
   drawPolygons: 1

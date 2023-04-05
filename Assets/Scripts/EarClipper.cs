@@ -326,9 +326,15 @@ namespace Earclipping
 			points.Add(tempLines[0].b);
 			tempLines.RemoveAt(0);
 
+
             while (tempLines.Count > 0)
             {
 				bool found = false;
+
+				int closestIdx = 0;
+				bool closeA = false;
+				float closestDist = 9999999999;
+
                 for (int i = 0; i < tempLines.Count; i++)
                 {
 					if (tempLines[i].a == points[points.Count - 1])
@@ -345,12 +351,28 @@ namespace Earclipping
 						found = true;
 						break;
 					}
+                    else if (Vector3.Distance(tempLines[i].a, points[points.Count - 1]) < closestDist)
+					{
+						closeA = true;
+						closestIdx = i;
+						closestDist = Vector3.Distance(tempLines[i].a, points[points.Count - 1]);
+
+					}
+                    else if (Vector3.Distance(tempLines[i].b, points[points.Count - 1]) < closestDist)
+                    {
+						closeA = false;
+						closestIdx = i;
+						closestDist = Vector3.Distance(tempLines[i].b, points[points.Count - 1]);
+					}
 				}
 
                 if (!found)
                 {
-					Debug.Log("This polygon has failed to create");
-					break;
+					points.Add(closeA ? tempLines[closestIdx].a : tempLines[closestIdx].b);
+					points.Add(!closeA ? tempLines[closestIdx].a : tempLines[closestIdx].b);
+
+					tempLines.RemoveAt(closestIdx);
+					Debug.Log("no identical line in tLine " + closestIdx);
                 }
             }
             
