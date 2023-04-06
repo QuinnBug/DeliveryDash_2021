@@ -49,6 +49,8 @@ public class NodeMeshConstructor : MonoBehaviour
 
         foreach (Node node in nodeManager.nodes)
         {
+            if (node.connections.Count == 0) continue;
+
             cs.current = node;
             cs.start = node.connections[0];
 
@@ -153,7 +155,7 @@ public class NodeMeshConstructor : MonoBehaviour
                     {
                         //Debug.Log("j - i = " + j + " - " + i + " : " + lineCount);
 
-                        int m = 0;
+                        int m = -1;
                         for (int k = i; k < lineCount; k++)
                         {
                             if (nodeLines[k] == nodeLines[i] || nodeLines[k] == nodeLines[j]) continue;
@@ -164,15 +166,22 @@ public class NodeMeshConstructor : MonoBehaviour
                             }
                         }
 
-                        if (nodeLines[i].CloserToA(node.point)) nodeLines[i].a = intersection;
-                        else nodeLines[i].b = intersection;
+                        if (m == -1)
+                        {
+                            Debug.Log("There's an issue here");
+                        }
+                        else
+                        {
+                            if (nodeLines[i].CloserToA(node.point)) nodeLines[i].a = intersection;
+                            else nodeLines[i].b = intersection;
 
-                        if (nodeLines[j].CloserToA(node.point)) nodeLines[j].a = intersection;
-                        else nodeLines[j].b = intersection;
+                            if (nodeLines[j].CloserToA(node.point)) nodeLines[j].a = intersection;
+                            else nodeLines[j].b = intersection;
 
-                        nodeLines.RemoveAt(m);
-                        lineCount--;
-                        j--;
+                            nodeLines.RemoveAt(m);
+                            lineCount--;
+                            j--;
+                        }
                     }
                 }
             }
@@ -197,26 +206,10 @@ public class NodeMeshConstructor : MonoBehaviour
             }
         }
 
-        //if (shapeLines != null && drawLines)
-        //{
-        //    for (int i = 0; i < shapeLines.Count; i++)
-        //    {
-        //        Gizmos.color = Color.green;
-        //        Gizmos.DrawLine(shapeLines[i].a, shapeLines[i].b);
-        //    }
-        //}
-
         if (polygons != null && drawPolygons)
         {
             for (int i = 0; i < polygons.Count; i++)
             {
-                //foreach (Line line in polygons[i].lines)
-                //{
-                //    Gizmos.color = Color.cyan;
-                //    Gizmos.DrawLine(line.a, line.b);
-                //}
-
-
                 for (int j = 0; j < polygons[i].vertices.Length; j++)
                 {
                     if (j > 0)
@@ -226,9 +219,6 @@ public class NodeMeshConstructor : MonoBehaviour
                     }
                     //Handles.Label(polygons[i].vertices[j], j.ToString());
                 }
-
-                //Gizmos.color = Color.cyan;
-                //Gizmos.DrawLine(polygons[i].vertices[0], polygons[i].vertices[polygons[i].vertices.Length - 1]);
             }
         }
     }

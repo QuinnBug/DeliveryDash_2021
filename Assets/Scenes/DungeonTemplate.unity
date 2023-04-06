@@ -189,7 +189,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c48d00931287a84b9ece90ab1b6e787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  drawTris: 1
+  drawTris: 0
   doClip: 1
   timePerTri: 0
   timePerPoly: 0
@@ -823,9 +823,9 @@ MonoBehaviour:
     axiom: o
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
-  count: 8
+  count: 15
   length: 75
-  angle: 90
+  angle: 45
   nodeLimitRange:
     min: 50
     max: 200
@@ -857,8 +857,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e7b09b4b007a84493a949705dd8ab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roadWidth: 8
+  roadWidth: 10
   nodeRadius: 15
   drawPoints: 0
-  drawPolygons: 1
+  drawPolygons: 0
   timePerNode: 0

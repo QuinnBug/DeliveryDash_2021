@@ -118,18 +118,43 @@ public class LNode_Manager : Singleton<LNode_Manager>
 
     private Node AddNode(Vector3 pos, Node parent)
     {
+        bool crossover = false;
+
+        Node newSpace = new Node(pos);
+        Line connLine = new Line(pos, parent.point);
         foreach (Node item in nodes)
         {
             if (pos == item.point || Vector3.Distance(pos, item.point) <= nodeLimitRange.min)
             {
-                //Debug.Log("No new node needed");
                 parent.AddConnection(item);
                 return item;
             }
         }
 
-        //Debug.Log("Create Node");
-        Node newSpace = new Node(pos, parent);
+        foreach (Node item in nodes)
+        {
+            Line testLine = new Line(item.point, pos);
+            for (int i = 0; i < item.connections.Count; i++)
+            {
+                Node otherItem = item.connections[i];
+                testLine.b = otherItem.point;
+                if (connLine.DoesIntersect(testLine, out Vector3 intersection))
+                {
+                    item.RemoveConnection(otherItem);
+                    i--;
+
+                    //item.AddConnection(parent);
+                    //item.AddConnection(newSpace);
+
+                    //otherItem.AddConnection(parent);
+                    //otherItem.AddConnection(newSpace);
+
+                    //crossover = true;
+                }
+            }
+        }
+
+        if(!crossover) newSpace.AddConnection(parent);
         nodes.Add(newSpace);
         return newSpace;
     }
@@ -206,6 +231,22 @@ public class Node
             node.connections.Add(this);
         }
 
+    }
+
+    public void RemoveConnection(Node node) 
+    {
+        if (node == this || !connections.Contains(node))
+            return;
+        else
+        {
+            node.connections.Remove(this);
+            connections.Remove(node);
+        }
+    }
+
+    public void RemoveConnection(int i) 
+    {
+        RemoveConnection(connections[i]);
     }
 
     public void SortConnections()

@@ -372,7 +372,7 @@ namespace Earclipping
 					points.Add(!closeA ? tempLines[closestIdx].a : tempLines[closestIdx].b);
 
 					tempLines.RemoveAt(closestIdx);
-					Debug.Log("no identical line in tLine " + closestIdx);
+					Debug.Log("no identical line in tLine " + center);
                 }
             }
             
