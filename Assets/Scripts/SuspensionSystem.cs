@@ -11,6 +11,7 @@ public class Wheel
 
     public Vector3 offset;
     public SuspensionSettings settings;
+    public LayerMask groundMask;
 
     private float minLength;
     private float maxLength;
@@ -71,6 +72,7 @@ public class SuspensionSystem : MonoBehaviour
 
     public Wheel[] wheels;
     public SuspensionSettings baseSettings;
+    public LayerMask groundMask = new LayerMask();
 
     // Start is called before the first frame update
     void Start()

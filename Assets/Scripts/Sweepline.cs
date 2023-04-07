@@ -384,14 +384,10 @@ public class Line
 
     //this updates the type and makes sure that a is leftmost or topmost based on type
     public void UpdateType() 
-    {   
-
-        if (Mathf.Abs(a.x - b.x) < 0.001f)
-        {
-            type = LineType.VERTICAL;
-            
-        }
+    {
+        if (Mathf.Abs(a.x - b.x) < 0.001f) type = LineType.VERTICAL;
         else if (Mathf.Abs(a.z - b.z) < 0.001f) type = LineType.HORIZONTAL;
+        //else if (a.z == b.z) type = LineType.HORIZONTAL;
         else type = LineType.REGULAR;
     }
 
@@ -414,19 +410,9 @@ public class Line
 
     public Line(Vector3 start, Vector3 end)
     {
-        //we use the capital A to avoid calling UpdateType more than needed
-
-        //A = (start.x <= end.x) ? start : end;
-        //b = (start.x <= end.x) ? end : start;
-
-        //if (type == LineType.VERTICAL)
-        //{
-        //    A = (start.z >= end.z) ? start : end;
-        //    b = (start.z >= end.z) ? end : start;
-        //}
-
         A = start;
-        b = end;
+        B = end;
+        UpdateType();
     }
 
     public Line(Vector3 start, Vector3 end, int i) : this(start, end)
@@ -561,8 +547,10 @@ public class Line
         float[] equationB = lineB.Equation();
 
         float slopeDiff = equationA[0] - equationB[0];
-        if (Mathf.Abs(slopeDiff) <= 0.001f)
+        if (Mathf.Abs(slopeDiff) <= 0.001f &&
+            (!(lineB.type == LineType.VERTICAL && type == LineType.HORIZONTAL) && !(lineB.type == LineType.HORIZONTAL && type == LineType.VERTICAL)))
         {
+            //Debug.Log(type + " " + equationA[0] + " > " + lineB.type + " " + equationB[0]);
             //Debug.Log("These lines are parallel");
             return false;
         }
@@ -572,14 +560,21 @@ public class Line
             Line verticalLine = type == LineType.VERTICAL ? this : lineB;
             Line otherLine = type == LineType.VERTICAL ? lineB : this;
 
-            intersection = new Vector3(verticalLine.a.x, intersection.y, otherLine.GetYAtXOnLine(verticalLine.a.x));
+            if (otherLine.type == LineType.HORIZONTAL)
+            {
+                intersection = new Vector3(verticalLine.a.x, intersection.y, otherLine.a.z);
+            }
+            else
+            {
+                intersection = new Vector3(verticalLine.a.x, intersection.y, otherLine.GetYAtXOnLine(verticalLine.a.x));
+            }
+
         }
         else
         {
             intersection.x = (equationB[1] - equationA[1]) / (equationA[0] - equationB[0]);
             intersection.z = -1 * ((equationA[1] * equationB[0] - equationB[1] * equationA[0]) / (equationA[0] - equationB[0]));
         }
-
 
 
         //if the intersection is not within the range of either line then return false;

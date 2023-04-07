@@ -8,7 +8,7 @@ using UnityEditor;
 
 public class NodeMeshConstructor : MonoBehaviour
 {
-    LNode_Manager nodeManager;
+    public LNode_Manager nodeManager;
 
     public float roadWidth;
     public float nodeRadius;
@@ -24,8 +24,6 @@ public class NodeMeshConstructor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        nodeManager = LNode_Manager.Instance;
-
         polygons = null;
 
         meshCreated = false;
@@ -36,7 +34,6 @@ public class NodeMeshConstructor : MonoBehaviour
     {
         if (nodeManager.nodeGenDone && polygons == null && !meshCreated)
         {
-            Debug.Log("A");
             StartCoroutine(CreatePolygonFromNodes());
         }
     }
@@ -195,6 +192,24 @@ public class NodeMeshConstructor : MonoBehaviour
         meshCreated = true;
     }
 
+    private void OnValidate()
+    {
+        if(nodeManager != null) ValueClamps(nodeManager.clampValues);
+    }
+
+    public void ValueClamps(bool forceUpdate = false)
+    {
+        if (nodeRadius >= (nodeManager.nodeLimitRange.min / 2)*0.75f || forceUpdate)
+        {
+            //nodeRadius = (nodeManager.nodeLimitRange.min / 2) * 0.75f;
+        }
+
+        if (roadWidth > nodeRadius * 0.75f || forceUpdate)
+        {
+            //roadWidth = nodeRadius * 0.75f;
+        }
+    }
+
     private void OnDrawGizmos()
     {
         if (nodeManager != null && nodeManager.nodes != null && drawPoints)
@@ -220,84 +235,6 @@ public class NodeMeshConstructor : MonoBehaviour
                     //Handles.Label(polygons[i].vertices[j], j.ToString());
                 }
             }
-        }
-    }
-
-    public class Bounds 
-    {
-        public Vector3[] corners = new Vector3[4];
-        
-        public Bounds(Vector3[] points) 
-        {
-            corners = points;
-        }
-
-        public Vector3[] GetSegment(int startPoint) 
-        {
-            int endPoint = startPoint + 1;
-            if (endPoint >= corners.Length) endPoint = 0;
-
-            return new Vector3[] { corners[startPoint], corners[endPoint] };
-        }
-
-        public Vector3 GetOverlap(Vector3[] otherLine) 
-        {
-            for (int i = 0; i < corners.Length; i++)
-            {
-                Vector3[] currentLine = GetSegment(i);
-                if (DoesIntersect(otherLine, currentLine)) 
-                {
-                    //Line1
-                    float A1 = otherLine[1].z - otherLine[0].z;
-                    float B1 = otherLine[0].x - otherLine[1].x;
-                    float C1 = A1 * otherLine[0].x + B1 * otherLine[0].z;
-
-                    //Line2
-                    float A2 = currentLine[1].z - currentLine[0].z;
-                    float B2 = currentLine[0].x - currentLine[1].x;
-                    float C2 = A1 * currentLine[0].x + B1 * currentLine[0].z;
-
-                    float det = A1 * B2 - A2 * B1;
-                    if (det != 0)
-                    {
-                        float x = (B2 * C1 - B1 * C2) / det;
-                        float z = (A1 * C2 - A2 * C1) / det;
-                        return new Vector3(x, 0, z);
-                    }
-                }
-            }
-
-            return Vector3.negativeInfinity;
-        }
-        //https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
-        
-        public bool CounterClockwisePoints(Vector3 a, Vector3 b, Vector3 c) 
-        {
-            return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
-        }
-
-        public bool DoesIntersect(Vector3[] lineA, Vector3[] lineB) 
-        {
-            return CounterClockwisePoints(lineA[0], lineB[0], lineB[1]) != CounterClockwisePoints(lineA[1], lineB[0], lineB[1]) &&
-                   CounterClockwisePoints(lineA[0], lineA[1], lineB[0]) != CounterClockwisePoints(lineA[0], lineA[1], lineB[1]);
-        }
-    }
-
-    [System.Serializable]
-    public struct NodePair 
-    {
-        public Node from;
-        public Node to;
-
-        public NodePair(Node a, Node b) 
-        {
-            from = a;
-            to = b;
-        }
-
-        public NodePair Inverse()
-        {
-            return new NodePair(to, from);
         }
     }
 

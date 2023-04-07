@@ -7,18 +7,18 @@ public class Player_Manager : Singleton<Player_Manager>
 {
     public PlayerStats stats;
 
-    internal bool active = false;
+    public bool active = false;
     internal Rigidbody rb;
     internal Car_Movement movement;
     internal Turret turret;
-    [Space]
-    public UiPointer arrow = new UiPointer();
+    //[Space]
+    //public UiPointer arrow = new UiPointer();
 
     public void Start()
     {
-        Event_Manager.Instance._OnBuildingsGenerated.AddListener(Activate);
+        //Event_Manager.Instance._OnBuildingsGenerated.AddListener(Activate);
 
-        arrow.transform = transform;
+        //arrow.transform = transform;
         rb = GetComponent<Rigidbody>();
         movement = GetComponent<Car_Movement>();
         turret = GetComponentInChildren<Turret>();
@@ -42,7 +42,7 @@ public class Player_Manager : Singleton<Player_Manager>
         movement.fuelDrain = stats.fuelDrain;
 
         //arrow update
-        arrow.Update(active);
+        //arrow.Update(active);
     }
 
     public void Activate()
@@ -101,9 +101,10 @@ public class UiPointer
 
     bool CheckPointerState()
     {
-        if (Delivery_Manager.Instance.targets.Count == 0) return false;
-
-        return true;
+        //if (Delivery_Manager.Instance.targets.Count == 0) return false;
+        //
+        //return true;
+        return false;
     }
 }
 

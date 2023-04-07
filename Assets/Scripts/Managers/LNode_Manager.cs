@@ -9,20 +9,21 @@ using Random = UnityEngine.Random;
 /// </summary>
 public class LNode_Manager : Singleton<LNode_Manager>
 {
-    public bool testConnections = false;
+    [Space]
     public bool showConnections = false;
     public bool showNodes = false;
     [Space]
     public LSystem lSys = new LSystem();
     public int count = 5;
     [Space]
+    public bool clampValues = false;
     public int length;
+    [Space]
     public int angle;
     //below the minimum the nodes combine, above the maximum connections are broken
     public Range nodeLimitRange;
     public int nodesPerStep = 50;
     public float timePerStep;
-    [Space]
     internal List<Node> nodes = new List<Node>();
 
     internal bool nodeGenDone = false;
@@ -121,19 +122,22 @@ public class LNode_Manager : Singleton<LNode_Manager>
         bool crossover = false;
 
         Node newSpace = new Node(pos);
-        Line connLine = new Line(pos, parent.point);
         foreach (Node item in nodes)
         {
             if (pos == item.point || Vector3.Distance(pos, item.point) <= nodeLimitRange.min)
             {
                 parent.AddConnection(item);
-                return item;
+                //return item;
+                newSpace = item;
+                break;
             }
         }
 
+        Line connLine = new Line(newSpace.point, parent.point);
+        Line testLine = new Line(Vector3.zero, Vector3.zero);
         foreach (Node item in nodes)
         {
-            Line testLine = new Line(item.point, pos);
+            testLine.a = item.point;
             for (int i = 0; i < item.connections.Count; i++)
             {
                 Node otherItem = item.connections[i];
@@ -161,14 +165,19 @@ public class LNode_Manager : Singleton<LNode_Manager>
 
     private void OnValidate()
     {
-        if (nodeLimitRange.min >= length)
+        ValueClamps(clampValues);
+    }
+
+    public void ValueClamps(bool forceUpdate = false) 
+    {
+        if (nodeLimitRange.min >= length / 2.0f || forceUpdate)
         {
-            nodeLimitRange.min = length - 5;
+            nodeLimitRange.min = length / 2.0f;
         }
 
-        if (nodeLimitRange.max <= length)
+        if (nodeLimitRange.max <= length * 2.0f || forceUpdate)
         {
-            nodeLimitRange.max = nodeLimitRange.min + length + 5;
+            nodeLimitRange.max = length * 2.0f;
         }
     }
 
