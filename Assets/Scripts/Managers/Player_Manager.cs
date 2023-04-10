@@ -66,12 +66,13 @@ public class UiPointer
 
     private Vector2 pointerPosition = Vector2.zero;
     internal Transform transform;
+    Vector3 targetPos;
 
     public void Update(bool active)
     {
         pointer.enabled = CheckPointerState();
 
-        if (active && Delivery_Manager.Instance.targets.Count > 0)
+        if (active)
         {
             Rotation();
             Position();
@@ -81,7 +82,6 @@ public class UiPointer
 
     void Rotation()
     {
-        Vector3 targetPos = Delivery_Manager.Instance.targets[0].meshCenter;
         Vector3 diff = targetPos - transform.position;
         diff.y = 0;
         diff.Normalize();
@@ -92,7 +92,6 @@ public class UiPointer
 
     void Position()
     {
-        Vector3 targetPos = Delivery_Manager.Instance.targets[0].meshCenter;
         Vector3 diff = (targetPos - transform.position);
         Vector2 flatDiff = new Vector2(Mathf.Clamp(diff.x, xScreenRange.min, xScreenRange.max), Mathf.Clamp(diff.z, yScreenRange.min, yScreenRange.max));
         pointer.transform.localPosition = Vector3.Lerp(pointer.transform.localPosition, flatDiff, moveSpeed * Time.deltaTime);

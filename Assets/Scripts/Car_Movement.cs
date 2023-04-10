@@ -49,10 +49,8 @@ public class Car_Movement : MonoBehaviour
             return;
         }
 
-        string groundedStatus = "Grounded : ";
         foreach (Wheel wheel in suspension.wheels)
         {
-            groundedStatus += " " + wheel.grounded.ToString();
             if (wheel.grounded)
             {
                 rb.AddForce(movementInput * moveSpeed);
@@ -60,8 +58,6 @@ public class Car_Movement : MonoBehaviour
                 break;
             }
         }
-
-        Debug.Log(groundedStatus);
     }
 
     public void Rotation() 
