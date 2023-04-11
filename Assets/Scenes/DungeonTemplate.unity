@@ -500,7 +500,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 381227246}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 20, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1191,8 +1191,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a12f3a51a95fd24d885f70d2ba5fe53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showConnections: 1
-  showNodes: 1
+  showConnections: 0
+  showNodes: 0
   lSys:
     rules:
     - input: 111
@@ -1218,10 +1218,10 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: o
+    axiom: ff
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
-  count: 15
+  count: 18
   clampValues: 1
   length: 75
   angle: 45
@@ -1259,6 +1259,9 @@ MonoBehaviour:
   nodeManager: {fileID: 2109595310}
   roadWidth: 10
   nodeRadius: 20
+  doubleSided: 0
+  extrude: 1
+  extrusionDepth: -10
   drawPoints: 0
   drawPolygons: 0
   timePerNode: 0

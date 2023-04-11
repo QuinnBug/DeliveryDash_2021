@@ -682,6 +682,11 @@ public class Line
         intersections = iPoints.ToArray();
         return true;
     }
+
+    internal void DebugDraw(Color color, float duration)
+    {
+        Debug.DrawLine(a, b, color, duration);
+    }
 }
 
 public class Event 

@@ -6,79 +6,79 @@ using Utility;
 using UnityEditor;
 
 
-namespace Earclipping 
+namespace Earclipping
 {
 	public class EarClipper : MonoBehaviour
 	{
 		public bool drawTris;
 		[Space]
-        public bool doClip;
+		public bool doClip;
 		[Space]
-        public float timePerTri;
-        public float timePerPoly;
+		public float timePerTri;
+		public float timePerPoly;
 		[Space]
 		public List<Triangle[]> triList = null;
-        public bool clippingDone;
+		public bool clippingDone;
 
 		internal NodeMeshConstructor nmc;
 		List<Vertex> vertices;
 
 		Vertex displayEarTip = null;
 
-        public void Start()
-        {
+		public void Start()
+		{
 			displayEarTip = null;
 			nmc = FindObjectOfType<NodeMeshConstructor>();
 			triList = null;
-			clippingDone = false;
+			//clippingDone = false;
 		}
 
-        public void Update()
-        {
-            if (nmc.meshCreated && triList == null && !clippingDone && doClip)
-            {
+		public void Update()
+		{
+			if (nmc.meshCreated && triList == null && !clippingDone && doClip)
+			{
 				doClip = false;
-				ClipAllPolygons();
-            }
-        }
+				//ClipAllPolygonCoRoutine();
+			}
+		}
 
-		public void ClipAllPolygons() 
+		public void ClipAllPolygonCoRoutine()
 		{
 			triList = new List<Triangle[]>();
-			StartCoroutine(ClipPolygon(nmc.polygons.ToArray()));
+			StartCoroutine(ClipPolygons(nmc.polygons.ToArray()));
 		}
 
-        private void OnDrawGizmos()
-        {
-            if (triList != null && drawTris)
-            {
-                foreach (Triangle[] tris in triList)
-                {
-                    foreach (Triangle triangle in tris)
-                    {
-                        for (int i = 0; i < 3; i++)
-                        {
+		private void OnDrawGizmos()
+		{
+			if (triList != null && drawTris)
+			{
+				foreach (Triangle[] tris in triList)
+				{
+					foreach (Triangle triangle in tris)
+					{
+						for (int i = 0; i < 3; i++)
+						{
 							int j = Lists.ClampListIndex(i + 1, 3);
 
 							Gizmos.color = Color.red;
 							Gizmos.DrawLine(triangle.vertices[i], triangle.vertices[j]);
 						}
-                    }
-                }
-            }
+					}
+				}
+			}
 
-            if (displayEarTip != null && displayEarTip.prev != null && displayEarTip.next != null)
-            {
+			if (displayEarTip != null && displayEarTip.prev != null && displayEarTip.next != null)
+			{
 				Handles.Label(displayEarTip.point, displayEarTip.isReflex.ToString() + " - 1");
 				Handles.Label(displayEarTip.prev.point, displayEarTip.prev.isReflex.ToString() + " - 0");
 				Handles.Label(displayEarTip.next.point, displayEarTip.next.isReflex.ToString() + " - 2");
-            }
+			}
 		}
 
-        IEnumerator ClipPolygon(Polygon[] polygons) 
-	    {
-			List<Triangle> triangles = new List<Triangle>();
+		public Triangle[] GetTriangles(Polygon poly)
+		{
 			vertices = new List<Vertex>();
+			List<Triangle> triangles = new List<Triangle>();
 			List<Vertex> earVertices = new List<Vertex>();
 
 			Vertex earVertex;
@@ -86,101 +86,99 @@ namespace Earclipping
 			Vertex earVertexNext;
 			Triangle newTriangle;
 
+			triangles.Clear();
+			//If we just have three points, then we dont have to do all calculations
+			if (poly.vertices.Length == 3)
+			{
+				triangles.Add(new Triangle(poly.vertices[0], poly.vertices[1], poly.vertices[2]));
+				return triangles.ToArray();
+			}
+
+			//Step 1. Store the vertices in a list and we also need to know the next and prev vertex
+			vertices.Clear();
+			for (int i = 0; i < poly.vertices.Length; i++)
+			{
+				vertices.Add(new Vertex(poly.vertices[i]));
+			}
+
+			//Find the next and previous vertex
+			for (int i = 0; i < vertices.Count; i++)
+			{
+				vertices[i].prev = vertices[Lists.ClampListIndex(i - 1, vertices.Count)];
+				vertices[i].next = vertices[Lists.ClampListIndex(i + 1, vertices.Count)];
+			}
+
+			//Step 2. Find the reflex (concave) and convex vertices, and ear vertices
+			for (int i = 0; i < vertices.Count; i++)
+			{
+				CheckIfReflexOrConvex(vertices[i], poly.center);
+			}
+
+			//Have to find the ears after we have found if the vertex is reflex or convex
+			earVertices.Clear();
+			for (int i = 0; i < vertices.Count; i++)
+			{
+				IsVertexEar(vertices[i], vertices, earVertices, poly);
+			}
+
+			int loopCount = 0;
+			//Step 3. Triangulate!
+
+			while (true)
+			{
+				loopCount++;
+
+				//This means we have just one triangle left
+				if (vertices.Count == 3)
+				{
+					//The final triangle
+					triangles.Add(new Triangle(vertices[0].point, vertices[0].prev.point, vertices[0].next.point));
+					break;
+				}
+				else if (vertices.Count < 3 || earVertices.Count == 0) break;
+
+				//Make a triangle of the first ear
+				earVertex = earVertices[0];
+				earVertexPrev = earVertex.prev;
+				earVertexNext = earVertex.next;
+
+				newTriangle = new Triangle(earVertex.point, earVertexPrev.point, earVertexNext.point);
+
+				triangles.Add(newTriangle);
+
+				//Remove the vertex from the lists
+				earVertices.Remove(earVertex);
+				vertices.Remove(earVertex);
+
+				//Update the previous vertex and next vertex
+				earVertexPrev.next = earVertexNext;
+				earVertexNext.prev = earVertexPrev;
+
+				//...see if we have found a new ear by investigating the two vertices that were part of the ear
+				CheckIfReflexOrConvex(earVertexPrev, poly.center);
+				CheckIfReflexOrConvex(earVertexNext, poly.center);
+
+				earVertices.Remove(earVertexPrev);
+				earVertices.Remove(earVertexNext);
+
+				IsVertexEar(earVertexPrev, vertices, earVertices, poly);
+				IsVertexEar(earVertexNext, vertices, earVertices, poly);
+			}
+
+			return triangles.ToArray();
+		}
+
+		IEnumerator ClipPolygons(Polygon[] polygons)
+		{
 			foreach (Polygon poly in polygons)
-            {
-				triangles.Clear();
-				//If we just have three points, then we dont have to do all calculations
-				if (poly.vertices.Length == 3)
-				{
-					triangles.Add(new Triangle(poly.vertices[0], poly.vertices[1], poly.vertices[2]));
-					triList.Add(triangles.ToArray());
-					yield break;
-				}
-
-				//Step 1. Store the vertices in a list and we also need to know the next and prev vertex
-				vertices.Clear();
-				for (int i = 0; i < poly.vertices.Length; i++)
-				{
-					vertices.Add(new Vertex(poly.vertices[i]));
-				}
-
-				//Find the next and previous vertex
-				for (int i = 0; i < vertices.Count; i++)
-				{
-					vertices[i].prev = vertices[Lists.ClampListIndex(i - 1, vertices.Count)];
-					vertices[i].next = vertices[Lists.ClampListIndex(i + 1, vertices.Count)];
-				}
-
-				//Step 2. Find the reflex (concave) and convex vertices, and ear vertices
-				for (int i = 0; i < vertices.Count; i++)
-				{
-					CheckIfReflexOrConvex(vertices[i], poly.center);
-				}
-
-				//Have to find the ears after we have found if the vertex is reflex or convex
-				earVertices.Clear();
-				for (int i = 0; i < vertices.Count; i++)
-				{
-					IsVertexEar(vertices[i], vertices, earVertices, poly);
-				}
-
-				int loopCount = 0;
-				//Step 3. Triangulate!
-				
-				while (true)
-				{
-					loopCount++;
-
-					//This means we have just one triangle left
-					if (vertices.Count == 3)
-					{
-						//The final triangle
-						triangles.Add(new Triangle(vertices[0].point, vertices[0].prev.point, vertices[0].next.point));
-						break;
-					}
-					else if (vertices.Count < 3 || earVertices.Count == 0) break;
-
-					//Make a triangle of the first ear
-					earVertex = earVertices[0];
-					earVertexPrev = earVertex.prev;
-					earVertexNext = earVertex.next;
-
-					newTriangle = new Triangle(earVertex.point, earVertexPrev.point, earVertexNext.point);
-					
-					//newTriangle.DebugDraw(Color.blue, timePerTri * 0.95f);
-
-					//displayEarTip = earVertex;
-					if (timePerTri > 0) yield return new WaitForSeconds(timePerTri);
-					//displayEarTip = null;
-
-					triangles.Add(newTriangle);
-
-					//Remove the vertex from the lists
-					earVertices.Remove(earVertex);
-					vertices.Remove(earVertex);
-
-					//Update the previous vertex and next vertex
-					earVertexPrev.next = earVertexNext;
-					earVertexNext.prev = earVertexPrev;
-
-					//...see if we have found a new ear by investigating the two vertices that were part of the ear
-					CheckIfReflexOrConvex(earVertexPrev, poly.center);
-					CheckIfReflexOrConvex(earVertexNext, poly.center);
-
-					earVertices.Remove(earVertexPrev);
-					earVertices.Remove(earVertexNext);
-
-					IsVertexEar(earVertexPrev, vertices, earVertices, poly);
-					IsVertexEar(earVertexNext, vertices, earVertices, poly);
-				}
-
-				triList.Add(triangles.ToArray());
-                if (timePerPoly > 0) yield return new WaitForSeconds(timePerPoly);
+			{
+				triList.Add(GetTriangles(poly));
+				if (timePerPoly > 0) yield return new WaitForSeconds(timePerPoly);
 			}
 
 			clippingDone = true;
-	    }
-	
+		}
+
 		//Check if a vertex if reflex or convex, and add to appropriate list
 		private void CheckIfReflexOrConvex(Vertex v, Vector3 center)
 		{
@@ -315,6 +313,10 @@ namespace Earclipping
 		public Vector3[] vertices;
 		public Line[] lines;
 
+		public bool isThreeD = false;
+		public bool isVert = false;
+		public List<Polygon> linkedPolygons = null;
+
 		public Polygon(List<Line> nodeLines, Vector3 center)
 		{
 			lines = nodeLines.ToArray();
@@ -325,7 +327,6 @@ namespace Earclipping
 			points.Add(tempLines[0].a);
 			points.Add(tempLines[0].b);
 			tempLines.RemoveAt(0);
-
 
             while (tempLines.Count > 0)
             {
@@ -377,6 +378,35 @@ namespace Earclipping
             }
             
 			vertices = points.ToArray();
+
+			this.center = center;
+		}
+
+		public Polygon(Vector3 center, Vector3[] vertices, bool isVert = false) 
+		{
+			this.center = center;
+			this.vertices = vertices;
+			this.isVert = isVert;
+
+			List<Line> tempLines = new List<Line>();
+            for (int i = 0; i < vertices.Length; i++)
+            {
+				int j = Lists.ClampListIndex(i + 1, vertices.Length);
+
+				tempLines.Add(new Line(vertices[i], vertices[j]));
+            }
+			lines = tempLines.ToArray();
+		}
+
+		public void Flip() 
+		{
+			//flipping the vertices is easy, just remake the line list rather than flip them all? I think there's a line flip func anyway tho
+		}
+
+		public void AddConnectedPolygon(Polygon other)
+		{
+			if (linkedPolygons == null) linkedPolygons = new List<Polygon>() { other };
+			else linkedPolygons.Add(other);
 		}
 
         internal bool TriInBounds(Triangle newTriangle)
@@ -400,6 +430,22 @@ namespace Earclipping
 
 			return true;
         }
+
+		public void DebugDraw(Color color, float duration, bool connecteds = false) 
+		{
+            foreach (Line line in lines)
+            {
+				Debug.DrawLine(line.a, line.b, color, duration);
+            }
+
+            if (connecteds && linkedPolygons != null)
+            {
+                foreach (Polygon polygon in linkedPolygons)
+                {
+					polygon.DebugDraw(Color.green, duration);
+                }
+            }
+		}
     }
 }
 
