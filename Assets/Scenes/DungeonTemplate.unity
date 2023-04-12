@@ -334,6 +334,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: a40f3f99d2897a5498d8602093196b2b, type: 2}
     - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+      propertyPath: turnSpeed
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6467568480077756133, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: projectilePrefab
       value: 
       objectReference: {fileID: 3736760577868700389, guid: 29229cd260ac77746b046d65d3dd524e, type: 3}
@@ -469,7 +473,8 @@ PrefabInstance:
       propertyPath: m_AngularDrag
       value: 2
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1306780440, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
 --- !u!4 &201625559 stripped
 Transform:
@@ -506,6 +511,25 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &654054308 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6467568481500674761, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
+  m_PrefabInstance: {fileID: 201625558}
+  m_PrefabAsset: {fileID: 0}
+--- !u!136 &654054309
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654054308}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.55
+  m_Height: 2.25
+  m_Direction: 2
+  m_Center: {x: 0, y: -0.05, z: 0}
 --- !u!1 &944986436
 GameObject:
   m_ObjectHideFlags: 0
@@ -761,8 +785,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1043240469}
-  m_LocalRotation: {x: 0.18910751, y: -0.0000000084479606, z: 0.0000000016269286, w: 0.9819564}
-  m_LocalPosition: {x: 0, y: 24.86, z: -5}
+  m_LocalRotation: {x: 0.38268343, y: -0.000000015896617, z: 0.000000006584594, w: 0.92387956}
+  m_LocalPosition: {x: 0, y: 23.86, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1150607192}
@@ -815,10 +839,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BindingMode: 1
-  m_FollowOffset: {x: 0, y: 2, z: -5}
-  m_XDamping: 1
-  m_YDamping: 0.5
-  m_ZDamping: 0.5
+  m_FollowOffset: {x: 0, y: 1, z: -1}
+  m_XDamping: 0
+  m_YDamping: 0
+  m_ZDamping: 0
   m_AngularDampingMode: 0
   m_PitchDamping: 0
   m_YawDamping: 0
@@ -1221,13 +1245,13 @@ MonoBehaviour:
     axiom: o
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
-  count: 12
+  count: 15
   clampValues: 1
-  length: 75
-  angle: 30
+  length: 50
+  angle: 45
   nodeLimitRange:
-    min: 37.5
-    max: 150
+    min: 25
+    max: 100
   nodesPerStep: 175
   timePerStep: 0
 --- !u!4 &2109595311
@@ -1257,11 +1281,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nodeManager: {fileID: 2109595310}
-  roadWidth: 10
-  nodeRadius: 20
+  roadWidth: 5
+  nodeRadius: 12
   doubleSided: 0
   extrude: 1
-  extrusionDepth: -5
+  extrusionDepth: 8
   drawPoints: 0
   drawPolygons: 0
   timePerNode: 0

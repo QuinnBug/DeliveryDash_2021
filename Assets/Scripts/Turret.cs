@@ -45,7 +45,9 @@ public class Turret : MonoBehaviour
 
     public void Rotation() 
     {
-        Vector3 targetPos = transform.position + parent.InverseTransformDirection(aimingInput);
+        //Vector3 targetPos = transform.position + parent.InverseTransformDirection(aimingInput);
+        Vector3 targetPos = transform.position + Vector3.forward + aimingInput;
+
         Vector3 diff = targetPos - transform.position;
         diff.Normalize();
         float rot_y = Mathf.Atan2(diff.x, diff.z) * Mathf.Rad2Deg;
@@ -76,7 +78,8 @@ public class Turret : MonoBehaviour
             Rigidbody proj_rb;
             if (projectile.TryGetComponent(out proj_rb))
             {
-                Vector3 force = transform.TransformDirection(projectileForceDirection) * projectileForcePower;
+                //Vector3 force = transform.TransformDirection(projectileForceDirection) * projectileForcePower;
+                Vector3 force = transform.forward * projectileForcePower;
 
                 //Adjustmest for velocity
                 Vector3 carVel = rb.velocity;

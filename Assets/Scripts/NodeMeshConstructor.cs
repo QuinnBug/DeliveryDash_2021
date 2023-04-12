@@ -300,7 +300,7 @@ public class NodeMeshConstructor : MonoBehaviour
             foreach (Vector3[] vees in wallVertices)
             {
                 Polygon temp = new Polygon(node.point, vees, true);
-                temp.DebugDraw(Color.red, 120);
+                //temp.DebugDraw(Color.red, 120);
                 poly.AddConnectedPolygon(temp);
             }
             poly.isThreeD = true;
