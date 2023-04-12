@@ -458,5 +458,22 @@ namespace Utility
 			return ((index % listSize) + listSize) % listSize;
 		}
 	}
+
+	public static class Geometry 
+	{
+		public static Vector3 GetNormalOfPoints(Vector3 a, Vector3 b, Vector3 c) 
+		{
+			Vector3 result = Vector3.zero;
+
+			Vector3 U, V;
+			U = b - a;
+			V = c - a;
+			result.x = Mathf.Abs((U.y * V.z) - (U.z * V.y));
+			result.y = Mathf.Abs((U.z * V.x) - (U.x * V.z));
+			result.z = Mathf.Abs((U.x * V.y) - (U.y * V.x));
+
+			return result;
+		}
+	}
 }
 

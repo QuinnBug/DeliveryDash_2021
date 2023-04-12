@@ -53,7 +53,7 @@ public class Car_Movement : MonoBehaviour
         {
             if (wheel.grounded)
             {
-                rb.AddForce(movementInput * moveSpeed);
+                rb.AddForce(transform.forward * movementInput.z * moveSpeed);
                 Player_Manager.Instance.stats.currentFuel -= fuelDrain * Time.deltaTime;
                 break;
             }
@@ -71,8 +71,9 @@ public class Car_Movement : MonoBehaviour
         {
             if (suspension.GroundedPercent() > 0f)
             {
-                transform.rotation = Quaternion.Lerp(transform.rotation,
-                    Quaternion.LookRotation(movementInput, Vector3.up), turnSpeed * Time.deltaTime);
+                //transform.rotation = Quaternion.Lerp(transform.rotation,
+                //    Quaternion.LookRotation(movementInput, Vector3.up), turnSpeed * Time.deltaTime);
+                transform.Rotate(Vector3.up, movementInput.x * turnSpeed * Time.deltaTime);
             }
         }
     }

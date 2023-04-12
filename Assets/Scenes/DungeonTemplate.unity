@@ -295,7 +295,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: stats.turnSpeed
-      value: 3
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 1306780441, guid: eb9a216e2d1b0f04db2477adf67ec70f, type: 3}
       propertyPath: stats.shotsPerSecond
@@ -529,8 +529,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 944986436}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10, y: 15, z: 10}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 22.86, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -738,7 +738,7 @@ MonoBehaviour:
   m_Priority: 10
   m_StandbyUpdate: 2
   m_LookAt: {fileID: 944986437}
-  m_Follow: {fileID: 944986437}
+  m_Follow: {fileID: 201625559}
   m_Lens:
     FieldOfView: 60
     OrthographicSize: 5
@@ -761,8 +761,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1043240469}
-  m_LocalRotation: {x: 0.47185794, y: -0.000000021454222, z: 0.0000000114819505, w: 0.88167465}
-  m_LocalPosition: {x: 10, y: 45, z: -10}
+  m_LocalRotation: {x: 0.18910751, y: -0.0000000084479606, z: 0.0000000016269286, w: 0.9819564}
+  m_LocalPosition: {x: 0, y: 24.86, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1150607192}
@@ -815,8 +815,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BindingMode: 1
-  m_FollowOffset: {x: 0, y: 30, z: -20}
-  m_XDamping: 0.5
+  m_FollowOffset: {x: 0, y: 2, z: -5}
+  m_XDamping: 1
   m_YDamping: 0.5
   m_ZDamping: 0.5
   m_AngularDampingMode: 0
@@ -903,7 +903,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1415865385}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1218,13 +1218,13 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: ff
+    axiom: o
     finalString: '>f>f[ff][>ff][<<ff]'
     randomRuleOutput: 1
-  count: 18
+  count: 12
   clampValues: 1
   length: 75
-  angle: 45
+  angle: 30
   nodeLimitRange:
     min: 37.5
     max: 150
@@ -1261,7 +1261,7 @@ MonoBehaviour:
   nodeRadius: 20
   doubleSided: 0
   extrude: 1
-  extrusionDepth: -10
+  extrusionDepth: -5
   drawPoints: 0
   drawPolygons: 0
   timePerNode: 0

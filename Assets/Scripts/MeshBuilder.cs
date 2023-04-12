@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Earclipping;
+using Utility;
 using System;
 
 public class MeshBuilder : MonoBehaviour
@@ -30,6 +31,7 @@ public class MeshBuilder : MonoBehaviour
         if (nmc.meshCreated && meshes == null)
         {
             CreateMeshes(nmc.polygons);
+            spawnMesh = true;
         }
 
         if (meshes != null && spawnMesh == true)
@@ -48,7 +50,7 @@ public class MeshBuilder : MonoBehaviour
             //roads[i].transform.position = clipper.nmc.polygons[i].center;
 
             roads[i].GetComponent<MeshFilter>().mesh = meshes[i];
-            //roads[i].GetComponent<MeshCollider>().sharedMesh = meshes[i];
+            roads[i].GetComponent<MeshCollider>().sharedMesh = meshes[i];
         }
     }
 
@@ -64,21 +66,40 @@ public class MeshBuilder : MonoBehaviour
 
             List<Vector3> verts = new List<Vector3>();
             List<int> idxList = new List<int>();
+            List<Vector3> normalList = new List<Vector3>();
+
             foreach (Triangle tri in polyTris)
             {
-                foreach (Vector3 v in tri.vertices)
+                for (int v = 0; v < tri.vertices.Length; v++)
                 {
-                    if (!verts.Contains(v))
+                    if (!verts.Contains(tri.vertices[v]))
                     {
-                        verts.Add(v);
+                        verts.Add(tri.vertices[v]);
                     }
-                    idxList.Add(verts.IndexOf(v));
+                    idxList.Add(verts.IndexOf(tri.vertices[v]));
                 }
             }
-            idxList.Reverse();
+
+            //need to go through each vert and find the correct normal (possibly need to check the tri formed by the normals)
+            for (int k = 0; k < verts.Count; k++)
+            {
+                int idxidx = idxList.IndexOf(k);
+                int a = Lists.ClampListIndex(idxidx - 1, idxList.Count);
+                int b = Lists.ClampListIndex(idxidx, idxList.Count);
+                int c = Lists.ClampListIndex(idxidx + 1, idxList.Count);
+                Vector3 n = Geometry.GetNormalOfPoints(verts[idxList[a]], verts[idxList[b]], verts[idxList[c]]);
+                normalList.Add(n);
+            }
+
+            List<int> idxRev = new List<int>(idxList);
+            idxRev.Reverse();
+            idxList.AddRange(idxRev);
+
+            //Debug.Log(normalList.Count + " " + poly.vertices.Length);
 
             meshes[i].vertices = verts.ToArray();
             meshes[i].triangles = idxList.ToArray();
+            meshes[i].normals = normalList.ToArray();
             meshes[i].tangents = new Vector4[verts.Count];
 
             //if the polygon is going to be a 3d mesh we need to build the other linked polygon
@@ -90,11 +111,12 @@ public class MeshBuilder : MonoBehaviour
                 {
                     verts.Clear();
                     idxList.Clear();
+                    normalList.Clear();
                     if (linkedPoly.isVert)
                     {
                         verts = new List<Vector3>(linkedPoly.vertices);
-                        //the list of vertices halved then -1 for 0 start and -1 for not doing the last of the row
-                        for (int top = 0; top < (linkedPoly.vertices.Length /2) - 2; top++)
+                        //the list of vertices halved then -1 for 0 start
+                        for (int top = 0; top < (linkedPoly.vertices.Length /2); top++)
                         {
                             int bottom = (linkedPoly.vertices.Length - 1) - top;
 
@@ -122,12 +144,26 @@ public class MeshBuilder : MonoBehaviour
                                 idxList.Add(verts.IndexOf(v));
                             }
                         }
-                        idxList.Reverse();
                     }
+
+                    for (int k = 0; k < verts.Count; k++)
+                    {
+                        int idxidx = idxList.IndexOf(k);
+                        int a = Lists.ClampListIndex(idxidx - 1, idxList.Count);
+                        int b = Lists.ClampListIndex(idxidx, idxList.Count);
+                        int c = Lists.ClampListIndex(idxidx + 1, idxList.Count);
+                        Vector3 n = Geometry.GetNormalOfPoints(verts[idxList[a]], verts[idxList[b]], verts[idxList[c]]);
+                        normalList.Add(n);
+                    }
+
+                    idxRev = new List<int>(idxList);
+                    idxRev.Reverse();
+                    idxList.AddRange(idxRev);
 
                     Mesh subMesh = new Mesh();
                     subMesh.vertices = verts.ToArray();
                     subMesh.triangles = idxList.ToArray();
+                    subMesh.normals = normalList.ToArray();
                     subMesh.tangents = new Vector4[verts.Count];
                     meshList.Add(subMesh);
                 }
@@ -137,10 +173,11 @@ public class MeshBuilder : MonoBehaviour
                 {
                     combine[m] = new CombineInstance();
                     combine[m].mesh = meshList[m];
+                    combine[m].transform = transform.localToWorldMatrix;
                 }
 
                 meshes[i] = new Mesh();
-                meshes[i].CombineMeshes(combine, false);
+                meshes[i].CombineMeshes(combine);
             }
 
             i++;

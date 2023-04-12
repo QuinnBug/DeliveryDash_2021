@@ -251,7 +251,6 @@ public class NodeMeshConstructor : MonoBehaviour
 
                 if (intersects)
                 {
-                    Debug.Log("1");
                     end = next;
 
                     //we need to loop back around to the start idx in the eVerts
@@ -270,12 +269,31 @@ public class NodeMeshConstructor : MonoBehaviour
 
                     //then we jump to the start of the next poly
                     current = start = end;
+                    end = poly.vertices.Length;
                 }
                 else
                 {
-                    Debug.Log("2");
                     current++;
                 }
+            }
+
+            //to exit the prev loop current needs to be out of index range, so we bring it back in here
+            current--;
+            //we need to add the last set of verts that didn't get added by an interception.
+            if (verts.Count > 0)
+            {
+                //we need to loop back around to the start idx in the eVerts
+                while (current >= start)
+                {
+                    verts.Add(eVertices[current]);
+                    current--;
+                }
+
+                //then we add a connection to poly.vertices.start
+                verts.Add(poly.vertices[start]);
+
+                //then we add verts to wallVertices and clear verts
+                wallVertices.Add(verts.ToArray());
             }
 
             poly.AddConnectedPolygon(ePoly);
@@ -329,11 +347,12 @@ public class NodeMeshConstructor : MonoBehaviour
                 {
                     if (j > 0)
                     {
-                        Gizmos.color = Color.cyan;
+                        //Gizmos.color = Color.cyan;
                         //Gizmos.DrawLine(polygons[i].vertices[j], polygons[i].vertices[j - 1]);
-                        Gizmos.DrawSphere(polygons[i].vertices[j], 0.5f);
                     }
-                    //Handles.Label(polygons[i].vertices[j], j.ToString());
+                    Gizmos.color = Color.cyan;
+                    Gizmos.DrawSphere(polygons[i].vertices[j], 0.5f);
+                    Handles.Label(polygons[i].vertices[j] + (Vector3.up * j), j.ToString());
                 }
             }
         }
