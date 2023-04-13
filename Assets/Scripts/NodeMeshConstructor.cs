@@ -151,7 +151,7 @@ public class NodeMeshConstructor : MonoBehaviour
                     Line otherLine = new Line(newLine.a, node.point + (direction * (roadWidth * 0.25f)));
                     newLine.a = otherLine.b;
                     nodeLines.Add(otherLine);
-                    Debug.Log("???");
+                    //Debug.Log("???");
                 }
 
                 //this draws a line from the start point to the last line
@@ -193,7 +193,7 @@ public class NodeMeshConstructor : MonoBehaviour
                     Line otherLine = new Line(node.point + (direction * (roadWidth * 0.25f)), newLine.b);
                     newLine.b = otherLine.a;
                     nodeLines.Add(otherLine);
-                    Debug.Log("???");
+                    //Debug.Log("???");
                     break;
                 }
             }

@@ -54,6 +54,30 @@ public class MeshBuilder : MonoBehaviour
         }
     }
 
+    private Vector3[] CalculateNormals(Vector3[] verts, int[] idxList) 
+    {
+        Vector3[] normals = new Vector3[verts.Length];
+
+        for (int k = 0; k < idxList.Length; k += 3)
+        {
+            int v1 = idxList[k];
+            int v2 = idxList[Lists.ClampListIndex(k + 1, idxList.Length)];
+            int v3 = idxList[Lists.ClampListIndex(k + 2, idxList.Length)];
+
+            Vector3 n = Geometry.GetNormalOfPoints(verts[v1], verts[v2], verts[v3]);
+            normals[v1] += n;
+            normals[v2] += n;
+            normals[v3] += n;
+        }
+
+        for (int k = 0; k < normals.Length; k++)
+        {
+            normals[k].Normalize();
+        }
+
+        return normals;
+    }
+
     private void CreateMeshes(List<Polygon> polygons)
     {
         meshes = new Mesh[polygons.Count];
@@ -66,7 +90,6 @@ public class MeshBuilder : MonoBehaviour
 
             List<Vector3> verts = new List<Vector3>();
             List<int> idxList = new List<int>();
-            List<Vector3> normalList = new List<Vector3>();
 
             foreach (Triangle tri in polyTris)
             {
@@ -81,21 +104,11 @@ public class MeshBuilder : MonoBehaviour
             }
 
             //need to go through each vert and find the correct normal (possibly need to check the tri formed by the normals)
-            for (int k = 0; k < verts.Count; k++)
-            {
-                int idxidx = idxList.IndexOf(k);
-                int a = Lists.ClampListIndex(idxidx - 1, idxList.Count);
-                int b = Lists.ClampListIndex(idxidx, idxList.Count);
-                int c = Lists.ClampListIndex(idxidx + 1, idxList.Count);
-                Vector3 n = Geometry.GetNormalOfPoints(verts[idxList[a]], verts[idxList[b]], verts[idxList[c]]);
-                normalList.Add(n);
-            }
+            List<Vector3> normalList = new List<Vector3>(CalculateNormals(verts.ToArray(), idxList.ToArray()));
 
             List<int> idxRev = new List<int>(idxList);
             idxRev.Reverse();
             idxList.AddRange(idxRev);
-
-            //Debug.Log(normalList.Count + " " + poly.vertices.Length);
 
             meshes[i].vertices = verts.ToArray();
             meshes[i].triangles = idxList.ToArray();
@@ -146,15 +159,7 @@ public class MeshBuilder : MonoBehaviour
                         }
                     }
 
-                    for (int k = 0; k < verts.Count; k++)
-                    {
-                        int idxidx = idxList.IndexOf(k);
-                        int a = Lists.ClampListIndex(idxidx - 1, idxList.Count);
-                        int b = Lists.ClampListIndex(idxidx, idxList.Count);
-                        int c = Lists.ClampListIndex(idxidx + 1, idxList.Count);
-                        Vector3 n = Geometry.GetNormalOfPoints(verts[idxList[a]], verts[idxList[b]], verts[idxList[c]]);
-                        normalList.Add(n);
-                    }
+                    normalList = new List<Vector3>(CalculateNormals(verts.ToArray(), idxList.ToArray()));
 
                     idxRev = new List<int>(idxList);
                     idxRev.Reverse();

@@ -6,10 +6,11 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     public float moveSpeed;
-    public float turnSpeed;
+    public Vector2 turnSpeed;
+    [Space]
+    public GameObject head;
 
     internal Rigidbody rb;
-    internal GameObject head;
     Vector3 movementInput;
     Vector3 rotationInput;
 
@@ -17,31 +18,31 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (movementInput.sqrMagnitude >= 0.1f)
-        {
-            Movement();
-        }
-
-        if (movementInput.sqrMagnitude >= 0.1f)
-        {
-            Rotation();
-        }
+        Movement();
+        Rotation();
     }
 
     public void Movement()
     {
-        transform.Translate(movementInput * moveSpeed);
+        Vector3 movement = rb.velocity;
+        movement.x = movementInput.x * moveSpeed;
+        movement.z = movementInput.z * moveSpeed;
+
+        rb.velocity = transform.rotation * movement;
     }
 
     public void Rotation() 
     {
-        transform.Rotate(Vector3.up, rotationInput.y);
-        head.transform.Rotate(Vector3.right, rotationInput.x);
+        if (Mathf.Abs(rotationInput.x) > 0.1f) transform.Rotate(Vector3.up, rotationInput.x * turnSpeed.x * Time.deltaTime);
+        if (Mathf.Abs(rotationInput.y) > 0.1f) head.transform.Rotate(Vector3.right, rotationInput.y * turnSpeed.y * Time.deltaTime);
+        //transform.rotation = Quaternion.AngleAxis(rotationInput.y * turnSpeed * Time.deltaTime, transform.up) * transform.rotation;
+        //head.transform.rotation = Quaternion.AngleAxis(rotationInput.x * turnSpeed, head.transform.right) * head.transform.rotation;
     }
 
     public void MovementInput(InputAction.CallbackContext context)
@@ -56,7 +57,7 @@ public class PlayerController : MonoBehaviour
     {
         Vector2 _input = context.ReadValue<Vector2>();
 
-        rotationInput.y = _input.x;
-        rotationInput.x = _input.y;
+        rotationInput.y = Mathf.Clamp(_input.y * -1.0f, -1, 1);
+        rotationInput.x = Mathf.Clamp(_input.x, -1, 1);
     }
 }

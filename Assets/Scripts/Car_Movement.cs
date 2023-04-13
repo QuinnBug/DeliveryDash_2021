@@ -34,11 +34,12 @@ public class Car_Movement : MonoBehaviour
         if (movementInput.sqrMagnitude >= 0.1f) 
         {
             Movement();
+            Rotation();
         }
 
         if (rb.velocity.sqrMagnitude >= 0.1f)
         {
-            Rotation();
+            //Rotation();
         }
     }
 
@@ -67,14 +68,18 @@ public class Car_Movement : MonoBehaviour
             return;
         }
 
-        if (movementInput.sqrMagnitude > 0.1f)
+        //if (movementInput.sqrMagnitude > 0.1f)
+        //{
+        //    if (suspension.GroundedPercent() > 0f)
+        //    {
+        //        transform.rotation = Quaternion.Lerp(transform.rotation,
+        //            Quaternion.LookRotation(movementInput, Vector3.up), turnSpeed * Time.deltaTime);
+        //    }
+        //}
+
+        if (suspension.GroundedPercent() > 0f)
         {
-            if (suspension.GroundedPercent() > 0f)
-            {
-                //transform.rotation = Quaternion.Lerp(transform.rotation,
-                //    Quaternion.LookRotation(movementInput, Vector3.up), turnSpeed * Time.deltaTime);
-                transform.Rotate(Vector3.up, movementInput.x * turnSpeed * Time.deltaTime);
-            }
+            transform.Rotate(Vector3.up, movementInput.x * turnSpeed * Time.deltaTime);
         }
     }
 

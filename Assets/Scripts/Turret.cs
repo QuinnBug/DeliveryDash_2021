@@ -80,23 +80,24 @@ public class Turret : MonoBehaviour
             {
                 //Vector3 force = transform.TransformDirection(projectileForceDirection) * projectileForcePower;
                 Vector3 force = transform.forward * projectileForcePower;
+                force.y = projectileForceDirection.y;
 
                 //Adjustmest for velocity
-                Vector3 carVel = rb.velocity;
-                carVel = transform.InverseTransformDirection(carVel);
-                carVel.y = 0;
-                carVel.x = Mathf.Abs(carVel.x);
-                carVel.z = Mathf.Abs(carVel.z);
+                //Vector3 carVel = rb.velocity;
+                //carVel = transform.InverseTransformDirection(carVel);
+                //carVel.y = 0;
+                //carVel.x = Mathf.Abs(carVel.x);
+                //carVel.z = Mathf.Abs(carVel.z);
 
-                if (carVel.magnitude > 1)
-                {
-                    carVel.Normalize();
-                    carVel += Vector3.one;
-                    force.Scale(carVel);
-                }
+                //if (carVel.magnitude > 1)
+                //{
+                //    carVel.Normalize();
+                //    carVel += Vector3.one;
+                //    force.Scale(carVel);
+                //}
                 //end of adjustment
 
-                force.y = projectileForceDirection.y;
+                proj_rb.velocity = rb.velocity;
                 proj_rb.AddForce(force);
             }
         }

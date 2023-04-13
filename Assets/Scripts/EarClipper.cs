@@ -472,7 +472,7 @@ namespace Utility
 			result.y = Mathf.Abs((U.z * V.x) - (U.x * V.z));
 			result.z = Mathf.Abs((U.x * V.y) - (U.y * V.x));
 
-			return result;
+			return result.normalized;
 		}
 	}
 }
