@@ -139,9 +139,23 @@ public class NodeMeshConstructor : MonoBehaviour
                 Debug.Log("How come line 2 doesn't intersect the node?");
             }
 
+            //this connects the last point from the previous line to the start point of this section - we add it before we add the next lines
             if (nodeLines.Count > 0)
             {
-                nodeLines.Add(new Line(lines[2].b, nodeLines[nodeLines.Count - 3].a));
+                Line newLine = new Line(lines[2].b, nodeLines[nodeLines.Count - 3].a);
+                //This is one of 2 places where we can check if we are having issues with overlapping the corners
+
+                if (newLine.DoesIntersect(node.point, conn.point, out Vector3 iPoint))
+                {
+                    Vector3 direction = (node.point - Vector3.Lerp(newLine.a, newLine.b, 0.5f)).normalized;
+                    Line otherLine = new Line(newLine.a, node.point + (direction * (roadWidth * 0.25f)));
+                    newLine.a = otherLine.b;
+                    nodeLines.Add(otherLine);
+                    Debug.Log("???");
+                }
+
+                //this draws a line from the start point to the last line
+                nodeLines.Add(newLine);
             }
 
             nodeLines.AddRange(lines);
@@ -150,11 +164,42 @@ public class NodeMeshConstructor : MonoBehaviour
         if (node.connections.Count == 1)
         {
             //this is a dead end node so we need to draw around the node a lil extra (and replace this line which just cuts through a node)
-            nodeLines.Add(new Line(nodeLines[nodeLines.Count - 1].b, nodeLines[0].a));
+            Vector3[] points = new Vector3[4];
+            Vector3 farPoint = node.point + ((node.point - node.connections[0].point).normalized * roadWidth);
+            Quaternion rotation = Quaternion.LookRotation(node.connections[0].point - node.point, Vector3.up);
+
+            //close points
+            points[0] = nodeLines[0].a;
+            points[3] = nodeLines[nodeLines.Count - 1].b;
+
+            //middle points
+            points[1] = farPoint + (rotation * (-Vector3.right * roadWidth));
+            points[2] = farPoint + (rotation * (Vector3.right * roadWidth));
+
+            nodeLines.Add(new Line(points[0], points[1]));
+            nodeLines.Add(new Line(points[1], points[2]));
+            nodeLines.Add(new Line(points[2], points[3]));
         }
         else
         {
-            nodeLines.Add(new Line(nodeLines[2].b, nodeLines[nodeLines.Count - 3].a));
+            Line newLine = new Line(nodeLines[2].b, nodeLines[nodeLines.Count - 3].a);
+            //This is one of 2 places where we can check if we are having issues with overlapping the corners
+
+            foreach (Node conn in node.connections)
+            {
+                if (newLine.DoesIntersect(node.point, conn.point, out Vector3 iPoint))
+                {
+                    Vector3 direction = (node.point - Vector3.Lerp(newLine.a, newLine.b, 0.5f)).normalized;
+                    Line otherLine = new Line(node.point + (direction * (roadWidth * 0.25f)), newLine.b);
+                    newLine.b = otherLine.a;
+                    nodeLines.Add(otherLine);
+                    Debug.Log("???");
+                    break;
+                }
+            }
+
+            //this draws a line from the start point to the last line
+            nodeLines.Add(newLine);
         }
 
         //untangling any overlapping lines in the node before adding the final connection line in
@@ -347,12 +392,13 @@ public class NodeMeshConstructor : MonoBehaviour
                 {
                     if (j > 0)
                     {
-                        //Gizmos.color = Color.cyan;
-                        //Gizmos.DrawLine(polygons[i].vertices[j], polygons[i].vertices[j - 1]);
+                        Gizmos.color = Color.cyan;
+                        Gizmos.DrawLine(polygons[i].vertices[j], polygons[i].vertices[j - 1]);
                     }
-                    Gizmos.color = Color.cyan;
-                    Gizmos.DrawSphere(polygons[i].vertices[j], 0.5f);
-                    Handles.Label(polygons[i].vertices[j] + (Vector3.up * j), j.ToString());
+
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawSphere(polygons[i].vertices[j], 1.5f);
+                    //Handles.Label(polygons[i].vertices[j] + (Vector3.up * j), j.ToString());
                 }
             }
         }

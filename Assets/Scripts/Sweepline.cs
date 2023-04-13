@@ -525,6 +525,11 @@ public class Line
         return line;
     }
 
+    public bool DoesIntersect(Vector3 a, Vector3 b, out Vector3 intersection) 
+    {
+        return DoesIntersect(new Line(a, b), out intersection);
+    }
+
     public bool DoesIntersect(Line lineB, out Vector3 intersection)
     {
         intersection = a;
