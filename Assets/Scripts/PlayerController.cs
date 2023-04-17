@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     public float moveSpeed;
     public Vector2 turnSpeed;
+    public Vector2 turningDeadZone;
     [Space]
     public GameObject head;
 
@@ -34,13 +35,13 @@ public class PlayerController : MonoBehaviour
         movement.x = movementInput.x * moveSpeed;
         movement.z = movementInput.z * moveSpeed;
 
-        rb.velocity = transform.rotation * movement;
+        rb.AddForce(transform.rotation * movement);
     }
 
     public void Rotation() 
     {
-        if (Mathf.Abs(rotationInput.x) > 0.1f) transform.Rotate(Vector3.up, rotationInput.x * turnSpeed.x * Time.deltaTime);
-        if (Mathf.Abs(rotationInput.y) > 0.1f) head.transform.Rotate(Vector3.right, rotationInput.y * turnSpeed.y * Time.deltaTime);
+        if (Mathf.Abs(rotationInput.x) > turningDeadZone.x) transform.Rotate(Vector3.up, rotationInput.x * turnSpeed.x * Time.deltaTime);
+        if (Mathf.Abs(rotationInput.y) > turningDeadZone.y) head.transform.Rotate(Vector3.right, rotationInput.y * turnSpeed.y * Time.deltaTime);
         //transform.rotation = Quaternion.AngleAxis(rotationInput.y * turnSpeed * Time.deltaTime, transform.up) * transform.rotation;
         //head.transform.rotation = Quaternion.AngleAxis(rotationInput.x * turnSpeed, head.transform.right) * head.transform.rotation;
     }

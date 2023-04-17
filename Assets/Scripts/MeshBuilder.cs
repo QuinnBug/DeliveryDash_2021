@@ -10,6 +10,7 @@ public class MeshBuilder : MonoBehaviour
     public bool spawnMesh;
     public GameObject prefabObj;
     public Transform roadHolder;
+    public Material[] materialPallette;
     [Space]
     EarClipper clipper;
     NodeMeshConstructor nmc;
@@ -50,6 +51,14 @@ public class MeshBuilder : MonoBehaviour
             //roads[i].transform.position = clipper.nmc.polygons[i].center;
 
             roads[i].GetComponent<MeshFilter>().mesh = meshes[i];
+
+            List<Material> mats = new List<Material>() { materialPallette[0] };
+            for (int j = 1; j < meshes[i].subMeshCount; j++)
+            {
+                mats.Add(materialPallette[1]);
+            }
+            roads[i].GetComponent<MeshRenderer>().sharedMaterials = mats.ToArray();
+
             roads[i].GetComponent<MeshCollider>().sharedMesh = meshes[i];
         }
     }
@@ -182,7 +191,7 @@ public class MeshBuilder : MonoBehaviour
                 }
 
                 meshes[i] = new Mesh();
-                meshes[i].CombineMeshes(combine);
+                meshes[i].CombineMeshes(combine, false);
             }
 
             i++;

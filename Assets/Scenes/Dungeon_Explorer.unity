@@ -209,6 +209,9 @@ MonoBehaviour:
   spawnMesh: 1
   prefabObj: {fileID: 1431621214544958366, guid: ed4c3bfba5687d44cb7ea761092ee1a8, type: 3}
   roadHolder: {fileID: 381227247}
+  materialPallette:
+  - {fileID: 2100000, guid: 7c366356d4901fc41a12bc4bc6536028, type: 2}
+  - {fileID: 2100000, guid: 00f93ad13aefe3947bffffddf50fc46f, type: 2}
   meshes: []
   roads: []
 --- !u!1 &328440692
@@ -334,7 +337,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 683514062}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 22.99, z: 0}
+  m_LocalPosition: {x: 0, y: 23.53, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1295320918}
@@ -561,6 +564,7 @@ GameObject:
   - component: {fileID: 1132657910}
   - component: {fileID: 1132657911}
   - component: {fileID: 1132657912}
+  - component: {fileID: 1132657913}
   m_Layer: 0
   m_Name: Character
   m_TagString: Untagged
@@ -639,7 +643,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1132657905}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 22, z: 0}
+  m_LocalPosition: {x: 0, y: 22.54, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 328440693}
@@ -655,8 +659,8 @@ Rigidbody:
   m_GameObject: {fileID: 1132657905}
   serializedVersion: 2
   m_Mass: 5
-  m_Drag: 1
-  m_AngularDrag: 0.05
+  m_Drag: 5
+  m_AngularDrag: 0
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
@@ -780,9 +784,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2eb007033aecdc4182cf15c91e4121d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 10
-  turnSpeed: {x: 100, y: 50}
+  moveSpeed: 75
+  turnSpeed: {x: 225, y: 125}
+  turningDeadZone: {x: 0.1, y: 0.1}
   head: {fileID: 328440692}
+--- !u!114 &1132657913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1132657905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd94a00a1c8644e4baa649abbd53263a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wheels:
+  - offset: {x: 0, y: -1, z: 0}
+    settings:
+      restLength: 0.6
+      springTravel: 0.5
+      springStiffness: 125
+      damperStiffness: 20
+      wheelRadius: 0.25
+    groundMask:
+      serializedVersion: 2
+      m_Bits: 72
+  baseSettings:
+    restLength: 0.6
+    springTravel: 0.5
+    springStiffness: 125
+    damperStiffness: 20
+    wheelRadius: 0.25
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &1295320917
 GameObject:
   m_ObjectHideFlags: 3
@@ -1104,7 +1141,7 @@ MonoBehaviour:
     axiom: o
     finalString: '>f>f[ff][>ff][<<ff>f>>f]'
     randomRuleOutput: 1
-  count: 8
+  count: 15
   clampValues: 1
   length: 50
   angle: 45
@@ -1144,7 +1181,7 @@ MonoBehaviour:
   nodeRadius: 12
   doubleSided: 0
   extrude: 1
-  extrusionDepth: 8
+  extrusionDepth: 5
   drawPoints: 0
   drawPolygons: 1
   timePerNode: 0
