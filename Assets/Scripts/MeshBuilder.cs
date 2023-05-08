@@ -11,6 +11,7 @@ public class MeshBuilder : MonoBehaviour
     public GameObject prefabObj;
     public Transform roadHolder;
     public Material[] materialPallette;
+    public Vector2[] textureScales;
     [Space]
     EarClipper clipper;
     NodeMeshConstructor nmc;
@@ -104,24 +105,21 @@ public class MeshBuilder : MonoBehaviour
             {
                 for (int v = 0; v < tri.vertices.Length; v++)
                 {
-                    if (!verts.Contains(tri.vertices[v]))
-                    {
-                        verts.Add(tri.vertices[v]);
-                    }
-                    idxList.Add(verts.IndexOf(tri.vertices[v]));
+                    verts.Add(tri.vertices[v]);
+                    idxList.Add(verts.Count-1);
                 }
             }
 
             //need to go through each vert and find the correct normal (possibly need to check the tri formed by the normals)
             List<Vector3> normalList = new List<Vector3>(CalculateNormals(verts.ToArray(), idxList.ToArray()));
-            //List<Vector2> uvList = new List<Vector2>(CalculateUVs(poly, verts));
+            List<Vector2> uvList = new List<Vector2>(CalculateUVs(idxList, verts, textureScales[0]));
 
             List<int> idxRev = new List<int>(idxList);
             idxRev.Reverse();
             idxList.AddRange(idxRev);
 
             meshes[i].vertices = verts.ToArray();
-            //meshes[i].SetUVs(0, uvList);
+            meshes[i].SetUVs(0, uvList);
             meshes[i].triangles = idxList.ToArray();
             meshes[i].normals = normalList.ToArray();
             meshes[i].tangents = new Vector4[verts.Count];
@@ -139,23 +137,31 @@ public class MeshBuilder : MonoBehaviour
                     if (linkedPoly.isVert)
                     {
                         verts.Clear();
-                        foreach (Vertex vertex in linkedPoly.vertices)
-                        {
-                            verts.Add(vertex.point);
-                        }
+                        //foreach (Vertex vertex in linkedPoly.vertices)
+                        //{
+                        //    verts.Add(vertex.point);
+                        //}
 
                         //the list of vertices halved then -1 for 0 start
                         for (int top = 0; top < (linkedPoly.vertices.Length /2); top++)
                         {
                             int bottom = (linkedPoly.vertices.Length - 1) - top;
 
-                            idxList.Add(top);
-                            idxList.Add(bottom - 1);
-                            idxList.Add(top + 1);
+                            verts.Add(linkedPoly.vertices[top].point);
+                            idxList.Add(verts.Count - 1);
+                            verts.Add(linkedPoly.vertices[bottom - 1].point);
+                            idxList.Add(verts.Count - 1);
+                            verts.Add(linkedPoly.vertices[top + 1].point);
+                            idxList.Add(verts.Count - 1);
 
-                            idxList.Add(top);
-                            idxList.Add(bottom);
-                            idxList.Add(bottom - 1);
+                            //--
+
+                            verts.Add(linkedPoly.vertices[top].point);
+                            idxList.Add(verts.Count - 1);
+                            verts.Add(linkedPoly.vertices[bottom].point);
+                            idxList.Add(verts.Count - 1);
+                            verts.Add(linkedPoly.vertices[bottom - 1].point);
+                            idxList.Add(verts.Count - 1);
                         }
                     }
                     else
@@ -166,17 +172,14 @@ public class MeshBuilder : MonoBehaviour
                         {
                             foreach (Vector3 v in tri.vertices)
                             {
-                                if (!verts.Contains(v))
-                                {
-                                    verts.Add(v);
-                                }
-                                idxList.Add(verts.IndexOf(v));
+                                verts.Add(v);
+                                idxList.Add(verts.Count - 1);
                             }
                         }
                     }
 
                     normalList = new List<Vector3>(CalculateNormals(verts.ToArray(), idxList.ToArray()));
-                    //uvList = new List<Vector2>(CalculateUVs(linkedPoly, verts));
+                    uvList = new List<Vector2>(CalculateUVs(idxList, verts, textureScales[1]));
 
                     idxRev = new List<int>(idxList);
                     idxRev.Reverse();
@@ -184,7 +187,7 @@ public class MeshBuilder : MonoBehaviour
 
                     Mesh subMesh = new Mesh();
                     subMesh.vertices = verts.ToArray();
-                    //subMesh.SetUVs(0, uvList);
+                    subMesh.SetUVs(0, uvList);
                     subMesh.triangles = idxList.ToArray();
                     subMesh.normals = normalList.ToArray();
                     subMesh.tangents = new Vector4[verts.Count];
@@ -207,20 +210,49 @@ public class MeshBuilder : MonoBehaviour
         }
     }
 
-    private Vector2[] CalculateUVs(List<int> idxList, List<Vector3> points)
+    private Vector2[] CalculateUVs(List<int> idxList, List<Vector3> points, Vector2 textureScale)
     {
         List<Vector2> uvs = new List<Vector2>();
 
         for (int i = 0; i < idxList.Count; i += 3)
         {
-            Vector3 zero, one, two;
-            zero = points[idxList[i]];
-            one = points[idxList[i]+1];
-            two = points[idxList[i]+2];
+            Vector3[] vertices = new Vector3[3];
+            vertices[0] = points[idxList[i]];
+            vertices[1] = points[idxList[i]+1];
+            vertices[2] = points[idxList[i]+2];
 
-            Vector3 forward = Geometry.GetNormalOfPoints(zero, one, two);
-            Vector3 bottomLeft = Vector3.positiveInfinity;
+            Vector3 startingForward = Geometry.GetNormalOfPoints(vertices[0], vertices[1], vertices[2]);
 
+            //Rotate each of the points so that the normal is (0,0,-1) - Facing the screen
+            //That gives us the local x,y and we can then calculate the uv as before
+            Quaternion quaternion = Quaternion.identity;
+            //This is giving me the wrong rotation for some walls;
+            quaternion.SetFromToRotation(startingForward, Vector3.back);
+
+            Vector2 bottomLeft = Vector2.positiveInfinity;
+
+            Triangle test = new Triangle(vertices[0], vertices[1], vertices[2]);
+            test.DebugDraw(Color.red, 120);
+
+            for (int j = 0; j < 3; j++)
+            {
+                vertices[j] = (Vector2)(quaternion * vertices[j]);
+                Debug.Log(startingForward + " " + points[i + j] + " >> " + vertices[j]);
+
+                if (vertices[j].x < bottomLeft.x) bottomLeft.x = vertices[j].x;
+                if (vertices[j].y < bottomLeft.y) bottomLeft.y = vertices[j].y;
+            }
+
+            test.vertices = vertices;
+            test.DebugDraw(Color.green, 120);
+
+
+            foreach (Vector2 v in vertices)
+            {
+                //Vector2 uv = (v - bottomLeft) / textureScale;
+                Vector2 uv = v / textureScale;
+                uvs.Add(uv);
+            }
         }
 
         return uvs.ToArray();

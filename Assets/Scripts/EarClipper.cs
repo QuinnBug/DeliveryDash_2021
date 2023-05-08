@@ -382,8 +382,6 @@ namespace Earclipping
 			vertices = points.ToArray();
 
 			center = _center;
-
-			//CalulateUVs(Vector2.one);
 		}
 
 		public Polygon(Vector3 _center, Vector3[] _points, bool _isVert = false) 
@@ -406,39 +404,6 @@ namespace Earclipping
 				tempLines.Add(new Line(_points[i], _points[j]));
             }
 			lines = tempLines.ToArray();
-			//CalulateUVs(Vector2.one);
-		}
-
-		public void CalulateUVs(Vector2 textureSize)
-		{
-			if (vertices == null) return;
-
-			Vector2 lowerBounds = Vector2.positiveInfinity;
-            foreach (Vertex vertex in vertices)
-            {
-				if (vertex.point.x < lowerBounds.x) lowerBounds.x = vertex.point.x;
-
-                if (isVert)
-                {
-					if (vertex.point.y < lowerBounds.y) lowerBounds.y = vertex.point.y;
-                }
-                else
-                {
-					if (vertex.point.z < lowerBounds.y) lowerBounds.y = vertex.point.z;
-				}
-				
-			}
-
-            foreach (Vertex v in vertices)
-            {
-				Vector2 uv = v.point;
-				if (!isVert) uv.y = v.point.z;
-
-				uv = (uv - lowerBounds) / textureSize;
-				//uv.x = uv.x % textureSize.x;
-				//uv.y = uv.y % textureSize.y;
-				v.uv = uv;
-            }
 		}
 
 		public void Flip() 
