@@ -1141,7 +1141,7 @@ MonoBehaviour:
     axiom: o
     finalString: '>f>f[ff][>ff][<<ff>f>>f]'
     randomRuleOutput: 1
-  count: 15
+  count: 3
   clampValues: 1
   length: 50
   angle: 45

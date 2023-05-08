@@ -114,12 +114,14 @@ public class MeshBuilder : MonoBehaviour
 
             //need to go through each vert and find the correct normal (possibly need to check the tri formed by the normals)
             List<Vector3> normalList = new List<Vector3>(CalculateNormals(verts.ToArray(), idxList.ToArray()));
+            //List<Vector2> uvList = new List<Vector2>(CalculateUVs(poly, verts));
 
             List<int> idxRev = new List<int>(idxList);
             idxRev.Reverse();
             idxList.AddRange(idxRev);
 
             meshes[i].vertices = verts.ToArray();
+            //meshes[i].SetUVs(0, uvList);
             meshes[i].triangles = idxList.ToArray();
             meshes[i].normals = normalList.ToArray();
             meshes[i].tangents = new Vector4[verts.Count];
@@ -136,7 +138,12 @@ public class MeshBuilder : MonoBehaviour
                     normalList.Clear();
                     if (linkedPoly.isVert)
                     {
-                        verts = new List<Vector3>(linkedPoly.vertices);
+                        verts.Clear();
+                        foreach (Vertex vertex in linkedPoly.vertices)
+                        {
+                            verts.Add(vertex.point);
+                        }
+
                         //the list of vertices halved then -1 for 0 start
                         for (int top = 0; top < (linkedPoly.vertices.Length /2); top++)
                         {
@@ -169,6 +176,7 @@ public class MeshBuilder : MonoBehaviour
                     }
 
                     normalList = new List<Vector3>(CalculateNormals(verts.ToArray(), idxList.ToArray()));
+                    //uvList = new List<Vector2>(CalculateUVs(linkedPoly, verts));
 
                     idxRev = new List<int>(idxList);
                     idxRev.Reverse();
@@ -176,6 +184,7 @@ public class MeshBuilder : MonoBehaviour
 
                     Mesh subMesh = new Mesh();
                     subMesh.vertices = verts.ToArray();
+                    //subMesh.SetUVs(0, uvList);
                     subMesh.triangles = idxList.ToArray();
                     subMesh.normals = normalList.ToArray();
                     subMesh.tangents = new Vector4[verts.Count];
@@ -197,4 +206,36 @@ public class MeshBuilder : MonoBehaviour
             i++;
         }
     }
+
+    private Vector2[] CalculateUVs(List<int> idxList, List<Vector3> points)
+    {
+        List<Vector2> uvs = new List<Vector2>();
+
+        for (int i = 0; i < idxList.Count; i += 3)
+        {
+            Vector3 zero, one, two;
+            zero = points[idxList[i]];
+            one = points[idxList[i]+1];
+            two = points[idxList[i]+2];
+
+            Vector3 forward = Geometry.GetNormalOfPoints(zero, one, two);
+            Vector3 bottomLeft = Vector3.positiveInfinity;
+
+        }
+
+        return uvs.ToArray();
+    }
+
+    //private Vector2[] CalculateUVs(Polygon poly, List<Vector3> points)
+    //{
+    //    List<Vector2> uvs = new List<Vector2>();
+    //    List<Vertex> vertices = new List<Vertex>(poly.vertices);
+
+    //    foreach (Vector3 point in points)
+    //    {
+    //        uvs.Add(vertices.Find(x => x.point == point).uv);
+    //    }
+
+    //    return uvs.ToArray();
+    //}
 }
