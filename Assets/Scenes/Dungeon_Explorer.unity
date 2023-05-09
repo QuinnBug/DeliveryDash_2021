@@ -210,8 +210,11 @@ MonoBehaviour:
   prefabObj: {fileID: 1431621214544958366, guid: ed4c3bfba5687d44cb7ea761092ee1a8, type: 3}
   roadHolder: {fileID: 381227247}
   materialPallette:
+  - {fileID: 2100000, guid: de5f67ad039d0804a9c960c380fc6147, type: 2}
   - {fileID: 2100000, guid: 00f93ad13aefe3947bffffddf50fc46f, type: 2}
-  - {fileID: 2100000, guid: c613b528f48a54b4ea21157fbc231d1a, type: 2}
+  textureScales:
+  - {x: 5, y: 5}
+  - {x: 10, y: 10}
   meshes: []
   roads: []
 --- !u!1 &328440692
@@ -1138,10 +1141,10 @@ MonoBehaviour:
       outputs:
       - lo
       - ro
-    axiom: o
+    axiom: '>f'
     finalString: '>f>f[ff][>ff][<<ff>f>>f]'
     randomRuleOutput: 1
-  count: 15
+  count: 3
   clampValues: 1
   length: 50
   angle: 45

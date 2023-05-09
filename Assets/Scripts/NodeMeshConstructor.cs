@@ -253,7 +253,7 @@ public class NodeMeshConstructor : MonoBehaviour
 
             for (int i = 0; i < eVertices.Length; i++)
             {
-                eVertices[i] = poly.vertices[i] + (Vector3.up * extrusionDepth);
+                eVertices[i] = poly.vertices[i].point + (Vector3.up * extrusionDepth);
             }
 
             Polygon ePoly = new Polygon(node.point, eVertices);
@@ -276,11 +276,11 @@ public class NodeMeshConstructor : MonoBehaviour
             List<Vector3> verts = new List<Vector3>();
             while (current < poly.vertices.Length)
             {
-                verts.Add(poly.vertices[current]);
+                verts.Add(poly.vertices[current].point);
 
                 next = Lists.ClampListIndex(current + 1, poly.vertices.Length);
-                testLine.a = poly.vertices[current];
-                testLine.b = poly.vertices[next];
+                testLine.a = poly.vertices[current].point;
+                testLine.b = poly.vertices[next].point;
                 //testLine.DebugDraw(Color.green, 120);
 
                 bool intersects = false;
@@ -306,7 +306,7 @@ public class NodeMeshConstructor : MonoBehaviour
                     }
 
                     //then we add a connection to poly.vertices.start
-                    verts.Add(poly.vertices[start]);
+                    verts.Add(poly.vertices[start].point);
 
                     //then we add verts to wallVertices and clear verts
                     wallVertices.Add(verts.ToArray());
@@ -335,7 +335,7 @@ public class NodeMeshConstructor : MonoBehaviour
                 }
 
                 //then we add a connection to poly.vertices.start
-                verts.Add(poly.vertices[start]);
+                verts.Add(poly.vertices[start].point);
 
                 //then we add verts to wallVertices and clear verts
                 wallVertices.Add(verts.ToArray());
@@ -393,11 +393,11 @@ public class NodeMeshConstructor : MonoBehaviour
                     if (j > 0)
                     {
                         Gizmos.color = Color.cyan;
-                        Gizmos.DrawLine(polygons[i].vertices[j], polygons[i].vertices[j - 1]);
+                        Gizmos.DrawLine(polygons[i].vertices[j].point, polygons[i].vertices[j - 1].point);
                     }
 
                     Gizmos.color = Color.red;
-                    Gizmos.DrawSphere(polygons[i].vertices[j], 1.5f);
+                    Gizmos.DrawSphere(polygons[i].vertices[j].point, 1.5f);
                     //Handles.Label(polygons[i].vertices[j] + (Vector3.up * j), j.ToString());
                 }
             }
