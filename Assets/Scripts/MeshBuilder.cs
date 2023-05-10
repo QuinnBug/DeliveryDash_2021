@@ -40,6 +40,7 @@ public class MeshBuilder : MonoBehaviour
         {
             spawnMesh = false;
             CreateRoads();
+            BuildingPopulator.Instance.spawnBuildings = true;
         }
     }
 
@@ -237,7 +238,7 @@ public class MeshBuilder : MonoBehaviour
             for (int j = 0; j < 3; j++)
             {
                 vertices[j] = (Vector2)(quaternion * vertices[j]);
-                Debug.Log(startingForward + " " + points[i + j] + " >> " + vertices[j]);
+                //Debug.Log(startingForward + " " + points[i + j] + " >> " + vertices[j]);
 
                 if (vertices[j].x < bottomLeft.x) bottomLeft.x = vertices[j].x;
                 if (vertices[j].y < bottomLeft.y) bottomLeft.y = vertices[j].y;
