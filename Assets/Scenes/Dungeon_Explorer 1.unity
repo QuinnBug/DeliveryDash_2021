@@ -236,9 +236,11 @@ MonoBehaviour:
   - {fileID: 8891209064884612374, guid: 934d19abbf2da08418ec954dc2261df6, type: 3}
   - {fileID: 8891209064884612374, guid: 1ace8a7c59091204189d2c62e2d81356, type: 3}
   - {fileID: 8891209064884612374, guid: e0103f6bf24813d44b5d02244d80a7c0, type: 3}
-  gridSize: {x: 250, y: 250}
-  spaceSize: {x: 10, y: 100, z: 10}
-  startPoint: {x: -1250, y: 20, z: -1250}
+  - {fileID: 8891209064884612374, guid: 9bf3d190da507e64bbf35949bc9d4774, type: 3}
+  gridSize: {x: 125, y: 125}
+  spaceSize: {x: 10, y: 10, z: 10}
+  startPoint: {x: -625, y: 20, z: -625}
+  mb: {fileID: 193339241}
 --- !u!1 &381227246
 GameObject:
   m_ObjectHideFlags: 0
@@ -354,7 +356,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 25000
   field of view: 60
-  orthographic: 1
+  orthographic: 0
   orthographic size: 741.7
   m_Depth: 0
   m_CullingMask:
@@ -378,13 +380,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 487417275}
-  m_LocalRotation: {x: 0.27231947, y: 0.27231947, z: -0.08066469, w: 0.9193353}
-  m_LocalPosition: {x: -506, y: 528, z: -745}
+  m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.92387956}
+  m_LocalPosition: {x: 0, y: 150, z: -250}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 33, y: 33, z: 0}
+  m_LocalEulerAnglesHint: {x: 45, y: 0, z: 0}
 --- !u!1 &794724742
 GameObject:
   m_ObjectHideFlags: 0
@@ -592,7 +594,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1955614085
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -779,29 +781,35 @@ MonoBehaviour:
     rules:
     - input: 63
       outputs:
-      - q?
-      - w?
-      - e?
+      - '!f?'
+      - ef?
+      - rf?
+    - input: 33
+      outputs:
+      - q
+      - w
     - input: 113
       outputs:
-      - '[>f<ff<f][<f>ff>f]fff'
+      - '[>f<ff<f][<f>ff>f]'
     - input: 119
       outputs:
-      - '[>ff<f<ff]ff'
-      - '[<ff>f>ff]ff'
+      - '[>ff<f<ff]'
+      - '[<ff>f>ff]'
     - input: 101
       outputs:
-      - '>f<f'
-      - <f>f
       - <f
       - '>f'
+    - input: 114
+      outputs:
+      - '>f>[!]ff<f'
+      - <f>[!]ff>f
     axiom: ff?
     finalString: 
     randomRuleOutput: 1
-  count: 15
+  count: 8
   clampValues: 1
   length: 50
-  angle: 92
+  angle: 90
   nodeLimitRange:
     min: 25
     max: 100
@@ -834,11 +842,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nodeManager: {fileID: 2109595310}
-  roadWidth: 5
-  nodeRadius: 12
+  roadWidth: 8
+  nodeRadius: 16
   doubleSided: 0
   extrude: 1
   extrusionDepth: -5
   drawPoints: 0
-  drawPolygons: 1
+  drawPolygons: 0
   timePerNode: 0
